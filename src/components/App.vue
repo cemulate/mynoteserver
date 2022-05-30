@@ -1,19 +1,29 @@
 <template>
-<div id="root" style="height: 100vh">
-    <div class="columns" style="height: 100%">
+<div id="root">
+    <div class="columns is-gapless fullheight">
         <div class="column is-two-fifths">
-            <vue-codemirror
-                v-model="markdownSource"
-                placeholder="Hello, world!"
-                :style="{ height: '100%', display: 'block' }"
-                :autofocus="true"
-                :indent-with-tab="true"
-                :tab-size="4"
-                @ready="initCodemirror"
+            <code-mirror 
+                v-model:document="markdownSource"
+                ref="codemirror"
+                class="fullheight"
+                :debounce="500"
+                @open-image="openDrawingFromContext"
             />
         </div>
         <div class="column is-three-fifths">
             <div class="content" v-html="renderedContent"></div>
+        </div>
+    </div>
+    <div class="modal" :class="{ 'is-active': isDrawingOpen }">
+        <div class="modal-background">
+            <div class="container is-fullwidth fullheight">
+                <div class="box is-fullwidth fullheight">
+                    <sketch-pad></sketch-pad>
+                </div>
+            </div>
+        </div>
+        <div class="modal-content">
+            <button class="modal-close is-large" aria-label="close" @click="isDrawingOpen = false"></button>
         </div>
     </div>
 </div>
@@ -22,31 +32,50 @@
 <script>
 import { markdownIt } from '../lib/markdown';
 
+import SketchPad from '../components/SketchPad.vue';
+import CodeMirror from '../components/CodeMirror.vue';
+
 export default {
     data: () => ({
-        markdownSource: '',
-        debounceTimeoutID: null,
-        renderedContent: '',
+        markdownSource: 'Hello!',
+        isDrawingOpen: false,
     }),
+    computed: {
+        renderedContent() {
+            return markdownIt.render(this.markdownSource);
+        },
+    },
     methods: {
-        render() {
-            this.renderedContent = markdownIt.render(this.markdownSource);
+        toggleDrawing() {
+            this.isDrawingOpen = !this.isDrawingOpen;
         },
     },
     async updated() {
         return window.MathJax.typesetPromise();
     },
-    created() {
-        this.render();
+    mounted() {
+        document.addEventListener('keydown', event => {
+            if (!event.ctrlKey || event.key != ' ') return;
+            this.toggleDrawing();
+        });
     },
-    watch: {
-        markdownSource(newVal) {
-            if (this.debounceTimeoutID != null) window.clearTimeout(this.debounceTimeoutID);
-            this.debounceTimeoutID = window.setTimeout(this.render.bind(this), 500);
-        },
+    components: {
+        'sketch-pad': SketchPad,
+        'code-mirror': CodeMirror,
     },
 };
 </script>
 
 <style lang="scss">
+.fullheight {
+    height: 100%;
+}
+
+#root {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+}
 </style>

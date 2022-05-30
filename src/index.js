@@ -13,15 +13,6 @@ import { createApp } from 'vue';
 
 const app = createApp(App);
 
-import VueCodemirror from 'vue-codemirror'
-import { basicSetup } from '@codemirror/basic-setup'
-import { EditorView } from 'vue-codemirror';
-import { markdown as langMarkdown } from '@codemirror/lang-markdown';
-
-app.use(VueCodemirror, {
-    extensions: [ basicSetup, langMarkdown(), EditorView.lineWrapping ],
-});
-
 const body = document.getElementsByTagName('body')[0];
 const container = document.createElement('div');
 container.setAttribute('id', 'app');

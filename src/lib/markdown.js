@@ -1,7 +1,9 @@
 import MarkdownIt from 'markdown-it';
 import MarkdownItMath from 'markdown-it-math/dist/markdown-it-math';
 
-const markdownIt = new MarkdownIt();
+const markdownIt = new MarkdownIt({
+    html: true,
+});
 
 markdownIt.use(MarkdownItMath, {
     inlineOpen: '$',
