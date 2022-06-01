@@ -7,7 +7,6 @@
                 ref="codemirror"
                 class="fullheight"
                 :debounce="500"
-                @open-image="openDrawingFromContext"
             />
         </div>
         <div class="column is-three-fifths">
@@ -16,10 +15,8 @@
     </div>
     <div class="modal" :class="{ 'is-active': isDrawingOpen }">
         <div class="modal-background">
-            <div class="container is-fullwidth fullheight">
-                <div class="box is-fullwidth fullheight">
-                    <sketch-pad></sketch-pad>
-                </div>
+            <div class="sketch-area-container is-fullwidth fullheight" v-if="isDrawingOpen">
+                <sketch-area ref="sketch" class="fullwidth fullheight" :image="openedImage"></sketch-area>
             </div>
         </div>
         <div class="modal-content">
@@ -32,13 +29,14 @@
 <script>
 import { markdownIt } from '../lib/markdown';
 
-import SketchPad from '../components/SketchPad.vue';
+import SketchArea from '../components/SketchArea.vue';
 import CodeMirror from '../components/CodeMirror.vue';
 
 export default {
     data: () => ({
         markdownSource: 'Hello!',
         isDrawingOpen: false,
+        openedImage: null,
     }),
     computed: {
         renderedContent() {
@@ -48,6 +46,12 @@ export default {
     methods: {
         toggleDrawing() {
             this.isDrawingOpen = !this.isDrawingOpen;
+            if (this.isDrawingOpen) {
+                this.openedImage = this.$refs.codemirror.getImageAtCursor();
+            } else {
+                const image = this.$refs.sketch.getImage();
+                if (image != null) this.$refs.codemirror.addOrReplaceImageAtCursor(image);
+            }
         },
     },
     async updated() {
@@ -60,7 +64,7 @@ export default {
         });
     },
     components: {
-        'sketch-pad': SketchPad,
+        'sketch-area': SketchArea,
         'code-mirror': CodeMirror,
     },
 };
@@ -71,11 +75,21 @@ export default {
     height: 100%;
 }
 
+.fullwidth {
+    width: 100%;
+}
+
 #root {
     position: relative;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
+}
+
+.sketch-area-container {
+    background: white;
+    padding: 10px;
+    border: 5px solid gray;
 }
 </style>

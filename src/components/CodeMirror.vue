@@ -8,6 +8,7 @@ import { basicSetup } from '@codemirror/basic-setup';
 import { indentWithTab } from '@codemirror/commands';
 import { markdown as langMarkdown } from '@codemirror/lang-markdown';
 import { EditorView, keymap } from '@codemirror/view';
+import { foldService } from '@codemirror/language';
 
 
 export default {
@@ -39,6 +40,10 @@ export default {
                     this.debounceTimeoutID = window.setTimeout(this.commitDocument.bind(this), this.debounce);
                 }),
                 keymap.of([indentWithTab]),
+                foldService.of((state, lineStart, lineEnd) => {
+                    const beginning = state.sliceDoc(lineStart, lineStart + 4);
+                    if (beginning == '<img') return { from: lineStart, to: lineEnd + 1};
+                }),
             ],
         });
 
@@ -51,6 +56,19 @@ export default {
         commitDocument() {
             this.$emit('update:document', this.editorView.state.doc.toString());
         },
+        addOrReplaceImageAtCursor(dataURL) {
+            const cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
+            const line = this.editorView.state.doc.lineAt(cursor);
+            this.editorView.dispatch({
+                changes: { from: line.from, to: line.to, insert: `<img src="${ dataURL }"/>\n`},
+            });
+        },
+        getImageAtCursor() {
+            const cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
+            const line = this.editorView.state.doc.lineAt(cursor);
+            if (!line.text.startsWith('<img')) return null;
+            return line.text.slice(10, line.length - 3);
+        }
     },
 };
 </script>
