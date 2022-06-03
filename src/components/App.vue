@@ -1,21 +1,21 @@
 <template>
 <div id="root">
-    <div class="columns is-gapless fullheight">
+    <div class="columns is-gapless fullheight mb-0">
         <div class="column is-two-fifths">
             <code-mirror 
-                v-model:document="markdownSource"
+                v-model="markdownSource"
                 ref="codemirror"
                 class="fullheight"
                 :debounce="500"
             />
         </div>
-        <div class="column is-three-fifths">
-            <div class="content" v-html="renderedContent"></div>
+        <div class="column is-three-fifths vertical-scroll">
+            <div ref="renderView" class="content fullheight p-2" v-html="renderedContent"></div>
         </div>
     </div>
     <div class="modal" :class="{ 'is-active': isDrawingOpen }">
         <div class="modal-background">
-            <div class="sketch-area-container is-fullwidth fullheight" v-if="isDrawingOpen">
+            <div class="sketch-area-container fullheight" v-if="isDrawingOpen">
                 <sketch-area ref="sketch" class="fullwidth fullheight" :image="openedImage"></sketch-area>
             </div>
         </div>
@@ -55,7 +55,9 @@ export default {
         },
     },
     async updated() {
-        return window.MathJax.typesetPromise();
+        await window.MathJax.typesetPromise();
+        let el = this.$refs.renderView.parentElement;
+        el.scrollTop = el.scrollHeight;
     },
     mounted() {
         document.addEventListener('keydown', event => {
@@ -77,6 +79,14 @@ export default {
 
 .fullwidth {
     width: 100%;
+}
+
+.vertical-scroll {
+    overflow-y: scroll;
+}
+
+.content {
+    overflow-wrap: break-word;
 }
 
 #root {

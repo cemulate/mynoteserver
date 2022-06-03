@@ -15,9 +15,11 @@ export default {
     data: () => ({
         editorView: null,
         debounceTimeoutID: null,
+        ignoreNextDocUpdate: false,
+        ignoreNextModelUpdate: false,
     }),
     props: {
-        document: {
+        modelValue: {
             type: String,
             default: 'Hello, world!',
         },
@@ -28,13 +30,17 @@ export default {
     },
     mounted() {
         const state = EditorState.create({
-            doc: this.document,
+            doc: this.modelValue,
             extensions: [ 
                 basicSetup,
                 EditorView.lineWrapping,
                 langMarkdown(),
                 EditorView.updateListener.of(update => {
                     if (!update.docChanged) return;
+                    if (this.ignoreNextDocUpdate) {
+                        this.ignoreNextDocUpdate = false;
+                        return;
+                    }
 
                     if (this.debounceTimeoutID != null) window.clearTimeout(this.debounceTimeoutID);
                     this.debounceTimeoutID = window.setTimeout(this.commitDocument.bind(this), this.debounce);
@@ -54,7 +60,8 @@ export default {
     },
     methods: {
         commitDocument() {
-            this.$emit('update:document', this.editorView.state.doc.toString());
+            this.ignoreNextModelUpdate = true;
+            this.$emit('update:modelValue', this.editorView.state.doc.toString());
         },
         addOrReplaceImageAtCursor(dataURL) {
             const cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
@@ -69,6 +76,19 @@ export default {
             if (!line.text.startsWith('<img')) return null;
             return line.text.slice(10, line.length - 3);
         }
+    },
+    watch: {
+        modelValue(newVal, oldVal) {
+            if (this.ignoreNextModelUpdate) {
+                this.ignoreNextModelUpdate = false;
+                return;
+            }
+            
+            this.ignoreNextDocUpdate = true;
+            this.editorView.dispatch({
+                changes: { from: 0, to: this.editorView.state.doc.length, insert: newVal },
+            });
+        },
     },
 };
 </script>
