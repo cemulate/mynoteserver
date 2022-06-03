@@ -22,8 +22,9 @@
             <span v-else>No file selected</span>
 
             <span v-if="hasContentChanged"> (*)</span>
-            <span style="color: green" v-if="showSaveMessage"> Saved!</span>
-            <strong style="color: red" v-if="lastSaveFailed"> Save Failed</strong>
+            <Transition name="fade">
+                <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
+            </Transition>
         </p>
     </div>
 
@@ -49,6 +50,7 @@
 <script>
 import { render } from '../lib/markdown';
 import { toRaw } from 'vue';
+import * as network from '../lib/network';
 
 import SketchArea from '../components/SketchArea.vue';
 import CodeMirror from '../components/CodeMirror.vue';
@@ -64,8 +66,11 @@ export default {
         curFile: null,
 
         originalContentOnLoad: null,
-        showSaveMessage: false,
-        lastSaveFailed: false,
+        toast: {
+            color: 'black',
+            message: '',
+        },
+        showToast: false,
     }),
     computed: {
         renderedContent() {
@@ -100,30 +105,63 @@ export default {
                 this.markdownSource = `# ${ name }`;
                 // Always compare false as to display the unsaved star
                 this.originalContentOnLoad = null;
+                this.toast = { color: 'green', message: 'New File' };
             } else {
-                let response = await fetch(`/collection/${ collection }/file/${ name }`);
-                let result = await response.json();
-                this.markdownSource = result.content;
-                this.originalContentOnLoad = result.content;
+                let response = await network.get(`/collection/${ collection }/file/${ name }`);
+                if (response?.status == 200) {
+                    let result = await response.json();
+                    this.markdownSource = result.content;
+                    this.originalContentOnLoad = result.content;
+                    this.toast = { color: 'green', message: 'File loaded' };
+                } else {
+                    this.markdownSource = '';
+                    this.curFile = null;
+                    this.toast = { color: 'red', message: 'Load failed' };
+                }
             }
             this.$refs.codemirror.focus();
         },
         async saveCurFile() {
             if (this.curFile == null) return;
             let { collection, name } = toRaw(this.curFile);
-            let response = await fetch(`/collection/${ collection }/file/${ name }`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: this.markdownSource }),
-            });
-            if (response.status == 200) {
+            let response = await network.post(`/collection/${ collection }/file/${ name }`, { content: this.markdownSource });
+            if (response?.status == 200) {
                 this.originalContentOnLoad = this.markdownSource;
-                this.lastSaveFailed = false;
-                this.showSaveMessage = true;
+                this.toast = { color: 'green', message: 'Saved!' };
             } else {
-                this.lastSaveFailed = true;
+                this.toast = { color: 'red', message: 'Save failed' };
             }
         },
+        initializeFromLocalStorage() {
+            let curFile = window.localStorage.getItem('curFile');
+            if (curFile != null) {
+                curFile = JSON.parse(curFile);
+                curFile.mtime = new Date(curFile.mtime);
+            }
+            this.curFile = curFile;
+            let markdownSource = window.localStorage.getItem('markdownSource');
+            this.markdownSource = markdownSource ?? '';
+            this.originalContentOnLoad = window.localStorage.getItem('originalContentOnLoad');
+
+            // Only setup watchers now as to not immediately re-save the data or try to
+            // load the file over the network.
+            this.$watch('curFile', this.onCurFileChange);
+            this.$watch('markdownSource', this.onMarkdownSourceChange);
+            this.$watch('originalContentOnLoad', this.onOriginalContentOnLoadChange);
+        },
+        onCurFileChange(newVal) {
+            window.localStorage.setItem('curFile', JSON.stringify(newVal));
+            this.loadCurFile();
+        },
+        onMarkdownSourceChange(newVal) {
+            window.localStorage.setItem('markdownSource', newVal);
+        },
+        onOriginalContentOnLoadChange(newVal) {
+            window.localStorage.setItem('originalContentOnLoad', newVal);
+        },
+    },
+    created() {
+        this.initializeFromLocalStorage();
     },
     async updated() {
         await window.MathJax.typesetPromise();
@@ -140,15 +178,19 @@ export default {
                 event.preventDefault(); this.saveCurFile();
             } else if (event.ctrlKey && event.key == 'n') {
                 event.preventDefault(); this.createNewFile();
+            } else if (event.key == 'Escape') {
+                event.preventDefault();
+                if (this.isPickerOpen) this.togglePicker();
+                if (this.isDrawingOpen) this.toggleDrawing();
             }
         });
     },
     watch: {
-        curFile(newVal) {
-            this.loadCurFile();
-        },
-        showSaveMessage(newVal) {
-            if (newVal) window.setTimeout(() => this.showSaveMessage = false, 4000);
+        toast(newVal) {
+            if (newVal) {
+                this.showToast = true;
+                window.setTimeout(() => this.showToast = false, 5000);
+            }
         },
     },
     components: {
@@ -222,5 +264,13 @@ export default {
         width: 100%;
         height: 100%;
     }
+}
+
+.fade-leave-active {
+    transition: opacity 0.5s ease;
+}
+
+.fade-leave-to {
+    opacity: 0;
 }
 </style>

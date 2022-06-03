@@ -18,11 +18,15 @@
         @click="selectFile(entry)">
         {{ entry.collection }}/{{ entry.name }}
     </a>
+    <a class="panel-block" v-if="loadError">
+        Couldn't load files...
+    </a>
 </div>
 </template>
 
 <script>
 import { compareDesc } from 'date-fns';
+import * as network from '../lib/network';
 
 export default {
     data: () => ({
@@ -30,6 +34,8 @@ export default {
         searchTerm: '',
 
         focusedIndex: -1,
+
+        loadError: false,
     }),
     props: {
         selection: { type: Object },
@@ -49,12 +55,18 @@ export default {
     },
     methods: {
         async getFiles() {
-            let result = await fetch('/files');
-            let files = await result.json();
-            for (let f of files) {
-                f.mtime = new Date(f.mtime);
+            let response = await network.get('/files');
+            if (response?.status == 200) {
+                let files = await response.json();
+                for (let f of files) {
+                    f.mtime = new Date(f.mtime);
+                }
+                this.files = files;
+                this.loadError = false;
+            } else {
+                this.files = [];
+                this.loadError = true;
             }
-            this.files = files;
         },
         changeFocus(inc) {
             let newIndex = this.focusedIndex + inc;
