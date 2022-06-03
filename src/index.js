@@ -13,9 +13,4 @@ import { createApp } from 'vue';
 
 const app = createApp(App);
 
-const body = document.getElementsByTagName('body')[0];
-const container = document.createElement('div');
-container.setAttribute('id', 'app');
-body.insertBefore(container, body.firstChild);
-
-app.mount('#app');
+app.mount('body');

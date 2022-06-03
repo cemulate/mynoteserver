@@ -42,7 +42,6 @@ async function routes(server, options) {
     server.post('/collection/:collection/file/:file', async (req, res) => {
         let { content } = req.body;
         let dest = path.join(DIR, req.params.collection, req.params.file + '.md');
-        console.log(dest, content);
         await fs.writeFile(dest, content);
         return {};
     });

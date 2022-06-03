@@ -75,7 +75,10 @@ export default {
             const line = this.editorView.state.doc.lineAt(cursor);
             if (!line.text.startsWith('<img')) return null;
             return line.text.slice(10, line.length - 3);
-        }
+        },
+        focus() {
+            this.editorView.focus();
+        },
     },
     watch: {
         modelValue(newVal, oldVal) {

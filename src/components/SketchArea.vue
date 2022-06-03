@@ -103,7 +103,6 @@ export default {
         });
 
         c.addEventListener('pointermove', event => {
-            console.log(event.pointerType);
             event.preventDefault();
             if (this.disabled || !this.drawing) return;
             
