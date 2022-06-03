@@ -47,7 +47,7 @@
 </template>
 
 <script>
-import { markdownIt } from '../lib/markdown';
+import { render } from '../lib/markdown';
 import { toRaw } from 'vue';
 
 import SketchArea from '../components/SketchArea.vue';
@@ -69,7 +69,7 @@ export default {
     }),
     computed: {
         renderedContent() {
-            return markdownIt.render(this.markdownSource);
+            return render(this.markdownSource);
         },
         hasContentChanged() {
             return (this.markdownSource != this.originalContentOnLoad);

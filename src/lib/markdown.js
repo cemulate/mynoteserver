@@ -14,4 +14,6 @@ markdownIt.use(MarkdownItMath, {
     blockRenderer: str => `\\[\n${ str }\n\\]`,
 });
 
-export { markdownIt };
+const render = markdownIt.render.bind(markdownIt);
+
+export { render };
