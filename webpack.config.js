@@ -5,6 +5,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 
 module.exports = {
+  entry: process.env.NODE_ENV == 'development' ? ['webpack-hot-middleware/client', './src/index.js'] : './src/index.js',
   devServer: {
     static: {
       directory: path.resolve(__dirname, './src'),
@@ -37,6 +38,9 @@ module.exports = {
       },
     ]
   },
+  output: {
+    publicPath: '/app/',
+  },
   plugins: [
     new MiniCssExtractPlugin({ filename: 'styles.css' }),
     new HtmlWebpackPlugin({
@@ -44,5 +48,6 @@ module.exports = {
       title: 'App',
     }),
     new VueLoaderPlugin(),
-  ]
+    new webpack.HotModuleReplacementPlugin(),
+  ],
 };

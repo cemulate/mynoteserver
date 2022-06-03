@@ -4,6 +4,7 @@
   "description": "A new web application",
   "author": "Author",
   "scripts": {
+    "development": "NODE_ENV=development nodemon -L --ignore src --inspect=0.0.0.0 server/server.mjs -- -d `pwd`/notes",
     "serve": "webpack serve --mode development",
     "build": "webpack --mode production"
   },
@@ -17,7 +18,9 @@
     "css-loader": "^6.7.1",
     "html-webpack-plugin": "^5.5.0",
     "markdown-it": "^13.0.1",
+    "markdown-it-math": "^4.1.1",
     "mini-css-extract-plugin": "^2.6.0",
+    "nodemon": "^2.0.16",
     "sass": "^1.52.1",
     "sass-loader": "^13.0.0",
     "style-loader": "^3.3.1",
@@ -30,6 +33,9 @@
     "webpack-dev-server": "^4.9.0"
   },
   "dependencies": {
-    "markdown-it-math": "^4.1.1"
+    "@fastify/static": "^5.0.2",
+    "command-line-args": "^5.2.1",
+    "fastify": "^3.29.0",
+    "fastify-webpack-hmr": "^3.0.0"
   }
 }
