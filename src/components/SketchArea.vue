@@ -1,5 +1,5 @@
 <template>
-<canvas ref="canvas" v-bind:width="pixelWidth" v-bind:height="pixelHeight"></canvas>
+<canvas id="sketch-area-canvas" ref="canvas" v-bind:width="pixelWidth" v-bind:height="pixelHeight"></canvas>
 </template>
 
 <script>
@@ -81,10 +81,16 @@ export default {
         const c = this.$refs.canvas;
 
         const ctx = c.getContext('2d');
-        ctx.lineWidth = 4;
         ctx.lineCap = 'round';
         ctx.strokeStyle = this.color;
 
+        const lineWidthFromEvent = (event) => {
+            if (event.pressure != 0) {
+                return 1 + 2 * event.pressure;
+            } else {
+                return 3;
+            }
+        }
 
         c.addEventListener('pointerdown', event => {
             event.preventDefault();
@@ -92,15 +98,12 @@ export default {
 
             this.updatePosition(event);
             this.updateBounds();
-            
-            let ctx = this.$refs.canvas.getContext('2d');
-            let { x, y } = this.position;
-            ctx.moveTo(x, y); ctx.lineTo(x, y); ctx.stroke();
 
             this.drawing = true;
         });
 
         c.addEventListener('pointermove', event => {
+            console.log(event.pointerType);
             event.preventDefault();
             if (this.disabled || !this.drawing) return;
             
@@ -109,10 +112,10 @@ export default {
             this.updateBounds();
 
             let ctx = this.$refs.canvas.getContext('2d');
-            console.log(ctx.lineWidth);
+            ctx.lineWidth = lineWidthFromEvent(event);
             let { x: x1, y: y1 } = oldPos != null ? oldPos : this.position;
             let { x: x2, y: y2 } = this.position;
-            ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
         });
 
         c.addEventListener('pointerup', event => {
@@ -136,4 +139,7 @@ export default {
 </script>
 
 <style lang="scss">
+#sketch-area-canvas {
+    touch-action: none;
+}
 </style>
