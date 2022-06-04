@@ -30,8 +30,10 @@
 
     <div class="modal" :class="{ 'is-active': isDrawingOpen }">
         <div class="modal-background">
-            <div class="sketch-area-container" v-if="isDrawingOpen">
-                <sketch-area ref="sketch" :image="openedImage"></sketch-area>
+            <div class="sketch-area-container">
+                <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
+                read the DOM to set the correct dimensions -->
+                <sketch-area ref="sketch" :image="openedImage" v-if="isDrawingOpen"></sketch-area>
             </div>
         </div>
         <div class="modal-content">
@@ -260,10 +262,6 @@ export default {
     border: 5px solid gray;
     width: 100%;
     height: 100%;
-    > * {
-        width: 100%;
-        height: 100%;
-    }
 }
 
 .fade-leave-active {

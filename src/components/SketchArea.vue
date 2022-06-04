@@ -1,16 +1,24 @@
 <template>
-<canvas id="sketch-area-canvas" ref="canvas" v-bind:width="pixelWidth" v-bind:height="pixelHeight"></canvas>
+<canvas id="sketch-area-canvas" ref="sketchCanvas" v-bind:width="pixelWidth" v-bind:height="pixelHeight"></canvas>
+<canvas id="overlay-canvas" ref="overlayCanvas" v-bind:width="pixelWidth" v-bind:height="pixelHeight"></canvas>
 </template>
 
 <script>
 import { toRaw } from 'vue';
+
+const BUTTONS_ERASER = 32;
+const ACTION = {
+    NONE: 0,
+    DRAWING: 1,
+    ERASING: 2,
+};
 
 export default {
     data: () => ({
         initialized: false,
         pixelWidth: 480,
         pixelHeight: 580,
-        drawing: false,
+        action: ACTION.NONE,
 
         position: null,
         drawingBounds: {
@@ -25,6 +33,10 @@ export default {
             type: String,
             default: 'black',
         },
+        neutralEraserRadius: {
+            type: Number,
+            default: 40,
+        },
         disabled: {
             type: Boolean,
             default: false,
@@ -32,11 +44,11 @@ export default {
         image: {
             type: String,
             default: '',
-        }
+        },
     },
     methods: {
         getImage() {
-            const c = this.$refs.canvas;
+            const c = this.$refs.sketchCanvas;
             const ctx = c.getContext('2d');
 
             // In this case, the canvas was never drawn on.
@@ -71,55 +83,90 @@ export default {
         },
     },
     mounted() {
-        const c = this.$refs.canvas;
-
-        const compStyle = window.getComputedStyle(c);
+        // After these are set, continue initializing canvas in updated()
+        const compStyle = window.getComputedStyle(this.$refs.sketchCanvas);
         this.pixelWidth = parseInt(compStyle.getPropertyValue('width').replace('px', ''));
         this.pixelHeight = parseInt(compStyle.getPropertyValue('height').replace('px', ''));
     },
     updated() {
-        const c = this.$refs.canvas;
+        const sketchCanvas = this.$refs.sketchCanvas;
+        const overlayCanvas = this.$refs.overlayCanvas;
 
-        const ctx = c.getContext('2d');
+        const ctx = sketchCanvas.getContext('2d');
+        const overlay = overlayCanvas.getContext('2d');
+
         ctx.lineCap = 'round';
         ctx.strokeStyle = this.color;
 
-        const lineWidthFromEvent = (event) => {
+        overlay.strokeStyle = 'black';
+        overlay.setLineDash([ 4, 2 ]);
+        overlay.lineWidth = 1;
+
+        const lineWidthFromEvent = event => {
             if (event.pressure != 0) {
                 return 1 + 2 * event.pressure;
             } else {
                 return 3;
             }
-        }
+        };
 
-        c.addEventListener('pointerdown', event => {
+        const connect = (pos1, pos2, lineWidth) => {
+            ctx.lineWidth = lineWidth;
+            let { x: x1, y: y1 } = pos1 != null ? pos1 : pos2;
+            let { x: x2, y: y2 } = pos2;
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        };
+
+        const erase = pos => {
+            let { x, y } = pos;
+            let r = this.neutralEraserRadius;
+
+            overlay.clearRect(0, 0, this.pixelWidth, this.pixelHeight);
+            overlay.beginPath(); overlay.ellipse(x, y, r, r, 0, 0, 2 * Math.PI); overlay.stroke();
+
+            ctx.beginPath(); ctx.ellipse(x, y, r, r, 0, 0, 2 * Math.PI); ctx.fill();
+        };
+
+        const clearEraseTooltip = () => {
+            overlay.clearRect(0, 0, this.pixelWidth, this.pixelHeight);
+        };
+
+        sketchCanvas.addEventListener('pointerdown', event => {
             event.preventDefault();
             if (this.disabled) return;
 
             this.updatePosition(event);
             this.updateBounds();
 
-            this.drawing = true;
+            if (event.buttons == BUTTONS_ERASER) {
+                this.action = ACTION.ERASING;
+                ctx.globalCompositeOperation = 'destination-out';
+                erase(this.position);
+            } else {
+                this.action = ACTION.DRAWING;
+                ctx.globalCompositeOperation = 'source-over';
+            }
         });
 
-        c.addEventListener('pointermove', event => {
+        sketchCanvas.addEventListener('pointermove', event => {
             event.preventDefault();
-            if (this.disabled || !this.drawing) return;
+            if (this.disabled || this.action == ACTION.NONE) return;
             
             let oldPos = toRaw(this.position);
             this.updatePosition(event);
             this.updateBounds();
 
-            let ctx = this.$refs.canvas.getContext('2d');
-            ctx.lineWidth = lineWidthFromEvent(event);
-            let { x: x1, y: y1 } = oldPos != null ? oldPos : this.position;
-            let { x: x2, y: y2 } = this.position;
-            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+            if (this.action == ACTION.DRAWING) {
+                connect(oldPos, this.position, lineWidthFromEvent(event));
+            } else {
+                erase(this.position);
+            }
         });
 
-        c.addEventListener('pointerup', event => {
+        sketchCanvas.addEventListener('pointerup', event => {
             event.preventDefault();
-            this.drawing = false;
+            this.action = ACTION.NONE;
+            clearEraseTooltip();
         });
 
         if (this.image != null && this.image.length > 0) {
@@ -138,7 +185,16 @@ export default {
 </script>
 
 <style lang="scss">
-#sketch-area-canvas {
+#sketch-area-canvas, #overlay-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     touch-action: none;
+}
+
+#overlay-canvas {
+    pointer-events: none;
 }
 </style>
