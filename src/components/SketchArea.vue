@@ -65,7 +65,7 @@ export default {
             const destCtx = dest.getContext('2d');
             destCtx.putImageData(crop, 0, 0);
 
-            return dest.toDataURL();
+            return dest.toDataURL('image/webp');
         },
         updatePosition(event) {
             let rect = event.target.getBoundingClientRect();
