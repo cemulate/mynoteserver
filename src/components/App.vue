@@ -112,8 +112,8 @@ export default {
                 let response = await network.get(`/collection/${ collection }/file/${ name }`);
                 if (response?.status == 200) {
                     let result = await response.json();
-                    this.markdownSource = result.content;
                     this.originalContentOnLoad = result.content;
+                    this.markdownSource = result.content;
                     this.toast = { color: 'green', message: 'File loaded' };
                 } else {
                     this.markdownSource = '';
@@ -141,36 +141,15 @@ export default {
                 curFile.mtime = new Date(curFile.mtime);
             }
             this.curFile = curFile;
-            let markdownSource = window.localStorage.getItem('markdownSource');
-            this.markdownSource = markdownSource ?? '';
-            this.originalContentOnLoad = window.localStorage.getItem('originalContentOnLoad');
-
-            // Only setup watchers now as to not immediately re-save the data or try to
-            // load the file over the network.
-            this.$watch('curFile', this.onCurFileChange);
-            this.$watch('markdownSource', this.onMarkdownSourceChange);
-            this.$watch('originalContentOnLoad', this.onOriginalContentOnLoadChange);
         },
-        onCurFileChange(newVal) {
-            window.localStorage.setItem('curFile', JSON.stringify(newVal));
-            this.loadCurFile();
-        },
-        onMarkdownSourceChange(newVal) {
-            window.localStorage.setItem('markdownSource', newVal);
-        },
-        onOriginalContentOnLoadChange(newVal) {
-            window.localStorage.setItem('originalContentOnLoad', newVal);
-        },
-    },
-    created() {
-        this.initializeFromLocalStorage();
     },
     async updated() {
-        await window.MathJax.typesetPromise();
+        if (window.MathJax.typesetPromise != null) await window.MathJax.typesetPromise();
         let el = this.$refs.renderView.parentElement;
         el.scrollTop = el.scrollHeight;
     },
     mounted() {
+        this.initializeFromLocalStorage();
         document.addEventListener('keydown', event => {
             if (event.ctrlKey && event.key == ' ') {
                 event.preventDefault(); this.toggleDrawing();
@@ -193,6 +172,10 @@ export default {
                 this.showToast = true;
                 window.setTimeout(() => this.showToast = false, 5000);
             }
+        },
+        curFile(newVal) {
+            window.localStorage.setItem('curFile', JSON.stringify(newVal));
+            this.loadCurFile();
         },
     },
     components: {
