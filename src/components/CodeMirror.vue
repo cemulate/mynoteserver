@@ -9,10 +9,12 @@ import { indentWithTab } from '@codemirror/commands';
 import { markdown as langMarkdown } from '@codemirror/lang-markdown';
 import { EditorView, keymap, WidgetType, Decoration, ViewPlugin } from '@codemirror/view';
 
-import { hideLinesPlugin } from '../lib/codemirror-utils';
+import { hiddenField, prefixLineHider } from '../lib/codemirror-utils';
 
 const IMAGE_LINE_START = `<p class="inline-figure"><img src="`;
 const IMAGE_LINE_END = `"/></p>`;
+
+const hideImageLines = prefixLineHider(IMAGE_LINE_START, 'Figure');
 
 export default {
     data: () => ({
@@ -40,7 +42,7 @@ export default {
                 langMarkdown(),
                 EditorView.updateListener.of(this.onDocumentUpdate.bind(this)),
                 keymap.of([indentWithTab]),
-                hideLinesPlugin(IMAGE_LINE_START, 'Figure'),
+                hiddenField,
             ],
         });
 
@@ -70,6 +72,7 @@ export default {
             this.editorView.dispatch({
                 changes: { from: line.from, to: line.to, insert: IMAGE_LINE_START + dataURL + IMAGE_LINE_END + '\n'},
             });
+            hideImageLines(this.editorView);
         },
         getImageAtCursor() {
             const cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
@@ -92,6 +95,7 @@ export default {
             this.editorView.dispatch({
                 changes: { from: 0, to: this.editorView.state.doc.length, insert: newVal },
             });
+            hideImageLines(this.editorView);
         },
     },
 };

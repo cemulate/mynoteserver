@@ -1,8 +1,5 @@
-import { EditorState } from '@codemirror/state';
-import { basicSetup } from '@codemirror/basic-setup';
-import { indentWithTab } from '@codemirror/commands';
-import { markdown as langMarkdown } from '@codemirror/lang-markdown';
-import { EditorView, keymap, WidgetType, Decoration, ViewPlugin } from '@codemirror/view';
+import { StateEffect, StateField } from '@codemirror/state';
+import { EditorView, WidgetType, Decoration } from '@codemirror/view';
 
 
 class BadgeWidget extends WidgetType {
@@ -22,34 +19,42 @@ class BadgeWidget extends WidgetType {
     }
 }
 
-function hideLines(view, prefix, replacement) {
-    let decs = [];
-    for (let { from, to } of view.visibleRanges) {
-        let startLine = view.state.doc.lineAt(from);
-        let endLine = view.state.doc.lineAt(to);
-        for (let i = startLine.number; i <= endLine.number; i++) {
-            let line = view.state.doc.line(i);
-            if (line.text.startsWith(prefix)) {
-                let d = Decoration.replace({ widget: new BadgeWidget(replacement) });
-                decs.push(d.range(line.from, line.to));
+const addHiddenBadge = StateEffect.define();
+
+const hiddenField = StateField.define({
+    create() {
+        return Decoration.none;
+    },
+    update(hiddens, tr) {
+        hiddens = hiddens.map(tr.changes);
+        for (let e of tr.effects) {
+            if (e.is(addHiddenBadge)) {
+                // let d = Decoration.replace({ widget: new BadgeWidget('test') });
+                let d = e.value.decoration;
+                hiddens = hiddens.update({
+                    add: [ e.value.decoration.range(e.value.from, e.value.to) ],
+                });
             }
         }
-    }
-    return Decoration.set(decs);
-}
-
-const hideLinesPlugin = (prefix, replacement) => ViewPlugin.fromClass(class {
-    constructor(view) {
-        this.decorations = hideLines(view, prefix, replacement);
-    }
-
-    update(update) {
-        if (update.docChanged || update.viewportChanged) {
-            this.decorations = hideLines(update.view, prefix, replacement);
-        }
-    }
-}, {
-    decorations: v => v.decorations,
+        return hiddens;
+    },
+    provide: f => EditorView.decorations.from(f),
 });
 
-export { BadgeWidget, hideLinesPlugin };
+function prefixLineHider(prefix, replacement) {
+    const decoration = Decoration.replace({ widget: new BadgeWidget(replacement) });
+    return view => {
+        let effects = [];
+        let pos = 0;
+        while (pos <= view.state.doc.length) {
+            let line = view.state.doc.lineAt(pos);
+            if (line.text.startsWith(prefix)) {
+                effects.push(addHiddenBadge.of({ from: line.from, to: line.to, decoration }));
+            }
+            pos = line.to + 1;
+        }
+        view.dispatch({ effects });
+    }
+}
+
+export { BadgeWidget, hiddenField, prefixLineHider };
