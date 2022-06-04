@@ -45,6 +45,7 @@ module.exports = {
     new MiniCssExtractPlugin({ filename: 'styles.css' }),
     new HtmlWebpackPlugin({
       meta: { viewport: 'width=device-width, initial-scale=1' },
+      template: 'src/index.html',
       title: 'App',
     }),
     new VueLoaderPlugin(),

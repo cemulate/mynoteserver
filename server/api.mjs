@@ -5,6 +5,11 @@ import cliOptions from './cli-options.mjs';
 const DIR = cliOptions.directory;
 
 async function routes(server, options) {
+    server.get('/mathjax-config', async (req, res) => {
+        let content = await fs.readFile(path.join(DIR, 'mathjax-config.js'), { encoding: 'utf-8' });
+        res.header('Content-Type', 'text/javascript; charset=utf-8');
+        return content;
+    });
     server.get('/collections', async (req, res) => {
         let result = await fs.readdir(DIR, { withFileTypes: true });
         return result.filter(d => d.isDirectory()).map(d => d.name);
