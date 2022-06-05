@@ -16,9 +16,9 @@
     </div>
     <div>
         <p class="is-family-monospace mt-1 mb-1 pl-2">
-            <span v-if="curFile != null">
-                🗋 &nbsp; {{ curFile.collection }} / {{ curFile.name }}
-            </span>
+            <a class="has-text-black" v-if="curFile != null" @click="togglePicker">
+                🗋 {{ curFile.collection }} / {{ curFile.name }}
+            </a>
             <span v-else>No file selected</span>
 
             <span v-if="hasContentChanged"> (*)</span>
@@ -86,22 +86,22 @@ export default {
         toggleDrawing() {
             this.isDrawingOpen = !this.isDrawingOpen;
             if (this.isDrawingOpen) {
-                this.openedImage = this.$refs.codemirror.getImageAtCursor();
+                this.openedImage = this.$refs.codemirror?.getImageAtCursor();
             } else {
                 const image = this.$refs.sketch.getImage();
-                if (image != null) this.$refs.codemirror.addOrReplaceImageAtCursor(image);
+                if (image != null) this.$refs.codemirror?.addOrReplaceImageAtCursor(image);
             }
         },
         togglePicker() {
             this.isPickerOpen = !this.isPickerOpen;
-            if (this.isPickerOpen && this.$refs.picker != null) {
-                this.$refs.picker.getFiles();
-                this.$refs.picker.clear();
+            if (this.isPickerOpen) {
+                this.$refs.picker?.getFiles();
+                this.$refs.picker?.clear();
             }
         },
         async loadCurFile() {
             if (this.curFile == null) return;
-            let { collection, name, mtime } = toRaw(this.curFile);
+            let { collection, name, mtime } = this.curFile;
             if (mtime == null) {
                 // If it doesn't have an mtime, this file doesn't exist yet.
                 this.markdownSource = `# ${ name }`;
@@ -121,7 +121,7 @@ export default {
                     this.toast = { color: 'red', message: 'Load failed' };
                 }
             }
-            this.$refs.codemirror.focus();
+            this.$refs.codemirror?.focus();
         },
         async saveCurFile() {
             if (this.curFile == null) return;
@@ -144,7 +144,7 @@ export default {
         },
     },
     async updated() {
-        if (window.MathJax.typesetPromise != null) await window.MathJax.typesetPromise();
+        await window.MathJax?.typesetPromise?.();
         let el = this.$refs.renderView.parentElement;
         el.scrollTop = el.scrollHeight;
     },
@@ -187,6 +187,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import 'bulma/sass/utilities/mixins.sass';
 
 .content {
     overflow-wrap: break-word;
@@ -211,8 +212,14 @@ export default {
         overflow: auto;
 
         > :first-child {
-            flex-basis: 40%;
-            height: 100%;
+            @include mobile {
+                display: none;
+            }
+
+            @include tablet {
+                flex-basis: 40%;
+                height: 100%;   
+            }
 
             > * {
                 height: 100%;
@@ -220,8 +227,14 @@ export default {
         }
 
         > :last-child {
-            flex-basis: 60%;
-            height: 100%;
+            @include mobile {
+                flex-grow: 1;
+            }
+
+            @include tablet {
+                flex-basis: 60%;
+                height: 100%;
+            }
 
             > .render-container {
                 height: 100%;
