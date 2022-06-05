@@ -32,7 +32,7 @@
         <div class="modal-background">
             <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
             read the DOM to set the correct dimensions -->
-            <sketch-area ref="sketch" :image="openedImage" v-if="isDrawingOpen"></sketch-area>
+            <sketch-area id="sketch-area-component" ref="sketch" :image="openedImage" v-if="isDrawingOpen"></sketch-area>
         </div>
         <div class="modal-content">
         </div>
@@ -249,13 +249,13 @@ export default {
     }
 }
 
-// .sketch-area-container {
-//     background: white;
-//     padding: 10px;
-//     border: 5px solid gray;
-//     width: 100%;
-//     height: 100%;
-// }
+#sketch-area-component {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
 
 .fade-leave-active {
     transition: opacity 0.5s ease;
