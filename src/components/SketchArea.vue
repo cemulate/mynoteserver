@@ -1,6 +1,27 @@
 <template>
-<canvas id="sketch-area-canvas" ref="sketchCanvas" v-bind:width="pixelWidth" v-bind:height="pixelHeight"></canvas>
-<canvas id="overlay-canvas" ref="overlayCanvas" v-bind:width="pixelWidth" v-bind:height="pixelHeight"></canvas>
+<div class="sketch-area-root">
+    <div>
+        <div class="canvas-container">
+            <canvas id="main-canvas" ref="mainCanvas"
+                :width="pixelWidth"
+                :height="pixelHeight"
+                @pointerdown.prevent="onPointerDown"
+                @pointermove.prevent="onPointerMove"
+                @pointerup.prevent="onPointerUp"
+            />
+            <canvas id="overlay-canvas" ref="overlayCanvas" v-bind:width="pixelWidth" v-bind:height="pixelHeight"></canvas>
+        </div>
+    </div>
+    <div>
+        <div class="toolbar">
+            <a class="box"
+                v-for="c in colors"
+                :style="{ 'background': c, 'border': c == color ? '3px solid white' : 'none' }"
+                @click="color = c"
+            ></a>
+        </div>
+    </div>
+</div>
 </template>
 
 <script>
@@ -19,6 +40,8 @@ export default {
         pixelWidth: 480,
         pixelHeight: 580,
         action: ACTION.NONE,
+        color: 'black',
+        colors: [ 'black', 'blue', 'red', 'green', 'orange' ],
 
         position: null,
         drawingBounds: {
@@ -29,10 +52,6 @@ export default {
         },
     }),
     props: {
-        color: {
-            type: String,
-            default: 'black',
-        },
         neutralEraserRadius: {
             type: Number,
             default: 40,
@@ -48,7 +67,7 @@ export default {
     },
     methods: {
         getImage() {
-            const c = this.$refs.sketchCanvas;
+            const c = this.$refs.mainCanvas;
             const ctx = c.getContext('2d');
 
             // In this case, the canvas was never drawn on.
@@ -81,43 +100,17 @@ export default {
             this.drawingBounds.maxX = Math.max(this.drawingBounds.maxX, Math.min(this.pixelWidth, this.position.x + 5));
             this.drawingBounds.maxY = Math.max(this.drawingBounds.maxY, Math.min(this.pixelHeight, this.position.y + 5));
         },
-    },
-    mounted() {
-        // After these are set, continue initializing canvas in updated()
-        const compStyle = window.getComputedStyle(this.$refs.sketchCanvas);
-        this.pixelWidth = parseInt(compStyle.getPropertyValue('width').replace('px', ''));
-        this.pixelHeight = parseInt(compStyle.getPropertyValue('height').replace('px', ''));
-    },
-    updated() {
-        const sketchCanvas = this.$refs.sketchCanvas;
-        const overlayCanvas = this.$refs.overlayCanvas;
-
-        const ctx = sketchCanvas.getContext('2d');
-        const overlay = overlayCanvas.getContext('2d');
-
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = this.color;
-
-        overlay.strokeStyle = 'black';
-        overlay.setLineDash([ 4, 2 ]);
-        overlay.lineWidth = 1;
-
-        const lineWidthFromEvent = event => {
+        lineWidthFromEvent(event) {
             if (event.pressure != 0) {
                 return 1 + 2 * event.pressure;
             } else {
                 return 3;
             }
-        };
+        },
+        erase(pos) {
+            const ctx = this.$refs.mainCanvas.getContext('2d');
+            const overlay = this.$refs.overlayCanvas.getContext('2d');
 
-        const connect = (pos1, pos2, lineWidth) => {
-            ctx.lineWidth = lineWidth;
-            let { x: x1, y: y1 } = pos1 != null ? pos1 : pos2;
-            let { x: x2, y: y2 } = pos2;
-            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-        };
-
-        const erase = pos => {
             let { x, y } = pos;
             let r = this.neutralEraserRadius;
 
@@ -125,15 +118,21 @@ export default {
             overlay.beginPath(); overlay.ellipse(x, y, r, r, 0, 0, 2 * Math.PI); overlay.stroke();
 
             ctx.beginPath(); ctx.ellipse(x, y, r, r, 0, 0, 2 * Math.PI); ctx.fill();
-        };
-
-        const clearEraseTooltip = () => {
+        },
+        clearEraseTooltip() {
+            const overlay = this.$refs.overlayCanvas.getContext('2d');
             overlay.clearRect(0, 0, this.pixelWidth, this.pixelHeight);
-        };
-
-        sketchCanvas.addEventListener('pointerdown', event => {
-            event.preventDefault();
+        },
+        connect(pos1, pos2, lineWidth) {
+            const ctx = this.$refs.mainCanvas.getContext('2d');
+            ctx.lineWidth = lineWidth; ctx.strokeStyle = this.color;
+            let { x: x1, y: y1 } = pos1 != null ? pos1 : pos2;
+            let { x: x2, y: y2 } = pos2;
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        },
+        onPointerDown(event) {
             if (this.disabled) return;
+            const ctx = this.$refs.mainCanvas.getContext('2d');
 
             this.updatePosition(event);
             this.updateBounds();
@@ -141,15 +140,13 @@ export default {
             if (event.buttons == BUTTONS_ERASER) {
                 this.action = ACTION.ERASING;
                 ctx.globalCompositeOperation = 'destination-out';
-                erase(this.position);
+                this.erase(this.position);
             } else {
                 this.action = ACTION.DRAWING;
                 ctx.globalCompositeOperation = 'source-over';
             }
-        });
-
-        sketchCanvas.addEventListener('pointermove', event => {
-            event.preventDefault();
+        },
+        onPointerMove(event) {
             if (this.disabled || this.action == ACTION.NONE) return;
             
             let oldPos = toRaw(this.position);
@@ -157,17 +154,33 @@ export default {
             this.updateBounds();
 
             if (this.action == ACTION.DRAWING) {
-                connect(oldPos, this.position, lineWidthFromEvent(event));
+                this.connect(oldPos, this.position, this.lineWidthFromEvent(event));
             } else {
-                erase(this.position);
+                this.erase(this.position);
             }
-        });
-
-        sketchCanvas.addEventListener('pointerup', event => {
-            event.preventDefault();
+        },
+        onPointerUp(event) {
             this.action = ACTION.NONE;
-            clearEraseTooltip();
-        });
+            this.clearEraseTooltip();
+        },
+    },
+    mounted() {
+        this.initialized = false;
+        // After these are set, continue initializing canvas in updated()
+        const compStyle = window.getComputedStyle(this.$refs.mainCanvas);
+        this.pixelWidth = parseInt(compStyle.getPropertyValue('width').replace('px', ''));
+        this.pixelHeight = parseInt(compStyle.getPropertyValue('height').replace('px', ''));
+    },
+    updated() {
+        if (this.initialized) return;
+
+        const ctx = this.$refs.mainCanvas.getContext('2d');
+        const overlay = this.$refs.overlayCanvas.getContext('2d');
+
+        ctx.lineCap = 'round';
+        overlay.strokeStyle = 'black';
+        overlay.setLineDash([ 4, 2 ]);
+        overlay.lineWidth = 1;
 
         if (this.image != null && this.image.length > 0) {
             let img = new Image();
@@ -180,21 +193,67 @@ export default {
 
             img.onload = () => ctx.drawImage(img, x, y);
         }
+
+        this.initialized = true;
     }
 };
 </script>
 
-<style lang="scss">
-#sketch-area-canvas, #overlay-canvas {
+<style lang="scss" scoped>
+.sketch-area-root {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+
+    display: flex;
+    flex-direction: row;
+
+    > :first-child {
+        flex-grow: 1;
+        background: lightgray;
+        padding: 0.5rem;
+
+        > .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    > :last-child {
+        flex-grow: 0;
+        
+        background: lightgray;
+
+        > .toolbar {
+            margin: 0.5rem 0.5rem 0.5rem 0;
+        }
+
+        .box {
+            width: 50px;
+            height: 50px;
+        }
+    }
+}
+
+.canvas-container canvas {
+    position: absolute;
+    top: 0; 
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    background-clip: padding-box;
+    border: 0.5rem solid transparent;
+    border-radius: 1rem;
+    background: white;
     touch-action: none;
 }
 
 #overlay-canvas {
+    background: none;
     pointer-events: none;
 }
 </style>

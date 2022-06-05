@@ -30,14 +30,11 @@
 
     <div class="modal" :class="{ 'is-active': isDrawingOpen }">
         <div class="modal-background">
-            <div class="sketch-area-container">
-                <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
-                read the DOM to set the correct dimensions -->
-                <sketch-area ref="sketch" :image="openedImage" v-if="isDrawingOpen"></sketch-area>
-            </div>
+            <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
+            read the DOM to set the correct dimensions -->
+            <sketch-area ref="sketch" :image="openedImage" v-if="isDrawingOpen"></sketch-area>
         </div>
         <div class="modal-content">
-            <button class="modal-close is-large" aria-label="close" @click="isDrawingOpen = false"></button>
         </div>
     </div>
     <div class="modal" :class="{ 'is-active': isPickerOpen }">
@@ -252,13 +249,13 @@ export default {
     }
 }
 
-.sketch-area-container {
-    background: white;
-    padding: 10px;
-    border: 5px solid gray;
-    width: 100%;
-    height: 100%;
-}
+// .sketch-area-container {
+//     background: white;
+//     padding: 10px;
+//     border: 5px solid gray;
+//     width: 100%;
+//     height: 100%;
+// }
 
 .fade-leave-active {
     transition: opacity 0.5s ease;
