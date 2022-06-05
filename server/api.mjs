@@ -1,55 +1,39 @@
-import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import cliOptions from './cli-options.mjs';
+import Directory from './Directory.mjs';
 
-const DIR = cliOptions.directory;
+const dir = new Directory(cliOptions.directory);
 
 async function routes(server, options) {
     server.get('/mathjax-config', async (req, res) => {
-        let content = await fs.readFile(path.join(DIR, 'mathjax-config.js'), { encoding: 'utf-8' });
+        let content = await dir.readFile('mathjax-config.js');
         res.header('Content-Type', 'text/javascript; charset=utf-8');
         return content;
     });
     server.get('/collections', async (req, res) => {
-        let result = await fs.readdir(DIR, { withFileTypes: true });
-        return result.filter(d => d.isDirectory()).map(d => d.name);
+        let result = await dir.subdirectories();
+        return result.map(d => d.name);
     });
     server.get('/files', async (req, res) => {
-        let topList = await fs.readdir(DIR, { withFileTypes: true });
-        let dirs = topList.filter(x => x.isDirectory());
-        let results = await Promise.all(dirs.map(async (d) => {
-            let files = await fs.readdir(path.join(DIR, d.name), { withFileTypes: true });
-            files = files.filter(f => path.extname(f.name) == '.md');
-
-            return await Promise.all(files.map(async (f) => {
-                let stats = await fs.stat(path.join(DIR, d.name, f.name));
-                return { name: path.basename(f.name, '.md'), collection: d.name, mtime: stats.mtime };
-            }));
+        let dirs = await dir.subdirectories();
+        let entries = await Promise.all(dirs.map(async d => {
+            let files = await dir.files(d.name, '.md');
+            return files.map(f => ({ ...f, collection: d.name }));
         }));
-        return results.flat();
+        return entries.flat();
     });
     server.get('/collection/:collection', async (req, res) => {
-        let result = await fs.readdir(path.join(DIR, req.params.collection), { withFileTypes: true });
-        return result.filter(path.extname(d.name) == '.md').map(d => path.basename(d.name, '.md'));
+        let result = await dir.files(req.params.collection, '.md');
+        return result.map(f => path.basename(f.name, '.md'));
     });
     server.get('/collection/:collection/file/:file', async (req, res) => {
-        let content = await fs.readFile(
-            path.join(DIR, req.params.collection, req.params.file + '.md'),
-            { encoding: 'utf-8' },
-        );
+        let content = await dir.readFile(req.params.collection, req.params.file + '.md');
         return { content };
-    });
-    server.post('/collections', async (req, res) => {
-        let { name } = req.body;
-        await fs.mkdir(path.join(DIR, name), { recursive: true });
-        return {};
     });
     server.post('/collection/:collection/file/:file', async (req, res) => {
         let { content } = req.body;
         let { collection, file } = req.params;
-        await fs.mkdir(path.join(DIR, collection), { recursive: true });
-        let dest = path.join(DIR, collection, file + '.md');
-        await fs.writeFile(dest, content);
+        await dir.writeFile(content, collection, file + '.md');
         return {};
     });
 };
