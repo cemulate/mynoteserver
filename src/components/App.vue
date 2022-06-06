@@ -17,11 +17,10 @@
     <div>
         <p class="is-family-monospace mt-1 mb-1 pl-2">
             <a class="has-text-black" v-if="curFile != null" @click="togglePicker">
-                🗋 {{ curFile.collection }} / {{ curFile.name }}
+                🗋 {{ curFile.collection }} / {{ curFile.name }}{{ hasContentChanged ? '*' : '' }}
             </a>
             <span v-else>No file selected</span>
 
-            <span v-if="hasContentChanged"> (*)</span>
             <Transition name="fade">
                 <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
             </Transition>
@@ -77,6 +76,11 @@ export default {
         },
         hasContentChanged() {
             return (this.markdownSource != this.originalContentOnLoad);
+        },
+        documentTitle() {
+            if (this.curFile == null) return 'SelfNotes';
+            let base = `${ this.curFile.collection }/${ this.curFile.name }`;
+            return this.hasContentChanged ? base + '*' : base;
         },
     },
     methods: {
@@ -170,10 +174,14 @@ export default {
                 window.setTimeout(() => this.showToast = false, 5000);
             }
         },
-        curFile(newVal) {
+        async curFile(newVal) {
             window.localStorage.setItem('curFile', JSON.stringify(newVal));
-            this.loadCurFile();
+            await this.loadCurFile();
+            document.title = this.documentTitle;
         },
+        hasContentChanged(newVal) {
+            document.title = this.documentTitle;
+        }
     },
     components: {
         'sketch-area': SketchArea,

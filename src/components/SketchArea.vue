@@ -259,15 +259,11 @@ export default {
 }
 
 .close-button {
-    width: 0.4in;
-    height: 0.4in;
-    border: 0px solid transparent;
-    border-radius: 10px;
-    background-color: lightgray;
-    /* A very cursed 'X' close button */
-    /* 0.566 = diagonal length = d, 0.255 = 0.45d, 0.311 = 0.55d */
-    background: repeating-linear-gradient( -45deg, transparent 0 0.255in, black 0.255in 0.311in, transparent 0.311in 0.566in ),
-        repeating-linear-gradient( 45deg, transparent 0 0.255in, black 0.255in 0.311in, transparent 0.311in 0.566in ),
+    width: 0.5in;
+    height: 0.5in;
+    background: url('../assets/xmark-solid.svg');
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .canvas-container canvas {

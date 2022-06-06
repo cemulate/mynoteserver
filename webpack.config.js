@@ -33,20 +33,21 @@ module.exports = {
         ],
       },
       {
-        test: /\.(png|jpg|gif)$/i,
+        test: /\.(png|jpg|gif|svg|ico)$/i,
         type: 'asset/resource',
       },
     ]
   },
   output: {
     publicPath: '/app/',
+    assetModuleFilename: 'assets/[hash][ext][query]',
   },
   plugins: [
     new MiniCssExtractPlugin({ filename: 'styles.css' }),
     new HtmlWebpackPlugin({
       meta: { viewport: 'width=device-width, initial-scale=1' },
       template: 'src/index.html',
-      title: 'App',
+      title: 'SelfNotes',
     }),
     new VueLoaderPlugin(),
     new webpack.HotModuleReplacementPlugin(),
