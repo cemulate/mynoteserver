@@ -1,11 +1,22 @@
 #!/usr/bin/env node
 
 import * as url from 'url';
-import cliOptions from './cli-options.mjs';
+import { options, usage } from './cli-options.mjs';
+import { exit } from 'process';
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 import fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+
+if ('help' in options) {
+    console.log(usage);
+    exit();
+}
+
+if (options.directory == null) {
+    console.error('A notes directory must be provided.');
+    exit();
+}
 
 const server = fastify();
 
@@ -26,4 +37,4 @@ server.get('/', async (request, reply) => {
 import api from './api.mjs';
 server.register(api);
 
-server.listen(cliOptions.port, cliOptions.host);
+server.listen(options.port, options.host);

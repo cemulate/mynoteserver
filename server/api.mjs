@@ -1,8 +1,8 @@
 import * as path from 'node:path';
-import cliOptions from './cli-options.mjs';
+import { options } from './cli-options.mjs';
 import Directory from './Directory.mjs';
 
-const dir = new Directory(cliOptions.directory);
+const dir = new Directory(options.directory);
 
 async function routes(server, options) {
     server.get('/mathjax-config', async (req, res) => {
