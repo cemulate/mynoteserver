@@ -42,7 +42,6 @@ class Directory {
 
     async readFile(...parts) {
         let f = this.fullValidatedPath(parts);
-        console.log(f);
         return await fs.readFile(f, { encoding: 'utf-8' });
     }
 
