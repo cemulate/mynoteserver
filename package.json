@@ -1,12 +1,14 @@
 {
-  "name": "new-application",
-  "version": "1.0.0",
-  "description": "A new web application",
-  "author": "Author",
+  "name": "selfnotes",
+  "version": "0.1.0",
+  "description": "Simple self-hosted note-taking using markdown with first-class support for math and inline drawings",
+  "author": "Chase Meadors",
   "scripts": {
-    "development": "NODE_ENV=development nodemon -L --ignore src --inspect=0.0.0.0 server/server.mjs -- -d `pwd`/notes",
-    "serve": "webpack serve --mode development",
+    "development": "NODE_ENV=development nodemon -L --ignore src --inspect=0.0.0.0 server/server.mjs -- -p 8080 -h '0.0.0.0' -d `pwd`/notes",
     "build": "webpack --mode production"
+  },
+  "bin": {
+    "selfnotes": "server/server.mjs"
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",
