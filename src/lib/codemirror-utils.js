@@ -1,4 +1,4 @@
-import { StateEffect, StateField } from '@codemirror/state';
+import { StateField } from '@codemirror/state';
 import { EditorView, WidgetType, Decoration } from '@codemirror/view';
 
 
@@ -19,42 +19,27 @@ class BadgeWidget extends WidgetType {
     }
 }
 
-const addHiddenBadge = StateEffect.define();
-
-const hiddenField = StateField.define({
-    create() {
-        return Decoration.none;
-    },
-    update(hiddens, tr) {
-        hiddens = hiddens.map(tr.changes);
-        for (let e of tr.effects) {
-            if (e.is(addHiddenBadge)) {
-                // let d = Decoration.replace({ widget: new BadgeWidget('test') });
-                let d = e.value.decoration;
-                hiddens = hiddens.update({
-                    add: [ e.value.decoration.range(e.value.from, e.value.to) ],
-                });
+function hideLinesByPrefixField(prefix, replacement) {
+    const rep = Decoration.replace({ widget: new BadgeWidget(replacement) });
+    return StateField.define({
+        create() {
+            return Decoration.none;
+        },
+        update(hiddens, tr) {
+            hiddens = hiddens.map(tr.changes);
+            let pos = 0;
+            let newHiddens = [];
+            while (pos < tr.newDoc.length) {
+                let line = tr.newDoc.lineAt(pos);
+                if (line.text.startsWith(prefix)) {
+                    newHiddens.push(rep.range(line.from, line.to));
+                }
+                pos = line.to + 1;
             }
-        }
-        return hiddens;
-    },
-    provide: f => EditorView.decorations.from(f),
-});
-
-function prefixLineHider(prefix, replacement) {
-    const decoration = Decoration.replace({ widget: new BadgeWidget(replacement) });
-    return view => {
-        let effects = [];
-        let pos = 0;
-        while (pos <= view.state.doc.length) {
-            let line = view.state.doc.lineAt(pos);
-            if (line.text.startsWith(prefix)) {
-                effects.push(addHiddenBadge.of({ from: line.from, to: line.to, decoration }));
-            }
-            pos = line.to + 1;
-        }
-        view.dispatch({ effects });
-    }
+            return hiddens.update({ add: newHiddens });
+        },
+        provide: f => EditorView.decorations.from(f),
+    });
 }
 
-export { BadgeWidget, hiddenField, prefixLineHider };
+export { BadgeWidget, hideLinesByPrefixField };
