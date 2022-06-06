@@ -9,16 +9,22 @@
                 @pointermove.prevent="onPointerMove"
                 @pointerup.prevent="onPointerUp"
             />
-            <canvas id="overlay-canvas" ref="overlayCanvas" v-bind:width="pixelWidth" v-bind:height="pixelHeight"></canvas>
+            <canvas id="overlay-canvas" ref="overlayCanvas" :width="pixelWidth" :height="pixelHeight"></canvas>
         </div>
     </div>
     <div>
         <div class="toolbar">
-            <a class="box"
-                v-for="c in colors"
+            <a class="box color-button"
+                v-for="c in normalColors"
                 :style="{ 'background': c, 'border': c == color ? '3px solid white' : 'none' }"
                 @click="color = c"
-            ></a>
+            />
+            <a class="box color-button eraser-button" 
+                :style="{ 'border': color == 'ERASER' ? '3px solid black' : 'none' }"
+                @click="color = 'ERASER'"
+            />
+            <div class="is-flex-grow-1"></div>
+            <a class="close-button" @click="$emit('close')"></a>
         </div>
     </div>
 </div>
@@ -41,7 +47,7 @@ export default {
         pixelHeight: 580,
         action: ACTION.NONE,
         color: 'black',
-        colors: [ 'black', 'blue', 'red', 'green', 'orange' ],
+        colors: [ 'black', 'blue', 'red', 'green', 'orange', 'ERASER' ],
 
         position: null,
         drawingBounds: {
@@ -56,6 +62,10 @@ export default {
             type: Number,
             default: 40,
         },
+        lineWidthRange: {
+            type: Array,
+            default: [1, 4],
+        },
         disabled: {
             type: Boolean,
             default: false,
@@ -63,6 +73,11 @@ export default {
         image: {
             type: String,
             default: '',
+        },
+    },
+    computed: {
+        normalColors() {
+            return this.colors.filter(c => c != 'ERASER');
         },
     },
     methods: {
@@ -101,11 +116,10 @@ export default {
             this.drawingBounds.maxY = Math.max(this.drawingBounds.maxY, Math.min(this.pixelHeight, this.position.y + 5));
         },
         lineWidthFromEvent(event) {
-            if (event.pressure != 0) {
-                return 1 + 2 * event.pressure;
-            } else {
-                return 3;
-            }
+            const [ min, max ] = this.lineWidthRange;
+            if (event.pressure == 0) return (min + max) / 2;
+            
+            return min + (max - min) * event.pressure;
         },
         erase(pos) {
             const ctx = this.$refs.mainCanvas.getContext('2d');
@@ -137,7 +151,7 @@ export default {
             this.updatePosition(event);
             this.updateBounds();
 
-            if (event.buttons == BUTTONS_ERASER) {
+            if (event.buttons == BUTTONS_ERASER || this.color == 'ERASER') {
                 this.action = ACTION.ERASING;
                 ctx.globalCompositeOperation = 'destination-out';
                 this.erase(this.position);
@@ -222,14 +236,38 @@ export default {
         background: lightgray;
 
         > .toolbar {
-            margin: 0.5rem 0.5rem 0.5rem 0;
-        }
+            padding: 0.5rem 0.5rem 0.5rem 0;
+            height: 100%;
 
-        .box {
-            width: 50px;
-            height: 50px;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
         }
     }
+}
+
+.color-button {
+    width: 0.5in;
+    height: 0.5in;
+}
+.eraser-button {
+    background-color: lightgray;
+    background-image:  repeating-linear-gradient(45deg, white 25%, transparent 25%, transparent 75%, white 75%, white),
+        repeating-linear-gradient(45deg, white 25%, lightgray 25%, lightgray 75%, white 75%, white);
+    background-position: 0 0, 10px 10px;
+    background-size: 20px 20px;
+}
+
+.close-button {
+    width: 0.4in;
+    height: 0.4in;
+    border: 0px solid transparent;
+    border-radius: 10px;
+    background-color: lightgray;
+    /* A very cursed 'X' close button */
+    /* 0.566 = diagonal length = d, 0.255 = 0.45d, 0.311 = 0.55d */
+    background: repeating-linear-gradient( -45deg, transparent 0 0.255in, black 0.255in 0.311in, transparent 0.311in 0.566in ),
+        repeating-linear-gradient( 45deg, transparent 0 0.255in, black 0.255in 0.311in, transparent 0.311in 0.566in ),
 }
 
 .canvas-container canvas {

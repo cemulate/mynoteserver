@@ -32,7 +32,7 @@
         <div class="modal-background">
             <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
             read the DOM to set the correct dimensions -->
-            <sketch-area id="sketch-area-component" ref="sketch" :image="openedImage" v-if="isDrawingOpen"></sketch-area>
+            <sketch-area id="sketch-area-component" ref="sketch" :image="openedImage" v-if="isDrawingOpen" @close="toggleDrawing"></sketch-area>
         </div>
         <div class="modal-content">
         </div>
