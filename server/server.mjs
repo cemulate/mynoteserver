@@ -7,6 +7,8 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 import fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+import api from './api.mjs';
+import Directory from './Directory.mjs';
 
 if ('help' in options) {
     console.log(usage);
@@ -34,7 +36,7 @@ server.get('/', async (request, reply) => {
     return reply.redirect('/app/');
 });
 
-import api from './api.mjs';
-server.register(api);
+const directory = new Directory(options.directory);
+server.register(api, { directory });
 
 server.listen(options.port, options.host);

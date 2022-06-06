@@ -1,10 +1,8 @@
-import * as path from 'node:path';
-import { options } from './cli-options.mjs';
-import Directory from './Directory.mjs';
-
-const dir = new Directory(options.directory);
+import { basename } from 'node:path';
 
 async function routes(server, options) {
+    const dir = options.directory;
+
     server.get('/mathjax-config', async (req, res) => {
         let content = await dir.readFile('mathjax-config.js');
         res.header('Content-Type', 'text/javascript; charset=utf-8');
@@ -24,7 +22,7 @@ async function routes(server, options) {
     });
     server.get('/collection/:collection', async (req, res) => {
         let result = await dir.files(req.params.collection, '.md');
-        return result.map(f => path.basename(f.name, '.md'));
+        return result.map(f => basename(f.name, '.md'));
     });
     server.get('/collection/:collection/file/:file', async (req, res) => {
         let content = await dir.readFile(req.params.collection, req.params.file + '.md');
