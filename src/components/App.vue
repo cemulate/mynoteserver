@@ -24,7 +24,7 @@
                     <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
                 </Transition>
             </p>
-            <a class="App-fullscreen-button is-flex-grow-0" @click="requestFullscreen"></a>
+            <a class="App-fullscreen-button is-flex-grow-0" @click="toggleFullscreen"></a>
         </div>
     </div>
 
@@ -101,8 +101,12 @@ export default {
                 this.$refs.picker?.clear();
             }
         },
-        requestFullscreen() {
-            document.documentElement.requestFullscreen();
+        toggleFullscreen() {
+            if (document.fullscreenElement != null) {
+                document.exitFullscreen();
+            } else {
+                document.documentElement.requestFullscreen();
+            }
         },
         async loadCurFile() {
             if (this.curFile == null) return;
