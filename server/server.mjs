@@ -17,6 +17,7 @@ if ('help' in options) {
 
 if (options.directory == null) {
     console.error('A notes directory must be provided.');
+    console.log(usage);
     exit();
 }
 
