@@ -1,5 +1,5 @@
 <template>
-<div id="file-picker" class="panel">
+<div class="FilePicker-root panel">
     <p class="panel-heading">
         Open
         <span v-if="topMatchingFiles.length == 0">(New)</span>
@@ -109,7 +109,7 @@ export default {
 </script>
 
 <style lang="scss">
-#file-picker {
+.FilePicker-root {
     background: white;
 }
 </style>

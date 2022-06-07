@@ -1,27 +1,25 @@
 <template>
-<div class="root">
-    <div>
-        <div>
+<div class="App-root is-flex is-flex-direction-column">
+    <div class="App-mainview is-flex-grow-1 is-flex is-flex-direction-row">
+        <div class="App-codemirror-container">
             <code-mirror 
                 v-model="markdownSource"
                 ref="codemirror"
                 :debounce="500"
             />
         </div>
-        <div class="">
-            <div class="render-container">
-                <div ref="renderView" class="content p-2" v-html="renderedContent"></div>
-            </div>
+        <div class="App-render-container p-2">
+            <div ref="renderView" class="content p-2" v-html="renderedContent"></div>
         </div>
     </div>
-    <div>
+    <div class="App-statusbar is-flex-grow-0">
         <p class="is-family-monospace mt-1 mb-1 pl-2">
             <a class="has-text-black" v-if="curFile != null" @click="togglePicker">
                 🗋 {{ curFile.collection }} / {{ curFile.name }}{{ hasContentChanged ? '*' : '' }}
             </a>
             <span v-else>No file selected</span>
 
-            <Transition name="fade">
+            <Transition name="App-fadeout">
                 <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
             </Transition>
         </p>
@@ -31,7 +29,7 @@
         <div class="modal-background">
             <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
             read the DOM to set the correct dimensions -->
-            <sketch-area id="sketch-area-component" ref="sketch" :image="openedImage" v-if="isDrawingOpen" @close="toggleDrawing"></sketch-area>
+            <sketch-area class="App-sketch-area-component" ref="sketch" :image="openedImage" v-if="isDrawingOpen" @close="toggleDrawing"></sketch-area>
         </div>
         <div class="modal-content">
         </div>
@@ -198,7 +196,7 @@ export default {
     overflow-wrap: break-word;
 }
 
-.root {
+.App-root {
     position: fixed;
     top: 0;
     left: 0;
@@ -206,59 +204,30 @@ export default {
     height: 100%;
 }
 
-    display: flex;
-    flex-direction: column;
+.App-mainview {
+    overflow: auto;
+}
 
-    > :first-child {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: row;
+.App-statusbar {
+    background: #f5f5f5;
+    border-top: 1px dotted gray;
+}
 
-        /* Important!! */
-        overflow: auto;
-
-        > :first-child {
-            @include mobile {
-                display: none;
-            }
-
-            @include tablet {
-                flex-basis: 40%;
-                height: 100%;   
-            }
-
-            > * {
-                height: 100%;
-            }
-        }
-
-        > :last-child {
-            @include mobile {
-                flex-grow: 1;
-            }
-
-            @include tablet {
-                flex-basis: 60%;
-                height: 100%;
-            }
-
-            > .render-container {
-                height: 100%;
-                overflow-y: auto;
-                padding: 0.5rem;
-            }
-        }
-    }
-
-    > :nth-child(2) {
-        flex-grow: 0;
-        
-        border-top: 1px dotted gray;
-        background: #f5f5f5;
+.App-codemirror-container {
+    @include mobile { display: none; }
+    @include tablet { flex-basis: 40%; height: 100% }
+    > div {
+        height: 100%;
     }
 }
 
-#sketch-area-component {
+.App-render-container {
+    @include mobile { flex-grow: 1; }
+    @include tablet { flex-basis: 60%; height: 100% }
+    overflow-y: auto;
+}
+
+.App-sketch-area-component {
     position: absolute;
     top: 0;
     left: 0;
@@ -266,11 +235,11 @@ export default {
     height: 100%;
 }
 
-.fade-leave-active {
+.App-fadeout-leave-active {
     transition: opacity 0.5s ease;
 }
 
-.fade-leave-to {
+.App-fadeout-leave-to {
     opacity: 0;
 }
 </style>

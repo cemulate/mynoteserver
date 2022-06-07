@@ -1,30 +1,30 @@
 <template>
-<div class="sketch-area-root">
-    <div>
-        <div class="canvas-container">
-            <canvas id="main-canvas" ref="mainCanvas"
+<div class="SketchArea-root is-flex is-flex-direction-row">
+    <div class="SketchArea-canvas-container is-flex-grow-1 p-2">
+        <div>
+            <canvas id="SketchArea-main-canvas" ref="mainCanvas"
                 :width="pixelWidth"
                 :height="pixelHeight"
                 @pointerdown.prevent="onPointerDown"
                 @pointermove.prevent="onPointerMove"
                 @pointerup.prevent="onPointerUp"
             />
-            <canvas id="overlay-canvas" ref="overlayCanvas" :width="pixelWidth" :height="pixelHeight"></canvas>
+            <canvas id="SketchArea-overlay-canvas" ref="overlayCanvas" :width="pixelWidth" :height="pixelHeight"></canvas>
         </div>
     </div>
-    <div>
-        <div class="toolbar">
-            <a class="box color-button"
+    <div class="is-flex-grow-0">
+        <div class="SketchArea-toolbar pt-2 pr-2 pb-2 is-flex is-flex-direction-column is-align-content-center">
+            <a class="box SketchArea-color-button"
                 v-for="c in normalColors"
                 :style="{ 'background': c, 'border': c == color ? '3px solid white' : 'none' }"
                 @click="color = c"
             />
-            <a class="box color-button eraser-button" 
+            <a class="box SketchArea-color-button SketchArea-eraser-button" 
                 :style="{ 'border': color == 'ERASER' ? '3px solid black' : 'none' }"
                 @click="color = 'ERASER'"
             />
             <div class="is-flex-grow-1"></div>
-            <a class="close-button" @click="$emit('close')"></a>
+            <a class="SketchArea-close-button" @click="$emit('close')"></a>
         </div>
     </div>
 </div>
@@ -214,43 +214,27 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.sketch-area-root {
-    display: flex;
-    flex-direction: row;
 
-    > :first-child {
-        flex-grow: 1;
-        background: lightgray;
-        padding: 0.5rem;
-
-        > .canvas-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-    }
-
-    > :last-child {
-        flex-grow: 0;
-        
-        background: lightgray;
-
-        > .toolbar {
-            padding: 0.5rem 0.5rem 0.5rem 0;
-            height: 100%;
-
-            display: flex;
-            align-items: center;
-            flex-direction: column;
-        }
+.SketchArea-root {
+    background: lightgray;
+}
+.SketchArea-canvas-container {
+    > div {
+        position: relative;
+        width: 100%;
+        height: 100%;
     }
 }
 
-.color-button {
+.SketchArea-toolbar {
+    height: 100%;
+}
+
+.SketchArea-color-button {
     width: 0.5in;
     height: 0.5in;
 }
-.eraser-button {
+.SketchArea-eraser-button {
     background-color: lightgray;
     background-image:  repeating-linear-gradient(45deg, white 25%, transparent 25%, transparent 75%, white 75%, white),
         repeating-linear-gradient(45deg, white 25%, lightgray 25%, lightgray 75%, white 75%, white);
@@ -258,7 +242,7 @@ export default {
     background-size: 20px 20px;
 }
 
-.close-button {
+.SketchArea-close-button {
     width: 0.5in;
     height: 0.5in;
     background: url('../assets/xmark-solid.svg');
@@ -266,7 +250,7 @@ export default {
     background-position: center;
 }
 
-.canvas-container canvas {
+.SketchArea-canvas-container canvas {
     position: absolute;
     top: 0; 
     left: 0;
@@ -280,7 +264,7 @@ export default {
     touch-action: none;
 }
 
-#overlay-canvas {
+#SketchArea-overlay-canvas {
     background: none;
     pointer-events: none;
 }

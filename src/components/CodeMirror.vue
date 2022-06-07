@@ -1,5 +1,5 @@
 <template>
-<div id="codemirror-container" ref="root"></div>
+<div class="CodeMirror-root" ref="root"></div>
 </template>
 
 <script>
@@ -98,7 +98,7 @@ export default {
 </script>
 
 <style lang="scss">
-#codemirror-container {
+.CodeMirror-root {
     > .cm-editor {
         height: 100%;
     }
