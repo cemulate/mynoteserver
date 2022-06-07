@@ -12,17 +12,20 @@
             <div ref="renderView" class="content p-2" v-html="renderedContent"></div>
         </div>
     </div>
-    <div class="App-statusbar is-flex-grow-0">
-        <p class="is-family-monospace mt-1 mb-1 pl-2">
-            <a class="has-text-black" v-if="curFile != null" @click="togglePicker">
-                🗋 {{ curFile.collection }} / {{ curFile.name }}{{ hasContentChanged ? '*' : '' }}
-            </a>
-            <span v-else>No file selected</span>
+    <div class="App-statusbar is-family-monospace is-flex-grow-0 pt-1 pb-1 pl-2 pr-2">
+        <div class="is-flex is-align-content-center">
+            <p class="is-flex-grow-1">
+                <a class="has-text-black" v-if="curFile != null" @click="togglePicker">
+                    🗋 {{ curFile.collection }} / {{ curFile.name }}{{ hasContentChanged ? '*' : '' }}
+                </a>
+                <span v-else>No file selected</span>
 
-            <Transition name="App-fadeout">
-                <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
-            </Transition>
-        </p>
+                <Transition name="App-fadeout">
+                    <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
+                </Transition>
+            </p>
+            <a class="App-fullscreen-button is-flex-grow-0" @click="requestFullscreen"></a>
+        </div>
     </div>
 
     <div class="modal" :class="{ 'is-active': isDrawingOpen }">
@@ -97,6 +100,9 @@ export default {
                 this.$refs.picker?.getFiles();
                 this.$refs.picker?.clear();
             }
+        },
+        requestFullscreen() {
+            document.documentElement.requestFullscreen();
         },
         async loadCurFile() {
             if (this.curFile == null) return;
@@ -233,6 +239,16 @@ export default {
     left: 0;
     width: 100%;
     height: 100%;
+}
+
+.App-fullscreen-button {
+    display: inline-block;
+    height: 1.5em;
+    aspect-ratio: 1;
+    background: url('../assets/maximize.svg');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-position: center;
 }
 
 .App-fadeout-leave-active {

@@ -245,8 +245,9 @@ export default {
 .SketchArea-close-button {
     width: 0.5in;
     height: 0.5in;
-    background: url('../assets/xmark-solid.svg');
+    background: url('../assets/delete.svg');
     background-repeat: no-repeat;
+    background-size: 60% 60%;
     background-position: center;
 }
 
