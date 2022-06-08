@@ -14,19 +14,21 @@
     </div>
     <div class="App-statusbar is-family-monospace is-flex-grow-0 pt-1 pb-1 pl-2 pr-2">
         <div class="is-flex is-align-content-center">
-            <a v-if="curFile != null" class="App-icon App-open-file-indicator" @click="togglePicker"></a>
+            <a class="App-icon App-open-file-indicator" @click="togglePicker"></a>
             <span class="is-flex-grow-1 ml-2">
-                <a v-if="curFile != null" class="has-text-black" @click="togglePicker">
+                <a class="has-text-black" @click="togglePicker">
+                    <span v-if="curFile != null">
                     {{ curFile.collection }} / {{ curFile.name }}{{ hasContentChanged ? '*' : '' }}
+                    </span>
+                    <span v-else>Select file</span>
                 </a>
-                <span v-else>No file selected</span>
-
                 <Transition name="App-fadeout">
                     <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
                 </Transition>
             </span>
-            <a class="App-icon App-print-button is-flex-grow-0 mr-4" @click="printContent"></a>
-            <a class="App-icon App-fullscreen-button is-flex-grow-0" @click="toggleFullscreen"></a>
+            <a class="is-hidden-mobile App-icon App-edit-image-button is-flex-grow-0 ml-4" @click="toggleDrawing"></a>
+            <a class="is-hidden-mobile App-icon App-print-button is-flex-grow-0 ml-4" @click="printContent"></a>
+            <a class="App-icon App-fullscreen-button is-flex-grow-0 ml-4" @click="toggleFullscreen"></a>
         </div>
     </div>
 
@@ -293,6 +295,11 @@ export default {
 
 .App-print-button {
     background-image: url('../assets/printer.svg');
+    background-size: 100% 100%;
+}
+
+.App-edit-image-button {
+    background-image: url('../assets/image.svg');
     background-size: 100% 100%;
 }
 
