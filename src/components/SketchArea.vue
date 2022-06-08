@@ -24,8 +24,9 @@
                 :style="{ 'border': color == 'ERASER' ? '3px solid black' : 'none' }"
                 @click="color = 'ERASER'"
             />
+            <a class="SketchArea-color-button SketchArea-undo-button" @click="undo"></a>
             <div class="is-flex-grow-1"></div>
-            <a class="SketchArea-close-button" @click="$emit('close')"></a>
+            <a class="SketchArea-color-button SketchArea-close-button" @click="$emit('close')"></a>
         </div>
     </div>
 </div>
@@ -33,6 +34,7 @@
 
 <script>
 import { toRaw } from 'vue';
+import { getCropBoundsFromImageData } from '../lib/image-utils';
 
 const BUTTONS_ERASER = 32;
 const ACTION = {
@@ -51,17 +53,15 @@ export default {
         colors: [ 'black', 'blue', 'red', 'green', 'orange', 'ERASER' ],
 
         position: null,
-        drawingBounds: {
-            minX: 480 + 1,
-            minY: 580 + 1,
-            maxX: -1,
-            maxY: -1,
-        },
+        context: null,
+        initialImageData: null,
+        strokes: [],
+        curStroke: [],
     }),
     props: {
         neutralEraserRadius: {
             type: Number,
-            default: 40,
+            default: 30,
         },
         lineWidthRange: {
             type: Array,
@@ -83,16 +83,18 @@ export default {
     },
     methods: {
         getImage() {
-            const c = this.$refs.mainCanvas;
-            const ctx = c.getContext('2d');
-
             // In this case, the canvas was never drawn on.
-            if (this.drawingBounds.maxX < 0) return null;
+            if (this.strokes.length == 0) return null;
 
-            let width = this.drawingBounds.maxX - this.drawingBounds.minX;
-            let height = this.drawingBounds.maxY - this.drawingBounds.minY;
+            let raw = this.context.getImageData(0, 0, this.pixelWidth, this.pixelHeight);
+            let bounds = getCropBoundsFromImageData(raw);
 
-            let crop = ctx.getImageData(this.drawingBounds.minX, this.drawingBounds.minY, width, height);
+            // canvas is empty
+            if (bounds == null) return null;
+
+            let width = bounds.maxX - bounds.minX;
+            let height = bounds.maxY - bounds.minY;
+            let crop = this.context.getImageData(bounds.minX, bounds.minY, width, height);
 
             let dest = document.createElement('canvas');
             dest.width = width;
@@ -107,56 +109,55 @@ export default {
             // on the computed style at creation
             this.position = { x: event.offsetX, y: event.offsetY };
         },
-        updateBounds() {
-            if (this.position == null) return;
-            this.drawingBounds.minX = Math.min(this.drawingBounds.minX, Math.max(0, this.position.x - 5));
-            this.drawingBounds.minY = Math.min(this.drawingBounds.minY, Math.max(0, this.position.y - 5));
-            this.drawingBounds.maxX = Math.max(this.drawingBounds.maxX, Math.min(this.pixelWidth, this.position.x + 5));
-            this.drawingBounds.maxY = Math.max(this.drawingBounds.maxY, Math.min(this.pixelHeight, this.position.y + 5));
-        },
         lineWidthFromEvent(event) {
             const [ min, max ] = this.lineWidthRange;
             if (event.pressure == 0) return (min + max) / 2;
             
             return min + (max - min) * event.pressure;
         },
-        erase(pos) {
-            const ctx = this.$refs.mainCanvas.getContext('2d');
-            const overlay = this.$refs.overlayCanvas.getContext('2d');
-
+        erase(pos, showEraser = true) {
             let { x, y } = pos;
             let r = this.neutralEraserRadius;
 
-            overlay.clearRect(0, 0, this.pixelWidth, this.pixelHeight);
-            overlay.beginPath(); overlay.ellipse(x, y, r, r, 0, 0, 2 * Math.PI); overlay.stroke();
+            if (showEraser) {
+                this.overlayContext.clearRect(0, 0, this.pixelWidth, this.pixelHeight);
+                this.overlayContext.beginPath();
+                this.overlayContext.ellipse(x, y, r, r, 0, 0, 2 * Math.PI);
+                this.overlayContext.stroke();
+            }
 
-            ctx.beginPath(); ctx.ellipse(x, y, r, r, 0, 0, 2 * Math.PI); ctx.fill();
+            this.context.beginPath(); this.context.ellipse(x, y, r, r, 0, 0, 2 * Math.PI); this.context.fill();
         },
         clearEraseTooltip() {
-            const overlay = this.$refs.overlayCanvas.getContext('2d');
-            overlay.clearRect(0, 0, this.pixelWidth, this.pixelHeight);
+            this.overlayContext.clearRect(0, 0, this.pixelWidth, this.pixelHeight);
         },
         connect(pos1, pos2, lineWidth) {
-            const ctx = this.$refs.mainCanvas.getContext('2d');
-            ctx.lineWidth = lineWidth; ctx.strokeStyle = this.color;
+            this.context.lineWidth = lineWidth;
             let { x: x1, y: y1 } = pos1 != null ? pos1 : pos2;
             let { x: x2, y: y2 } = pos2;
-            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+            this.context.beginPath(); this.context.moveTo(x1, y1); this.context.lineTo(x2, y2); this.context.stroke();
         },
         onPointerDown(event) {
             if (this.disabled) return;
-            const ctx = this.$refs.mainCanvas.getContext('2d');
 
             this.updatePosition(event);
-            this.updateBounds();
 
+            // Setup to perform the appropriate action;
+            // Start a log of the current action in curStroke
             if (event.buttons == BUTTONS_ERASER || this.color == 'ERASER') {
                 this.action = ACTION.ERASING;
-                ctx.globalCompositeOperation = 'destination-out';
+                this.context.globalCompositeOperation = 'destination-out';
                 this.erase(this.position);
+
+                this.curStroke.push({ action: ACTION.ERASING });
+                this.curStroke.push(this.position);
             } else {
                 this.action = ACTION.DRAWING;
-                ctx.globalCompositeOperation = 'source-over';
+                this.context.globalCompositeOperation = 'source-over';
+                this.context.strokeStyle = this.color;
+
+                this.curStroke.push({ action: ACTION.DRAWING, color: this.color });
+                this.curStroke.push([ this.position, 0 ]);
             }
         },
         onPointerMove(event) {
@@ -164,17 +165,55 @@ export default {
             
             let oldPos = toRaw(this.position);
             this.updatePosition(event);
-            this.updateBounds();
 
+            // Perform the action, and continue the log in curStroke
             if (this.action == ACTION.DRAWING) {
-                this.connect(oldPos, this.position, this.lineWidthFromEvent(event));
+                let width = this.lineWidthFromEvent(event);
+                this.connect(oldPos, this.position, width);
+                this.curStroke.push([ this.position, width ]);
             } else {
                 this.erase(this.position);
+                this.curStroke.push(this.position);
             }
         },
         onPointerUp(event) {
             this.action = ACTION.NONE;
             this.clearEraseTooltip();
+
+            this.strokes.push(this.curStroke);
+            this.curStroke = [];
+        },
+        undo() {
+            // Delete last stroke, and replay everything back
+            this.strokes.pop();
+            this.context.clearRect(0, 0, this.pixelWidth, this.pixelHeight);
+            this.drawInitialImage();
+            this.redrawStrokes();  
+        },
+        drawInitialImage() {
+            if (this.initialImageData == null) return;
+            let { width, height } = this.initialImageData;
+            let x = Math.floor((this.pixelWidth / 2) - (width / 2));
+            let y = Math.floor((this.pixelHeight / 2) - (height / 2));
+            this.context.putImageData(this.initialImageData, x, y);
+        },
+        redrawStrokes() {
+            for (let [ { action, ...params }, ...data ] of this.strokes) {
+                if (action == ACTION.ERASING) {
+                    this.context.globalCompositeOperation = 'destination-out';
+                    for (let p of data) {
+                        this.erase(p, false);
+                    }
+                } else if (action == ACTION.DRAWING) {
+                    this.context.globalCompositeOperation = 'source-over';
+                    this.context.strokeStyle = params.color;
+                    for (let i = 1; i < data.length; i ++) {
+                        let [ pos1 ] = data[i-1];
+                        let [ pos2, width ] = data[i];
+                        this.connect(pos1, pos2, width);
+                    }
+                }
+            }
         },
     },
     mounted() {
@@ -205,14 +244,16 @@ export default {
 
             let x = Math.floor((this.pixelWidth / 2) - (img.width / 2));
             let y = Math.floor((this.pixelHeight / 2) - (img.height / 2));
-            
-            this.drawingBounds = { minX: x, minY: y, maxX: x + img.width, maxY: y + img.height };
 
-            img.onload = () => ctx.drawImage(img, x, y);
-        } else {
-            this.drawingBounds = { minX: this.pixelWidth + 1, minY: this.pixelHeight + 1, maxX: -1, maxY: -1 };
+            img.onload = () => {
+                this.context.drawImage(img, x, y);
+                // Save this as ImageData for re-drawing later.
+                this.initialImageData = this.context.getImageData(x, y, img.width, img.height);
+            }
         }
 
+        this.context = ctx;
+        this.overlayContext = overlay;
         this.initialized = true;
     }
 };
@@ -247,9 +288,13 @@ export default {
     background-size: 20px 20px;
 }
 
+.SketchArea-undo-button {
+    background: url('../assets/undo.svg');
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-position: center;
+}
 .SketchArea-close-button {
-    width: 0.5in;
-    height: 0.5in;
     background: url('../assets/delete.svg');
     background-repeat: no-repeat;
     background-size: 60% 60%;
