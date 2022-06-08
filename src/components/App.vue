@@ -85,7 +85,7 @@ export default {
             return (this.markdownSource != this.originalContentOnLoad);
         },
         documentTitle() {
-            if (this.curFile == null) return 'SelfNotes';
+            if (this.curFile == null) return 'My Notes';
             let base = `${ this.curFile.collection }/${ this.curFile.name }`;
             return this.hasContentChanged ? base + '*' : base;
         },

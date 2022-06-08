@@ -47,7 +47,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       meta: { viewport: 'width=device-width, initial-scale=1' },
       template: 'src/index.html',
-      title: 'SelfNotes',
+      title: 'My Notes',
     }),
     new VueLoaderPlugin(),
     new webpack.HotModuleReplacementPlugin(),

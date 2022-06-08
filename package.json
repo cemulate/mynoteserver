@@ -1,5 +1,5 @@
 {
-  "name": "selfnotes",
+  "name": "mynoteserver",
   "version": "0.1.0",
   "description": "Simple self-hosted note-taking using markdown with first-class support for math and inline drawings",
   "author": "Chase Meadors",
@@ -8,7 +8,7 @@
     "build": "webpack --mode production"
   },
   "bin": {
-    "selfnotes": "server/server.mjs"
+    "mynoteserver": "server/server.mjs"
   },
   "devDependencies": {
     "@babel/core": "^7.18.2",
