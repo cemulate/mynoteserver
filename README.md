@@ -13,10 +13,10 @@ A simple, self-hosted note-taking solution with the following key features:
 # Usage
 
 Distribution is as an npm package, but nothing is published on npm yet.
-For now, download `mynoteserver-0.1.0.tgz` from the Releases, and run
+For now, download `mynoteserver-x.x.x.tgz` from the Releases, and run
 
 ```
-$ sudo npm -g install mynoteserver-0.1.0.tgz
+$ sudo npm -g install mynoteserver-x.x.x.tgz
 $ mynoteserver -h [host] -p [port] -d [notes directory]
 ```
 
