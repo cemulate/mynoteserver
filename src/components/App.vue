@@ -42,7 +42,7 @@
         </div>
     </div>
     <div class="modal" :class="{ 'is-active': isPickerOpen }">
-        <div class="modal-background"></div>
+        <div class="modal-background" @click="togglePicker"></div>
         <div class="modal-content">
             <file-picker ref="picker" v-model:selection="curFile" @update:selection="isPickerOpen = false"></file-picker>
         </div>
