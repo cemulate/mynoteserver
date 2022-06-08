@@ -12,5 +12,16 @@ A simple, self-hosted note-taking solution with the following key features:
 
 # Usage
 
-TODO
+Distribution is as an npm package, but nothing is published on npm yet.
+For now, download `mynoteserver-0.1.0.tgz` from the Releases, and run
+
+```
+$ sudo npm -g install mynoteserver-0.1.0.tgz
+$ mynoteserver -h [host] -p [port] -d [notes directory]
+```
+
+## Deployment
+
+This is meant to be a self-hosted application.
+Though the server implements basic security measures, it still accesses the filesystem and it is assumed that you "know what you're doing" when it comes to exposing the app to the internet. "Production" deployments should use standard solutions such as a reverse proxy, virtualization, proper user permissions, etc.
 
