@@ -14,17 +14,19 @@
     </div>
     <div class="App-statusbar is-family-monospace is-flex-grow-0 pt-1 pb-1 pl-2 pr-2">
         <div class="is-flex is-align-content-center">
-            <p class="is-flex-grow-1">
-                <a class="has-text-black" v-if="curFile != null" @click="togglePicker">
-                    🗋 {{ curFile.collection }} / {{ curFile.name }}{{ hasContentChanged ? '*' : '' }}
+            <a v-if="curFile != null" class="App-icon App-open-file-indicator" @click="togglePicker"></a>
+            <span class="is-flex-grow-1 ml-2">
+                <a v-if="curFile != null" class="has-text-black" @click="togglePicker">
+                    {{ curFile.collection }} / {{ curFile.name }}{{ hasContentChanged ? '*' : '' }}
                 </a>
                 <span v-else>No file selected</span>
 
                 <Transition name="App-fadeout">
                     <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
                 </Transition>
-            </p>
-            <a class="App-fullscreen-button is-flex-grow-0" @click="toggleFullscreen"></a>
+            </span>
+            <a class="App-icon App-print-button is-flex-grow-0 mr-4" @click="printContent"></a>
+            <a class="App-icon App-fullscreen-button is-flex-grow-0" @click="toggleFullscreen"></a>
         </div>
     </div>
 
@@ -44,6 +46,8 @@
         </div>
     </div>
 </div>
+<!-- The only element on the page for printing: -->
+<div class="content App-print-only p-4" v-html="renderedContent"></div>
 </template>
 
 <script>
@@ -107,6 +111,9 @@ export default {
             } else {
                 document.documentElement.requestFullscreen();
             }
+        },
+        printContent() {
+            window.print();
         },
         async loadCurFile() {
             if (this.curFile == null) return;
@@ -199,12 +206,34 @@ export default {
 };
 </script>
 
+<!-- Unscoped to apply to dynamically generated html inside .content -->
+<style lang="scss">
+.content {
+    overflow-wrap: break-word;
+
+    p.inline-figure {
+        text-align: center;
+    }
+}
+</style>
+
 <style lang="scss" scoped>
 @import 'bulma/sass/utilities/mixins.sass';
 
-.content {
-    overflow-wrap: break-word;
+// Printing 
+.App-print-only {
+    display: none;
 }
+
+@media print {
+    .App-print-only {
+        display: block;
+    }
+    body *:not(.App-print-only, .App-print-only *) {
+        display: none;
+    }
+}
+// --------
 
 .App-root {
     position: fixed;
@@ -245,14 +274,26 @@ export default {
     height: 100%;
 }
 
-.App-fullscreen-button {
+.App-icon {
     display: inline-block;
     height: 1.5em;
     aspect-ratio: 1;
-    background: url('../assets/maximize.svg');
     background-repeat: no-repeat;
-    background-size: 100% 100%;
     background-position: center;
+}
+.App-fullscreen-button {
+    background-image: url('../assets/maximize.svg');
+    background-size: 100% 100%;
+}
+
+.App-open-file-indicator {
+    background-image: url('../assets/folder.svg');
+    background-size: 80% 80%;
+}
+
+.App-print-button {
+    background-image: url('../assets/printer.svg');
+    background-size: 100% 100%;
 }
 
 .App-fadeout-leave-active {
