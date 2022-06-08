@@ -102,11 +102,9 @@ export default {
             return dest.toDataURL('image/webp');
         },
         updatePosition(event) {
-            let rect = event.target.getBoundingClientRect();
-            this.position = {
-                x: (event.clientX - rect.left) * (this.pixelWidth / rect.width),
-                y: (event.clientY - rect.top) * (this.pixelHeight / rect.height),
-            };
+            // This works since the dimensions of the canvas are set based
+            // on the computed style at creation
+            this.position = { x: event.offsetX, y: event.offsetY };
         },
         updateBounds() {
             if (this.position == null) return;
@@ -180,10 +178,14 @@ export default {
     },
     mounted() {
         this.initialized = false;
-        // After these are set, continue initializing canvas in updated()
+        // These update the actual 'width' and 'height' of the canvases,
+        // which resets the context. Continue initializing in updated()
         const compStyle = window.getComputedStyle(this.$refs.mainCanvas);
-        this.pixelWidth = parseInt(compStyle.getPropertyValue('width').replace('px', ''));
-        this.pixelHeight = parseInt(compStyle.getPropertyValue('height').replace('px', ''));
+
+        // Using these values guarantees that event.offset[X|Y] is actually the correct coordinate.
+        let borderWidth = parseInt(compStyle.getPropertyValue('border-width').replace('px', ''));
+        this.pixelWidth = parseInt(compStyle.getPropertyValue('width').replace('px', '')) - 2 * borderWidth;
+        this.pixelHeight = parseInt(compStyle.getPropertyValue('height').replace('px', '')) - 2 * borderWidth;
     },
     updated() {
         if (this.initialized) return;
