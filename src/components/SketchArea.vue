@@ -8,6 +8,7 @@
                 @pointerdown.prevent="onPointerDown"
                 @pointermove.prevent="onPointerMove"
                 @pointerup.prevent="onPointerUp"
+                @contextmenu.prevent=""
             />
             <canvas id="SketchArea-overlay-canvas" ref="overlayCanvas" :width="pixelWidth" :height="pixelHeight"></canvas>
         </div>
