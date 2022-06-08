@@ -92,13 +92,15 @@ export default {
     },
     methods: {
         toggleDrawing() {
-            this.isDrawingOpen = !this.isDrawingOpen;
-            if (this.isDrawingOpen) {
+            if (!this.isDrawingOpen) {
+                // Opening
                 this.openedImage = this.$refs.codemirror?.getImageAtCursor();
             } else {
+                // Closing
                 const image = this.$refs.sketch.getImage();
                 if (image != null) this.$refs.codemirror?.addOrReplaceImageAtCursor(image);
             }
+            this.isDrawingOpen = !this.isDrawingOpen;
         },
         togglePicker() {
             this.isPickerOpen = !this.isPickerOpen;

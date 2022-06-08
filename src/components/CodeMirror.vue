@@ -68,7 +68,7 @@ export default {
             let cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
             let line = this.editorView.state.doc.lineAt(cursor);
             this.editorView.dispatch({
-                changes: { from: line.from, to: line.to, insert: IMAGE_LINE_START + dataURL + IMAGE_LINE_END + '\n'},
+                changes: { from: line.from, to: line.to, insert: IMAGE_LINE_START + dataURL + IMAGE_LINE_END },
             });
         },
         getImageAtCursor() {
