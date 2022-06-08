@@ -31,7 +31,10 @@ function hideLinesByPrefixField(prefix, replacement) {
             let newHiddens = [];
             while (pos < tr.newDoc.length) {
                 let line = tr.newDoc.lineAt(pos);
-                if (line.text.startsWith(prefix)) {
+                let duplicate = false;
+                // Set duplicate if there is already a range on this line
+                hiddens.between(line.from, line.to, () => duplicate = true);
+                if (!duplicate && line.text.startsWith(prefix)) {
                     newHiddens.push(rep.range(line.from, line.to));
                 }
                 pos = line.to + 1;
