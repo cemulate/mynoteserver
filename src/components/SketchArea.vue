@@ -206,6 +206,8 @@ export default {
             this.drawingBounds = { minX: x, minY: y, maxX: x + img.width, maxY: y + img.height };
 
             img.onload = () => ctx.drawImage(img, x, y);
+        } else {
+            this.drawingBounds = { minX: this.pixelWidth + 1, minY: this.pixelHeight + 1, maxX: -1, maxY: -1 };
         }
 
         this.initialized = true;
