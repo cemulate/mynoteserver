@@ -65,7 +65,7 @@ export default {
         },
         lineWidthRange: {
             type: Array,
-            default: [1, 4],
+            default: [0.8, 3],
         },
         disabled: {
             type: Boolean,
@@ -233,7 +233,7 @@ export default {
         const ctx = this.$refs.mainCanvas.getContext('2d');
         const overlay = this.$refs.overlayCanvas.getContext('2d');
 
-        ctx.lineCap = 'round';
+        ctx.lineCap = 'butt';
         overlay.strokeStyle = 'black';
         overlay.setLineDash([ 4, 2 ]);
         overlay.lineWidth = 1;
