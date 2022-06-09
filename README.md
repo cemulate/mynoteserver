@@ -10,6 +10,8 @@ A simple, self-hosted note-taking solution with the following key features:
     * **No managing image files and links!** Images are stored _directly_ in the markdown document as an image tag with a data URL, conveniently hidden from view in the editor.
     * Edit images easily by re-opening the sketch area with your cursor on the line of an existing figure tag.
 
+Check out [the demo](https://cemulate.github.io/mynoteserver/app/); this is a mocked-out copy of the front-end/app that you can use to test out the editor.
+
 # Usage
 
 Distribution is as an npm package, but nothing is published on npm yet.
@@ -19,6 +21,18 @@ For now, download `mynoteserver-x.x.x.tgz` from the Releases, and run
 $ sudo npm -g install mynoteserver-x.x.x.tgz
 $ mynoteserver -h [host] -p [port] -d [notes directory]
 ```
+
+# Reference
+
+* Key shortcuts
+    * `ctrl-space`: Add/edit/open image under cursor
+    * `ctrl-p`: File palette (switch, open, create new files)
+    * `ctrl-s`: Save file
+* Toolbar buttons
+    * Folder/filename: Open file palette
+    * Image button: Add/edit/open image under cursor
+    * Print button: Print _rendered content_ (save as PDF)
+    * Fullscreen button: Make editor fullscreen
 
 ## Deployment
 
