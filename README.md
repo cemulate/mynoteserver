@@ -4,6 +4,8 @@ A simple, self-hosted note-taking solution with the following key features:
 
 * Typed content comes _first_; full Markdown support
 * **First-class support** for math with MathJax, including custom configurations and macros
+    * Drop a file called `mathjax-config.js` in the top level of your notes directory and the app will find/include it.
+    An [example of such a file](https://docs.mathjax.org/en/latest/input/tex/macros.html) is in the MathJax docs.
 * Notes are stored as _plain markdown files_ in a single directory with _one_ level of hierarchy: `collection/name`.
 * Insert drawings/figures instantly with a button or `ctrl-space`
     * Rich sketch interface with full support for stylus pressure & erasers, colors, etc.
