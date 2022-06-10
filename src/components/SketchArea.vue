@@ -82,9 +82,11 @@ export default {
         },
     },
     methods: {
-        getImage() {
+        getImage(discardUnedited = true) {
             // In this case, the canvas was never drawn on.
-            if (this.strokes.length == 0) return null;
+            // (but the image might be new / we are not editing an existing image,
+            // in which case discardUnedited will be false)
+            if (discardUnedited && this.strokes.length == 0) return null;
 
             let raw = this.context.getImageData(0, 0, this.pixelWidth, this.pixelHeight);
             let bounds = getCropBoundsFromImageData(raw);
@@ -240,16 +242,15 @@ export default {
 
         if (this.image != null && this.image.length > 0) {
             let img = new Image();
-            img.src = this.image;
-
-            let x = Math.floor((this.pixelWidth / 2) - (img.width / 2));
-            let y = Math.floor((this.pixelHeight / 2) - (img.height / 2));
-
             img.onload = () => {
+                let x = Math.floor((this.pixelWidth / 2) - (img.width / 2));
+                let y = Math.floor((this.pixelHeight / 2) - (img.height / 2));
+
                 this.context.drawImage(img, x, y);
                 // Save this as ImageData for re-drawing later.
                 this.initialImageData = this.context.getImageData(x, y, img.width, img.height);
             }
+            img.src = this.image;
         }
 
         this.context = ctx;

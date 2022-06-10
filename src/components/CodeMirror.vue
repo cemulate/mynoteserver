@@ -1,5 +1,5 @@
 <template>
-<div class="CodeMirror-root" ref="root"></div>
+<div class="CodeMirror-root" ref="root" @paste="onPaste"></div>
 </template>
 
 <script>
@@ -10,6 +10,7 @@ import { markdown as langMarkdown } from '@codemirror/lang-markdown';
 import { EditorView, keymap } from '@codemirror/view';
 
 import { hideLinesByPrefixField } from '../lib/codemirror-utils';
+import { getImageDataURLFromClipboardEvent } from '../lib/image-utils';
 
 const IMAGE_LINE_START = `<p class="inline-figure"><img src="`;
 const IMAGE_LINE_END = `"/></p>`;
@@ -79,6 +80,10 @@ export default {
         },
         focus() {
             this.editorView.focus();
+        },
+        async onPaste(event) {
+            let image = await getImageDataURLFromClipboardEvent(event);
+            if (image != null) this.$emit('pasteImage', image);
         },
     },
     watch: {

@@ -6,6 +6,7 @@
                 v-model="markdownSource"
                 ref="codemirror"
                 :debounce="500"
+                @pasteImage="onPasteImage"
             />
         </div>
         <div class="App-render-container p-2">
@@ -36,7 +37,12 @@
         <div class="modal-background">
             <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
             read the DOM to set the correct dimensions -->
-            <sketch-area class="App-sketch-area-component" ref="sketch" :image="openedImage" v-if="isDrawingOpen" @close="toggleDrawing"></sketch-area>
+            <sketch-area class="App-sketch-area-component"
+                ref="sketch"
+                :image="openedImage"
+                v-if="isDrawingOpen"
+                @close="toggleDrawing"
+            />
         </div>
         <div class="modal-content">
         </div>
@@ -66,6 +72,7 @@ export default {
         markdownSource: '',
         isDrawingOpen: false,
         openedImage: null,
+        openedImageIsNew: false,
 
         isPickerOpen: false,
         curFile: null,
@@ -91,13 +98,16 @@ export default {
         },
     },
     methods: {
-        toggleDrawing() {
+        toggleDrawing(initialImage) {
             if (!this.isDrawingOpen) {
                 // Opening
-                this.openedImage = this.$refs.codemirror?.getImageAtCursor();
+                this.openedImage = initialImage ?? this.$refs.codemirror?.getImageAtCursor();
+                this.openedImageIsNew = initialImage != null;
             } else {
                 // Closing
-                const image = this.$refs.sketch.getImage();
+                // if the opened image was new (pasted), we still want to retrieve the image
+                // even if the user didn't edit it - so discardUnedited = false
+                const image = this.$refs.sketch.getImage(!this.openedImageIsNew);
                 if (image != null) this.$refs.codemirror?.addOrReplaceImageAtCursor(image);
             }
             this.isDrawingOpen = !this.isDrawingOpen;
@@ -161,6 +171,9 @@ export default {
                 curFile.mtime = new Date(curFile.mtime);
             }
             this.curFile = curFile;
+        },
+        onPasteImage(image) {
+            this.toggleDrawing(image);
         },
     },
     async updated() {
