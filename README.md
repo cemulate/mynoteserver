@@ -1,6 +1,6 @@
 # My Note Server
 
-A simple, self-hosted note-taking solution with the following key features:
+A simple, self-hosted note-taking and slide-making solution with the following key features:
 
 * Typed content comes _first_; full Markdown support
 * **First-class support** for math with MathJax, including custom configurations and macros
@@ -12,6 +12,10 @@ A simple, self-hosted note-taking solution with the following key features:
     * Rich sketch interface with full support for stylus pressure & erasers, colors, etc.
     * **No managing image files and links!** Images are stored _directly_ in the markdown document as an image tag with a data URL, conveniently hidden from view in the editor.
     * Edit images easily by re-opening the sketch area with your cursor on the line of an existing figure tag.
+* Instead of notes, **make [Reveal.js](https://revealjs.com) presentations** by starting the document with `---`. 
+In this case, horizontal rules (`---`) are treated as slide boundaries.
+    * In this mode, the fullscreen button will easily present the slides
+    * Use the "Fragmented" button to *automatically* add the `fragment` class to all block elements, making your presentation **automatically proceed step-by-step**.
 
 Check out [the demo](https://cemulate.github.io/mynoteserver/app/); this is a mocked-out copy of the front-end/app that you can use to test out the editor.
 
@@ -34,8 +38,8 @@ $ mynoteserver -h [host] -p [port] -d [notes directory]
 * Toolbar buttons
     * Folder/filename: Open file palette
     * Image button: Add/edit/open image under cursor
-    * Print button: Print _rendered content_ (save as PDF)
-    * Fullscreen button: Make editor fullscreen
+    * Link button: Contains a link to a static/server-rendered simple view of the current file; useful for bookmarking just to read or printing.
+    * Fullscreen button: Make editor fullscreen or, if the document is a presentation, present it.
 
 ## Deployment
 
