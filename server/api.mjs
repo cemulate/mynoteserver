@@ -15,7 +15,7 @@ async function routes(server, options) {
             res.header('Content-Type', 'text/css; charset=utf-8');
             return content;
         } catch (error) {
-            res.redirect(303, '/app/reveal-theme-white.css');
+            res.redirect(303, '/app/reveal-theme-default.css');
         }
     });
     server.get('/collections', async (req, res) => {

@@ -12,7 +12,7 @@ section.has-dark-background, section.has-dark-background h1, section.has-dark-ba
  * GLOBAL STYLES
  *********************************************/
 :root {
-  --r-background-color: #fff;
+  --r-background-color: ivory;
   --r-main-font: Source Sans Pro, Helvetica, sans-serif;
   --r-main-font-size: 42px;
   --r-main-color: #222;
@@ -22,7 +22,7 @@ section.has-dark-background, section.has-dark-background h1, section.has-dark-ba
   --r-heading-color: #222;
   --r-heading-line-height: 1.2;
   --r-heading-letter-spacing: normal;
-  --r-heading-text-transform: uppercase;
+  --r-heading-text-transform: unset;
   --r-heading-text-shadow: none;
   --r-heading-font-weight: 600;
   --r-heading1-text-shadow: none;
@@ -48,6 +48,10 @@ section.has-dark-background, section.has-dark-background h1, section.has-dark-ba
   font-size: var(--r-main-font-size);
   font-weight: normal;
   color: var(--r-main-color);
+}
+
+.reveal .slides {
+  text-align: left;
 }
 
 .reveal ::selection {
@@ -146,7 +150,7 @@ section.has-dark-background, section.has-dark-background h1, section.has-dark-ba
 .reveal ol,
 .reveal dl,
 .reveal ul {
-  display: inline-block;
+  display: block;
   text-align: left;
   margin: 0 0 0 1em;
 }
@@ -354,4 +358,17 @@ section.has-dark-background, section.has-dark-background h1, section.has-dark-ba
   .backgrounds {
     background-color: var(--r-background-color);
   }
+}
+
+/*********************************************
+ * CUSTOM
+ *********************************************/
+
+.reveal .slides p.inline-figure {
+  text-align: center;
+}
+
+/* Prevents fragments from having blurry text in Chrome? */
+.reveal .slides section .fragment {
+  will-change: unset !important;
 }

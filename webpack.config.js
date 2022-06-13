@@ -54,7 +54,7 @@ module.exports = {
       patterns: [
         // Need to be able to (not) include these dynamically with script tags
         { from: 'node_modules/reveal.js/dist/reveal.css', to: 'reveal.css' },
-        { from: 'node_modules/reveal.js/dist/theme/white.css', to: 'reveal-theme-white.css' },
+        { from: 'src/styles/reveal-theme-default.css', to: 'reveal-theme-default.css' },
       ],
     }),
     new VueLoaderPlugin(),
