@@ -3,7 +3,7 @@
 @import 'bulma/bulma.sass';
 
 // Remove vertical scrollbar on fullscreen application
-html {
+html.no-scroll {
     overflow-y: hidden;
 }
 
