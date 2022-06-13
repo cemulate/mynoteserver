@@ -1,7 +1,7 @@
-import { render } from '../src/lib/markdown.mjs';
+import { renderer } from '../src/lib/markdown.mjs';
 
 function printViewForNote(collection, file, content) {
-    let renderedContent = render(content);
+    let renderedContent = renderer.render(content);
     return `<!doctype html>
 <html>
 

@@ -38,6 +38,13 @@
             <a class="is-hidden-mobile App-icon App-edit-image-button is-flex-grow-0 ml-4" @click="toggleDrawing"></a>
             <a target="_blank" class="is-hidden-mobile App-icon App-static-link-button is-flex-grow-0 ml-4" :href="staticLink"></a>
             <a class="App-icon App-fullscreen-button is-flex-grow-0 ml-4" @click="toggleFullscreen"></a>
+            <button v-if="isSlides"
+                class="button is-small is-rounded ml-4"
+                :class="{ 'is-primary': fragmentsOn }"
+                @click="fragmentsOn = !fragmentsOn"
+            >
+            Fragmented
+            </button>
         </div>
     </div>
 
@@ -67,7 +74,7 @@
 </template>
 
 <script>
-import { render } from '../lib/markdown.mjs';
+import { renderer } from '../lib/markdown.mjs';
 import { toRaw } from 'vue';
 import * as network from '../lib/network';
 import Reveal from 'reveal.js';
@@ -79,6 +86,7 @@ import FilePicker from '../components/FilePicker.vue';
 export default {
     data: () => ({
         markdownSource: '',
+        fragmentsOn: false,
         isDrawingOpen: false,
         openedImage: null,
         openedImageIsNew: false,
@@ -95,7 +103,8 @@ export default {
     }),
     computed: {
         renderedContent() {
-            return render(this.markdownSource);
+            renderer.set({ fragmentify: this.fragmentsOn });
+            return renderer.render(this.markdownSource);
         },
         isSlides() {
             return this.markdownSource.startsWith('---');
@@ -202,7 +211,13 @@ export default {
         },
         initSlides() {
             let { width, height } = window.screen;
-            this.slideDeck = new Reveal(this.$refs.reveal, { embedded: true, width, height, keyboardCondition: 'focused' });
+            this.slideDeck = new Reveal(this.$refs.reveal, {
+                embedded: true,
+                width,
+                height,
+                keyboardCondition: 'focused',
+                help: false,
+            });
             this.slideDeck.initialize();
         },
         onPasteImage(image) {
@@ -343,7 +358,7 @@ export default {
 
 .App-icon {
     display: inline-block;
-    height: 1.5em;
+    height: 1.8em;
     aspect-ratio: 1;
     background-repeat: no-repeat;
     background-position: center;

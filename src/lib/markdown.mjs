@@ -1,20 +1,27 @@
 // This file is also used on the server for server-side rendering, so it must be named .mjs
 import MarkdownIt from 'markdown-it';
-import MarkdownItMath from 'markdown-it-math/dist/markdown-it-math.js';
+import markdownItMath from 'markdown-it-math/dist/markdown-it-math.js';
+import markdownItFragmentify from './markdown-it-fragmentify.mjs';
 
 const markdownIt = new MarkdownIt({
     html: true,
 });
 
-markdownIt.use(MarkdownItMath, {
+markdownIt.use(markdownItMath, {
     inlineOpen: '$',
     inlineClose: '$',
     blockOpen: '$$',
     blockClose: '$$',
     inlineRenderer: str => `\\(${ str }\\)`,
-    blockRenderer: str => `\\[\n${ str }\n\\]`,
+    blockRenderer: (str, token) => {
+        let attrString = '';
+        if (token.attrs != null) attrString = token.attrs.map(([ attr, value ]) => ` ${ attr }="${ value }"`);
+        return `<p${ attrString }>\n\\[\n${ str }\n\\]\n</p>`;
+    },
 });
 
-const render = markdownIt.render.bind(markdownIt);
+markdownIt.use(markdownItFragmentify, {});
 
-export { render };
+const renderer = markdownIt;
+
+export { renderer };
