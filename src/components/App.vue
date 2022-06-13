@@ -36,7 +36,7 @@
                 </Transition>
             </span>
             <a class="is-hidden-mobile App-icon App-edit-image-button is-flex-grow-0 ml-4" @click="toggleDrawing"></a>
-            <a class="is-hidden-mobile App-icon App-print-button is-flex-grow-0 ml-4" @click="printContent"></a>
+            <a target="_blank" class="is-hidden-mobile App-icon App-static-link-button is-flex-grow-0 ml-4" :href="staticLink"></a>
             <a class="App-icon App-fullscreen-button is-flex-grow-0 ml-4" @click="toggleFullscreen"></a>
         </div>
     </div>
@@ -67,7 +67,7 @@
 </template>
 
 <script>
-import { render } from '../lib/markdown';
+import { render } from '../lib/markdown.mjs';
 import { toRaw } from 'vue';
 import * as network from '../lib/network';
 import Reveal from 'reveal.js';
@@ -107,6 +107,10 @@ export default {
         },
         renderedSlides() {
             return this.renderedContent.split('<hr>').slice(1).map(x => x.trim());
+        },
+        staticLink() {
+            if (this.curFile == null) return '#';
+            return `/collection/${ this.curFile.collection }/file/${ this.curFile.name }/print`;
         },
         hasContentChanged() {
             return (this.markdownSource != this.originalContentOnLoad);
@@ -354,8 +358,8 @@ export default {
     background-size: 80% 80%;
 }
 
-.App-print-button {
-    background-image: url('../assets/printer.svg');
+.App-static-link-button {
+    background-image: url('../assets/link.svg');
     background-size: 100% 100%;
 }
 
