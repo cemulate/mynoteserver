@@ -16,6 +16,7 @@ A simple, self-hosted note-taking and slide-making solution with the following k
 In this case, horizontal rules (`---`) are treated as slide boundaries.
     * In this mode, the fullscreen button will easily present the slides
     * Use the "Fragmented" button to *automatically* add the `fragment` class to all block elements, making your presentation **automatically proceed step-by-step**.
+    * There is a default reveal.js theme, but you can drop a file called `reveal-theme.css` in the top level of your notes directory to use include that css, this can be an existing reveal.js theme or your own.
 
 Check out [the demo](https://cemulate.github.io/mynoteserver/app/); this is a mocked-out copy of the front-end/app that you can use to test out the editor.
 
