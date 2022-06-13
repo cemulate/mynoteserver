@@ -78,6 +78,17 @@ export default {
             if (!line.text.startsWith(IMAGE_LINE_START)) return null;
             return line.text.slice(IMAGE_LINE_START.length, line.length - IMAGE_LINE_END.length);
         },
+        getCursorRegion(regionPrefix) {
+            const cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
+            const cursorLine = this.editorView.state.doc.lineAt(cursor);
+            let region = 0, line = 1;
+            for (let content of this.editorView.state.doc.iterLines(1)) {
+                if (content.startsWith(regionPrefix)) region += 1;
+                line += 1;
+                if (line > cursorLine.number) break;
+            }
+            return region;
+        },
         focus() {
             this.editorView.focus();
         },

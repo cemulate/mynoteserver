@@ -6,3 +6,16 @@
 html {
     overflow-y: hidden;
 }
+
+// Reveal
+.reveal.reveal-custom {
+    .slides { text-align: left; }
+    .slides p.inline-figure { text-align: center; }
+    ul { display: block; }
+    ol { display: block; }
+    h1,h2,h3,h4,h5,h6 {
+        text-transform: unset;
+    }
+}
+
+

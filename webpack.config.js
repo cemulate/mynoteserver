@@ -2,6 +2,7 @@ const webpack = require('webpack');
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 
 module.exports = {
@@ -48,6 +49,13 @@ module.exports = {
       meta: { viewport: 'width=device-width, initial-scale=1' },
       template: 'src/index.html',
       title: 'My Notes',
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        // Need to be able to (not) include these dynamically with script tags
+        { from: 'node_modules/reveal.js/dist/reveal.css', to: 'reveal.css' },
+        { from: 'node_modules/reveal.js/dist/theme/white.css', to: 'reveal-theme-white.css' },
+      ],
     }),
     new VueLoaderPlugin(),
     new webpack.HotModuleReplacementPlugin(),

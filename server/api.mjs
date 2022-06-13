@@ -3,10 +3,19 @@ import { basename } from 'node:path';
 async function routes(server, options) {
     const dir = options.directory;
 
-    server.get('/mathjax-config', async (req, res) => {
+    server.get('/mathjax-config.js', async (req, res) => {
         let content = await dir.readFile('mathjax-config.js');
         res.header('Content-Type', 'text/javascript; charset=utf-8');
         return content;
+    });
+    server.get('/reveal-theme.css', async (req, res) => {
+        try {
+            let content = await dir.readFile('reveal-theme.css');
+            res.header('Content-Type', 'text/css; charset=utf-8');
+            return content;
+        } catch (error) {
+            res.redirect(303, '/app/reveal-theme-white.css');
+        }
     });
     server.get('/collections', async (req, res) => {
         let result = await dir.subdirectories();

@@ -1,5 +1,5 @@
 <template>
-<div class="App-root is-flex is-flex-direction-column">
+<div class="App-root is-flex is-flex-direction-column" :style="{ '--screen-aspect': screenApsectRatio }">
     <div class="App-mainview is-flex-grow-1 is-flex is-flex-direction-row">
         <div class="App-codemirror-container">
             <code-mirror 
@@ -10,11 +10,19 @@
             />
         </div>
         <div class="App-render-container p-2">
-            <div ref="renderView" class="content p-2" v-html="renderedContent"></div>
+            <div v-if="!isSlides" ref="renderView" class="rendered-content content p-2" v-html="renderedContent"></div>
+            <div v-if="isSlides" class="App-print reveal reveal-custom" ref="reveal">
+                <div class="slides">
+                    <section
+                        v-for="slide in renderedSlides"
+                        v-html="slide"
+                    />
+                </div>
+            </div>
         </div>
     </div>
     <div class="App-statusbar is-family-monospace is-flex-grow-0 pt-1 pb-1 pl-2 pr-2">
-        <div class="is-flex is-align-content-center">
+        <div class="is-flex is-align-items-center">
             <a class="App-icon App-open-file-indicator" @click="togglePicker"></a>
             <span class="is-flex-grow-1 ml-2">
                 <a class="has-text-black" @click="togglePicker">
@@ -55,13 +63,14 @@
     </div>
 </div>
 <!-- The only element on the page for printing: -->
-<div class="content App-print-only p-4" v-html="renderedContent"></div>
+<div class="App-print-only content p-4" :class="{ 'App-print': !isSlides }" v-html="renderedContent"></div>
 </template>
 
 <script>
 import { render } from '../lib/markdown';
 import { toRaw } from 'vue';
 import * as network from '../lib/network';
+import Reveal from 'reveal.js';
 
 import SketchArea from '../components/SketchArea.vue';
 import CodeMirror from '../components/CodeMirror.vue';
@@ -88,6 +97,17 @@ export default {
         renderedContent() {
             return render(this.markdownSource);
         },
+        isSlides() {
+            return this.markdownSource.startsWith('---');
+        },
+        screenApsectRatio() {
+            // Bounds as a CSS variable on App-root to be used in the style
+            let { width, height } = window.screen;
+            return width / height;
+        },
+        renderedSlides() {
+            return this.renderedContent.split('<hr>').slice(1).map(x => x.trim());
+        },
         hasContentChanged() {
             return (this.markdownSource != this.originalContentOnLoad);
         },
@@ -107,7 +127,7 @@ export default {
                 // Closing
                 // if the opened image was new (pasted), we still want to retrieve the image
                 // even if the user didn't edit it - so discardUnedited = false
-                const image = this.$refs.sketch.getImage(!this.openedImageIsNew);
+                const image = this.$refs.sketch?.getImage?.(!this.openedImageIsNew);
                 if (image != null) this.$refs.codemirror?.addOrReplaceImageAtCursor(image);
             }
             this.isDrawingOpen = !this.isDrawingOpen;
@@ -123,7 +143,11 @@ export default {
             if (document.fullscreenElement != null) {
                 document.exitFullscreen();
             } else {
-                document.documentElement.requestFullscreen();
+                if (!this.isSlides) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    this.$refs.reveal.requestFullscreen();
+                }
             }
         },
         printContent() {
@@ -172,14 +196,24 @@ export default {
             }
             this.curFile = curFile;
         },
+        initSlides() {
+            let { width, height } = window.screen;
+            this.slideDeck = new Reveal(this.$refs.reveal, { embedded: true, width, height, keyboardCondition: 'focused' });
+            this.slideDeck.initialize();
+        },
         onPasteImage(image) {
             this.toggleDrawing(image);
         },
     },
     async updated() {
         await window.MathJax?.typesetPromise?.();
-        let el = this.$refs.renderView.parentElement;
-        el.scrollTop = el.scrollHeight;
+        if (!this.isSlides) {
+            let el = this.$refs.renderView.parentElement;
+            el.scrollTop = el.scrollHeight;
+        } else {
+            let slide = this.$refs.codemirror?.getCursorRegion?.('---') ?? this.slideDeck.getHorizontalSlides().length;
+            this.slideDeck.slide(slide - 1, 0, 0);
+        }
     },
     mounted() {
         this.initializeFromLocalStorage();
@@ -198,6 +232,7 @@ export default {
                 if (this.isDrawingOpen) this.toggleDrawing();
             }
         });
+        if (this.isSlides) this.initSlides();
     },
     watch: {
         toast(newVal) {
@@ -213,7 +248,10 @@ export default {
         },
         hasContentChanged(newVal) {
             document.title = this.documentTitle;
-        }
+        },
+        isSlides(newVal) {
+            if (newVal) this.$nextTick(() => this.initSlides());
+        },
     },
     components: {
         'sketch-area': SketchArea,
@@ -223,14 +261,22 @@ export default {
 };
 </script>
 
-<!-- Unscoped to apply to dynamically generated html inside .content -->
+<!-- Unscoped to apply to dynamically generated html inside .rendered-content -->
 <style lang="scss">
-.content {
+.rendered-content {
     overflow-wrap: break-word;
 
     p.inline-figure {
         text-align: center;
     }
+}
+
+// The presentation's native viewport size is set to the screen size, for presenting,
+// in this mode, we want an accurate view that is downsized to fit on the right.
+.reveal {
+    width: 100%;
+    height: unset;
+    aspect-ratio: var(--screen-aspect);
 }
 </style>
 
@@ -243,10 +289,10 @@ export default {
 }
 
 @media print {
-    .App-print-only {
+    .App-print {
         display: block;
     }
-    body *:not(.App-print-only, .App-print-only *) {
+    body *:not(.App-print, .App-print *) {
         display: none;
     }
 }
