@@ -55,6 +55,7 @@ module.exports = {
         // Need to be able to (not) include these dynamically with script tags
         { from: 'node_modules/reveal.js/dist/reveal.css', to: 'reveal.css' },
         { from: 'src/styles/reveal-theme-default.css', to: 'reveal-theme-default.css' },
+        { from: 'node_modules/reveal.js/plugin/highlight/zenburn.css', to: 'highlight-theme-default.css' },
       ],
     }),
     new VueLoaderPlugin(),

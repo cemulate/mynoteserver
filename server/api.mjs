@@ -1,21 +1,26 @@
-import { basename } from 'node:path';
+import { basename, extname } from 'node:path';
 import { printViewForNote } from './print.mjs';
 
 async function routes(server, options) {
     const dir = options.directory;
 
-    server.get('/mathjax-config.js', async (req, res) => {
-        let content = await dir.readFile('mathjax-config.js');
-        res.header('Content-Type', 'text/javascript; charset=utf-8');
-        return content;
-    });
-    server.get('/reveal-theme.css', async (req, res) => {
+    server.get('/custom-resource/:name', async (req, res) => {
+        const allowed = [ 'mathjax-config.js', 'reveal-theme.css', 'highlight-theme.css' ];
+        if (!allowed.includes(req.params.name)) throw new Error('No such custom resource');
         try {
-            let content = await dir.readFile('reveal-theme.css');
-            res.header('Content-Type', 'text/css; charset=utf-8');
+            let ext = extname(req.params.name);
+            const type = { '.js': 'text/javascript', '.css': 'text/css' };
+            let content = await dir.readFile(req.params.name);
+            res.header('Content-Type', `${ type[ext] }; charset=utf-8`);
             return content;
         } catch (error) {
-            res.redirect(303, '/app/reveal-theme-default.css');
+            if (req.params.name == 'reveal-theme.css') {
+                res.redirect(303, '/app/reveal-theme-default.css');
+            } else if (req.params.name == 'highlight-theme.css') {
+                res.redirect(303, '/app/highlight-theme-default.css');
+            } else {
+                throw error;
+            }
         }
     });
     server.get('/collections', async (req, res) => {
