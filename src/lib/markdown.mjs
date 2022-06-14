@@ -3,7 +3,6 @@ import MarkdownIt from 'markdown-it';
 import markdownItMath from 'markdown-it-math/dist/markdown-it-math.js';
 import { markdownItFragmentify, markdownItFixFence } from './markdown-it-plugins.mjs';
 import hljs from 'highlight.js';
-import { parseStringStyle } from '@vue/shared';
 
 const highlight = (str, language) => {
     if (language != null && hljs.getLanguage(language) != null) {
