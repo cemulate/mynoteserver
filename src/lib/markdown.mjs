@@ -1,7 +1,7 @@
 // This file is also used on the server for server-side rendering, so it must be named .mjs
 import MarkdownIt from 'markdown-it';
 import markdownItMath from 'markdown-it-math/dist/markdown-it-math.js';
-import { markdownItFragmentify, markdownItFixFence } from './markdown-it-plugins.mjs';
+import { markdownItFragmentify, markdownItCustomFence } from './markdown-it-plugins.mjs';
 import hljs from 'highlight.js';
 
 const highlight = (str, language) => {
@@ -36,7 +36,8 @@ markdownIt.use(markdownItMath, {
 // Re-write the renderer for "fence" tags
 // This makes the renderer put token.attrs on the <pre> element of a fence, instead of the <code>
 // In particular this makes the following plugin work correctly, since "fragment" will go on the <pre>
-markdownIt.use(markdownItFixFence);
+// Also allows the renderer to respect the 'highlightEnabled' option.
+markdownIt.use(markdownItCustomFence);
 
 markdownIt.use(markdownItFragmentify);
 

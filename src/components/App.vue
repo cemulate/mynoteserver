@@ -103,7 +103,7 @@ export default {
     }),
     computed: {
         renderedContent() {
-            renderer.set({ fragmentify: this.fragmentsOn });
+            renderer.set({ fragmentifyEnabled: this.fragmentsOn, highlightEnabled: this.isSlides });
             return renderer.render(this.markdownSource);
         },
         isSlides() {

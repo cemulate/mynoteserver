@@ -8,7 +8,7 @@ function markdownItFragmentify(markdownIt, options) {
     for (let name of [ 'paragraph_open', 'list_item_open', 'blockquote_open', 'math_block', 'heading_open', 'html_block', 'fence', 'code_block' ]) {
         markdownIt.renderer.rules[name] = (tokens, idx, options, env, self) => {
             // Perform functionality by default (if this option is not present) or otherwise respect the option value
-            if (options.fragmentify ?? true) {
+            if (options.fragmentifyEnabled ?? true) {
                 let token = tokens[idx];
                 if (name != 'html_block') {
                     // Normally, just add class="fragment" to the token's attrs, and 
@@ -31,7 +31,7 @@ function markdownItFragmentify(markdownIt, options) {
     }
 }
 
-function markdownItFixFence(markdownIt, options) {
+function markdownItCustomFence(markdownIt, options) {
     markdownIt.renderer.rules.fence = (tokens, idx, options, env, self) => {
         let token = tokens[idx];
         let info = token.info ? unescapeAll(token.info).trim() : '';
@@ -42,7 +42,11 @@ function markdownItFixFence(markdownIt, options) {
             langAttrs = parts.slice(2).join('');
         }
 
-        let highlighted = options?.highlight?.(token.content, langName, langAttrs) ?? escapeHtml(token.content);
+        let shouldHighlight = options.highlightEnabled ?? true;
+
+        let highlighted = shouldHighlight
+            ? options?.highlight?.(token.content, langName, langAttrs) ?? escapeHtml(token.content)
+            : escapeHtml(token.content);
 
         // let cIndex = token.attrIndex('class');
         // if (cIndex >= 0) {
@@ -52,7 +56,7 @@ function markdownItFixFence(markdownIt, options) {
         //     token.attrPush([ 'class', 'hljs' ]);
         // }
 
-        let codeAttrString = info != null
+        let codeAttrString = (info != null && shouldHighlight)
             ? ` class="hljs ${ options.langPrefix + langName }"`
             : '';
 
@@ -63,4 +67,4 @@ function markdownItFixFence(markdownIt, options) {
     };
 }
 
-export { markdownItFixFence, markdownItFragmentify };
+export { markdownItCustomFence, markdownItFragmentify };
