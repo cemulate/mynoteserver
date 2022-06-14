@@ -1,10 +1,24 @@
 // This file is also used on the server for server-side rendering, so it must be named .mjs
 import MarkdownIt from 'markdown-it';
 import markdownItMath from 'markdown-it-math/dist/markdown-it-math.js';
-import markdownItFragmentify from './markdown-it-fragmentify.mjs';
+import { markdownItFragmentify, markdownItFixFence } from './markdown-it-plugins.mjs';
+import hljs from 'highlight.js';
+import { parseStringStyle } from '@vue/shared';
+
+const highlight = (str, language) => {
+    if (language != null && hljs.getLanguage(language) != null) {
+        try {
+            return hljs.highlight(str, { language }).value;
+        } catch (error) {
+            return null;
+        }
+    }
+    return null;
+}
 
 const markdownIt = new MarkdownIt({
     html: true,
+    highlight,
 });
 
 markdownIt.use(markdownItMath, {
@@ -20,7 +34,12 @@ markdownIt.use(markdownItMath, {
     },
 });
 
-markdownIt.use(markdownItFragmentify, {});
+// Re-write the renderer for "fence" tags
+// This makes the renderer put token.attrs on the <pre> element of a fence, instead of the <code>
+// In particular this makes the following plugin work correctly, since "fragment" will go on the <pre>
+markdownIt.use(markdownItFixFence);
+
+markdownIt.use(markdownItFragmentify);
 
 const renderer = markdownIt;
 
