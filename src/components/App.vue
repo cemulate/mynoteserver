@@ -250,6 +250,10 @@ export default {
                 if (this.isDrawingOpen) this.toggleDrawing();
             }
         });
+        window.addEventListener('beforeunload', (event) => {
+            if (!this.hasContentChanged) return;
+            event.preventDefault(); event.returnValue = 1;
+        });
         if (this.isSlides) this.initSlides();
     },
     watch: {
