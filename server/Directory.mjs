@@ -35,9 +35,15 @@ class Directory {
             let stats = await fs.stat(p);
             return {
                 name: extension == null ? f.name : path.basename(f.name, extension),
-                mtime: stats.mtime,
+                mtime: stats.mtimeMs,
             };
         }));
+    }
+
+    async getFileMtime(...parts) {
+        let f = this.fullValidatedPath(parts);
+        let { mtimeMs } = await fs.stat(f);
+        return mtimeMs;
     }
 
     async readFile(...parts) {

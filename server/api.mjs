@@ -40,8 +40,11 @@ async function routes(server, options) {
         return result.map(f => basename(f.name, '.md'));
     });
     server.get('/collection/:collection/file/:file', async (req, res) => {
-        let content = await dir.readFile(req.params.collection, req.params.file + '.md');
-        return { content };
+        let [ content, mtime ] = await Promise.all([
+            dir.readFile(req.params.collection, req.params.file + '.md'),
+            dir.getFileMtime(req.params.collection, req.params.file + '.md'),
+        ]);
+        return { content, mtime };
     });
     server.get('/collection/:collection/file/:file/print', async (req, res) => {
         let content = await dir.readFile(req.params.collection, req.params.file + '.md');

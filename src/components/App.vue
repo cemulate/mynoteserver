@@ -205,7 +205,6 @@ export default {
             let curFile = window.localStorage.getItem('curFile');
             if (curFile != null) {
                 curFile = JSON.parse(curFile);
-                curFile.mtime = new Date(curFile.mtime);
             }
             this.curFile = curFile;
         },

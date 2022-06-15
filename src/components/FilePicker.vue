@@ -49,7 +49,7 @@ export default {
             } else {
                 result = this.files.filter(f => f.collection.includes(t1) && f.name.includes(t2));
             }
-            result.sort((a, b) => compareDesc(a.mtime, b.mtime));
+            result.sort((a, b) => Math.sign(b.mtime - a.mtime));
             return result.slice(0, 10);
         },
     },
@@ -58,9 +58,6 @@ export default {
             let response = await network.get('/files');
             if (response?.status == 200) {
                 let files = await response.json();
-                for (let f of files) {
-                    f.mtime = new Date(f.mtime);
-                }
                 this.files = files;
                 this.loadError = false;
             } else {
