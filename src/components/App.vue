@@ -195,7 +195,9 @@ export default {
             let { collection, name } = toRaw(this.curFile);
             let response = await network.post(`/collection/${ collection }/file/${ name }`, { content: this.markdownSource });
             if (response?.status == 200) {
+                let { mtime } = await response.json();
                 this.originalContentOnLoad = this.markdownSource;
+                window.localStorage.setItem('curFile', JSON.stringify({ ...this.curFile, mtime }));
                 this.toast = { color: 'green', message: 'Saved!' };
             } else {
                 this.toast = { color: 'red', message: 'Save failed' };

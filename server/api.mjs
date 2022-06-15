@@ -56,7 +56,8 @@ async function routes(server, options) {
         let { content } = req.body;
         let { collection, file } = req.params;
         await dir.writeFile(content, collection, file + '.md');
-        return {};
+        let mtime = await dir.getFileMtime(collection, file + '.md');
+        return { mtime };
     });
 };
 
