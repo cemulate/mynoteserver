@@ -9,7 +9,7 @@
                 @pasteImage="onPasteImage"
             />
         </div>
-        <div class="App-render-container p-2">
+        <div class="App-render-container p-2" ref="renderContainer">
             <div v-if="!isSlides" ref="renderView" class="rendered-content content p-2" v-html="renderedContent"></div>
             <div v-if="isSlides" class="App-print reveal reveal-custom" ref="reveal">
                 <div class="slides">
@@ -225,7 +225,7 @@ export default {
         },
     },
     async updated() {
-        await window.MathJax?.typesetPromise?.();
+        await window.MathJax?.typesetPromise?.([ this.$refs.renderContainer ]);
         if (!this.isSlides) {
             let el = this.$refs.renderView.parentElement;
             el.scrollTop = el.scrollHeight;
