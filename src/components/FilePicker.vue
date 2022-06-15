@@ -6,17 +6,18 @@
     </p>
     <div class="panel-block">
         <p class="control">
-            <input ref="searchBar" class="input" type="text" placeholder="Search" 
+            <input ref="searchBar" class="input is-family-monospace" type="text" placeholder="Search" 
                 v-model="searchTerm"
                 @keyup="inputKeypress"
             >
         </p>
     </div>
-    <a class="panel-block"
+    <a class="panel-block is-flex"
         v-for="(entry, index) in topMatchingFiles"
         v-bind:class="{ 'has-background-link-light': index == focusedIndex }"
         @click="selectFile(entry)">
-        {{ entry.collection }}/{{ entry.name }}
+        <span class="is-family-monospace">{{ entry.collection }}/{{ entry.name }}</span>
+        <small class="FilePicker-subdued ml-auto">{{ formatEditTime(entry.mtime) }}</small>
     </a>
     <a class="panel-block" v-if="loadError">
         Couldn't load files...
@@ -25,16 +26,14 @@
 </template>
 
 <script>
-import { compareDesc } from 'date-fns';
+import { format, toDate } from 'date-fns';
 import * as network from '../lib/network';
 
 export default {
     data: () => ({
         files: [],
         searchTerm: '',
-
         focusedIndex: -1,
-
         loadError: false,
     }),
     props: {
@@ -52,6 +51,11 @@ export default {
             result.sort((a, b) => Math.sign(b.mtime - a.mtime));
             return result.slice(0, 10);
         },
+        focusedFile() {
+            return (this.focusedIndex >= 0 && this.focusedIndex < this.topMatchingFiles.length)
+                ? this.topMatchingFiles[this.focusedIndex]
+                : null;
+        },
     },
     methods: {
         async getFiles() {
@@ -65,6 +69,10 @@ export default {
                 this.loadError = true;
             }
         },
+        formatEditTime(timestamp) {
+            let d = toDate(timestamp);
+            return format(d, 'LL/dd/yy K:mm aaa');
+        },
         changeFocus(inc) {
             let newIndex = this.focusedIndex + inc;
             if (newIndex >= 0 && newIndex < this.topMatchingFiles.length) this.focusedIndex = newIndex;
@@ -75,24 +83,29 @@ export default {
             } else if (event.key == 'ArrowUp') {
                 event.preventDefault(); this.changeFocus(-1);
             } else if (event.key == 'Enter') {
-                event.preventDefault(); this.selectFocusedFile();
+                event.preventDefault();
+                if (this.topMatchingFiles.length == 0) {
+                    this.selectNewFile();
+                } else if (this.topMatchingFiles.length == 1) {
+                    // Don't need to arrow down to the only file in the list.
+                    this.selectFile(this.topMatchingFiles[0]);
+                } else {
+                    let f = this.focusedFile;
+                    if (f != null) this.selectFile(f);
+                }
             }
         },
         selectFile(file) {
             this.$emit('update:selection', file);
         },
-        selectFocusedFile() {
-            if (this.focusedIndex >= 0 && this.focusedIndex < this.topMatchingFiles.length) {
-                this.selectFile(this.topMatchingFiles[this.focusedIndex]);
-            } else {
-                // New file
-                let [ t1, t2 ] = this.searchTerm.split('/');
-                // TODO: errors for these cases
-                if (t2 == undefined) return;
-                if (t1.length == 0 || t2.length == 0) return;
+        selectNewFile() {
+            // New file
+            let [ t1, t2 ] = this.searchTerm.split('/');
+            // TODO: errors for these cases
+            if (t2 == undefined) return;
+            if (t1.length == 0 || t2.length == 0) return;
 
-                this.selectFile({ collection: t1, name: t2 });
-            }
+            this.selectFile({ collection: t1, name: t2 });
         },
         clear() {
             this.searchTerm = '';
@@ -108,5 +121,8 @@ export default {
 <style lang="scss">
 .FilePicker-root {
     background: white;
+}
+.FilePicker-subdued {
+    color: hsl(0, 0%, 30%);
 }
 </style>
