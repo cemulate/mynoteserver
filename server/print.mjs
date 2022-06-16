@@ -1,4 +1,5 @@
 import { renderer } from '../src/lib/markdown.mjs';
+renderer.set({ fragmentifyEnabled: false, highlightEnabled: false });
 
 function printViewForNote(collection, file, content) {
     let renderedContent = renderer.render(content);
@@ -14,7 +15,9 @@ function printViewForNote(collection, file, content) {
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 
-<body><div class="content p-4">${ renderedContent }</div></body>
+<body class="print-page">
+<div class="container"><div class="rendered-note-content print-page content">${ renderedContent }</div></div>
+</body>
 
 </html>
 `;

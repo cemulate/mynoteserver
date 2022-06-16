@@ -10,7 +10,7 @@
             />
         </div>
         <div class="App-render-container p-2" ref="renderContainer">
-            <div v-if="!isSlides" ref="renderView" class="rendered-content content p-2" v-html="renderedContent"></div>
+            <div v-if="!isSlides" ref="renderView" class="rendered-note-content content" v-html="renderedContent"></div>
             <div v-if="isSlides" class="App-print reveal reveal-custom" ref="reveal">
                 <div class="slides">
                     <section
@@ -283,25 +283,6 @@ export default {
 };
 </script>
 
-<!-- Unscoped to apply to dynamically generated html inside .rendered-content -->
-<style lang="scss">
-.rendered-content {
-    overflow-wrap: break-word;
-
-    p.inline-figure {
-        text-align: center;
-    }
-}
-
-// The presentation's native viewport size is set to the screen size, for presenting,
-// in this mode, we want an accurate view that is downsized to fit on the right.
-.reveal {
-    width: 100%;
-    height: unset;
-    aspect-ratio: var(--screen-aspect);
-}
-</style>
-
 <style lang="scss" scoped>
 @import 'bulma/sass/utilities/mixins.sass';
 
@@ -334,6 +315,14 @@ export default {
     @include mobile { flex-grow: 1; }
     @include tablet { flex-basis: 60%; height: 100% }
     overflow-y: auto;
+}
+
+// The presentation's native viewport size is set to the screen size, for presenting,
+// in this mode, we want an accurate view that is downsized to fit on the right.
+.reveal {
+    width: 100%;
+    height: unset;
+    aspect-ratio: var(--screen-aspect);
 }
 
 .App-sketch-area-component {
