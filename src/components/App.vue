@@ -98,6 +98,7 @@ export default {
             message: '',
         },
         showToast: false,
+        scrollFollow: true,
     }),
     computed: {
         renderedContent() {
@@ -225,7 +226,7 @@ export default {
     },
     async updated() {
         await window.MathJax?.typesetPromise?.([ this.$refs.renderContainer ]);
-        if (!this.isSlides) {
+        if (!this.isSlides && this.scrollFollow) {
             let el = this.$refs.renderView.parentElement;
             el.scrollTop = el.scrollHeight;
         } else {
@@ -253,6 +254,14 @@ export default {
         window.addEventListener('beforeunload', (event) => {
             if (!this.hasContentChanged) return;
             event.preventDefault(); event.returnValue = 1;
+        });
+        let r = this.$refs.renderContainer;
+        r.addEventListener('scroll', event => {
+            let { scrollTop, scrollHeight, clientHeight } = event.target;
+            // RHS true iff the rendered content is scrolled to the bottom.
+            // if the user scrolls back up, remember to not snap the scroll
+            // position to bottom upon render until they scroll back down.
+            this.scrollFollow = (scrollHeight - scrollTop - clientHeight) == 0;
         });
         if (this.isSlides) this.initSlides();
     },
