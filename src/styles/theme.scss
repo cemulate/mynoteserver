@@ -26,10 +26,14 @@ html.no-scroll {
     }
 
     &.print-page {
+        min-height: 100vh;
         background: white;
         padding: 0.5rem 1rem 0.5rem 1rem;
         border-left: 2px solid black;
         border-right: 2px solid black;
+        @media print {
+            border: none;
+        }
     }
 }
 
