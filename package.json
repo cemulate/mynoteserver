@@ -1,6 +1,6 @@
 {
   "name": "mynoteserver",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Simple self-hosted note-taking using markdown with first-class support for math and inline drawings",
   "author": "Chase Meadors",
   "scripts": {
