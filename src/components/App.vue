@@ -69,8 +69,6 @@
         </div>
     </div>
 </div>
-<!-- The only element on the page for printing: -->
-<div class="App-print-only content p-4" :class="{ 'App-print': !isSlides }" v-html="renderedContent"></div>
 </template>
 
 <script>
@@ -306,21 +304,6 @@ export default {
 
 <style lang="scss" scoped>
 @import 'bulma/sass/utilities/mixins.sass';
-
-// Printing 
-.App-print-only {
-    display: none;
-}
-
-@media print {
-    .App-print {
-        display: block;
-    }
-    body *:not(.App-print, .App-print *) {
-        display: none;
-    }
-}
-// --------
 
 .App-root {
     position: fixed;
