@@ -7,7 +7,7 @@ import { EditorState } from '@codemirror/state';
 import { basicSetup } from '@codemirror/basic-setup';
 import { indentWithTab } from '@codemirror/commands';
 import { markdown as langMarkdown } from '@codemirror/lang-markdown';
-import { EditorView, keymap } from '@codemirror/view';
+import { EditorView, keymap, scrollPastEnd } from '@codemirror/view';
 
 import { hideLinesByPrefixField } from '../lib/codemirror-utils';
 import { getImageDataURLFromClipboardEvent } from '../lib/image-utils';
@@ -38,6 +38,7 @@ export default {
             extensions: [ 
                 basicSetup,
                 EditorView.lineWrapping,
+                scrollPastEnd(),
                 langMarkdown(),
                 EditorView.updateListener.of(this.onDocumentUpdate.bind(this)),
                 keymap.of([indentWithTab]),
