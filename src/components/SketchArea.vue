@@ -316,6 +316,10 @@ export default {
     touch-action: none;
 }
 
+#SketchArea-main-canvas {
+    cursor: crosshair;
+}
+
 #SketchArea-overlay-canvas {
     background: none;
     pointer-events: none;
