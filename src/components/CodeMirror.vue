@@ -4,7 +4,7 @@
 
 <script>
 import { EditorView, minimalSetup } from 'codemirror';
-import { EditorState } from '@codemirror/state';
+import { EditorState, EditorSelection } from '@codemirror/state';
 import { keymap, scrollPastEnd, lineNumbers, highlightActiveLineGutter, drawSelection, highlightActiveLine } from '@codemirror/view';
 import { indentWithTab, history, historyKeymap } from '@codemirror/commands';
 import { foldGutter, foldKeymap, defaultHighlightStyle, syntaxHighlighting, bracketMatching } from '@codemirror/language';
@@ -115,9 +115,14 @@ export default {
             }
             return region;
         },
-        onClick(event) {
+        onClick(event, view) {
             let el = event.target;
             if (!el.classList.contains('cm-badge-widget')) return;
+            let n = view.posAtDOM(el);
+            let line = view.state.doc.lineAt(n);
+            this.editorView.dispatch({
+                selection: EditorSelection.cursor(line.to),
+            });
             this.$emit('openImageAtCursor');
         },
         focus() {
