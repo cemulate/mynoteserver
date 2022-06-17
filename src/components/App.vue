@@ -134,7 +134,13 @@ export default {
         toggleDrawing(initialImage) {
             if (!this.isDrawingOpen) {
                 // Opening
-                this.openedImage = initialImage ?? this.$refs.codemirror?.getImageAtCursor();
+                if (this.$refs.codemirror == null) return;
+                let { valid, image: existingImage } = this.$refs.codemirror.checkCursorForImage();
+                // Cursor is not in a spot where an image could go, or on/in an image.
+                if (!valid) return;
+                // Take the given image (upon paste) or the image that was under the cursor as
+                // the SketchArea's image; this may ultimately still be null.
+                this.openedImage = initialImage ?? existingImage;
                 this.openedImageIsNew = initialImage != null;
             } else {
                 // Closing

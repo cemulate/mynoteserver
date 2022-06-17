@@ -89,15 +89,20 @@ export default {
         addOrReplaceImageAtCursor(dataURL) {
             let cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
             let line = this.editorView.state.doc.lineAt(cursor);
-            this.editorView.dispatch({
-                changes: { from: line.from, to: line.to, insert: IMAGE_LINE_START + dataURL + IMAGE_LINE_END },
-            });
+            let content = IMAGE_LINE_START + dataURL + IMAGE_LINE_END;
+            let shouldReplace = line.length == 0 || line.text.startsWith(IMAGE_LINE_START);
+            let changes = shouldReplace
+                ? { from: line.from, to: line.to, insert: content }
+                : { from: cursor, insert: '\n' + content };
+            this.editorView.dispatch({ changes });
         },
-        getImageAtCursor() {
+        checkCursorForImage() {
             const cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
             const line = this.editorView.state.doc.lineAt(cursor);
-            if (!line.text.startsWith(IMAGE_LINE_START)) return null;
-            return line.text.slice(IMAGE_LINE_START.length, line.length - IMAGE_LINE_END.length);
+            if (cursor != line.to) return { valid: false, image: null };
+            if (!line.text.startsWith(IMAGE_LINE_START)) return { valid: true, image: null };
+            let image = line.text.slice(IMAGE_LINE_START.length, line.length - IMAGE_LINE_END.length);
+            return { valid: true, image };
         },
         getCursorRegion(regionPrefix) {
             const cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
