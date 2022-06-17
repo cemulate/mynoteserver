@@ -7,6 +7,7 @@
                 ref="codemirror"
                 :debounce="500"
                 @pasteImage="onPasteImage"
+                @openImageAtCursor="toggleDrawing(null)"
             />
         </div>
         <div class="App-render-container p-2" ref="renderContainer">
@@ -35,7 +36,7 @@
                     <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
                 </Transition>
             </span>
-            <a class="is-hidden-mobile App-icon App-edit-image-button is-flex-grow-0 ml-4" @click="toggleDrawing"></a>
+            <a class="is-hidden-mobile App-icon App-edit-image-button is-flex-grow-0 ml-4" @click="toggleDrawing(null)"></a>
             <a target="_blank" class="is-hidden-mobile App-icon App-static-link-button is-flex-grow-0 ml-4" :href="staticLink"></a>
             <a class="App-icon App-fullscreen-button is-flex-grow-0 ml-4" @click="toggleFullscreen"></a>
             <button v-if="isSlides"

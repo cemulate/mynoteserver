@@ -11,12 +11,15 @@ class BadgeWidget extends WidgetType {
     eq(other) { return this.text == other.text }
 
     toDOM() {
-        let el = document.createElement('span');
+        let el = document.createElement('a');
         el.classList.add('tag');
         el.classList.add('is-link');
+        el.classList.add('cm-badge-widget');
         el.innerHTML = this.text;
         return el;
     }
+
+    ignoreEvent() { return false }
 }
 
 function hideLinesByPrefixField(prefix, replacement) {

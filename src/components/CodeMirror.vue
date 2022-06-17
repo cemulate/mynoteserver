@@ -66,6 +66,7 @@ export default {
                 langMarkdown(),
                 hideLinesByPrefixField(IMAGE_LINE_START, 'Figure'),
                 EditorView.updateListener.of(this.onDocumentUpdate.bind(this)),
+                EditorView.domEventHandlers({ click: this.onClick.bind(this) }),
             ],
             parent: this.$refs.root,
         });
@@ -108,6 +109,11 @@ export default {
                 if (line > cursorLine.number) break;
             }
             return region;
+        },
+        onClick(event) {
+            let el = event.target;
+            if (!el.classList.contains('cm-badge-widget')) return;
+            this.$emit('openImageAtCursor');
         },
         focus() {
             this.editorView.focus();
