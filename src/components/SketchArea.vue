@@ -3,6 +3,7 @@
     <div class="SketchArea-canvas-container is-flex-grow-1 p-2">
         <div>
             <canvas id="SketchArea-main-canvas" ref="mainCanvas"
+                :class="{ 'SketchArea-crosshair-cursor': recentPointerType != 'pen' }"
                 :width="pixelWidth"
                 :height="pixelHeight"
                 @pointerdown.prevent="onPointerDown"
@@ -52,6 +53,7 @@ export default {
         color: 'black',
         colors: [ 'black', 'blue', 'red', 'green', 'orange', 'ERASER' ],
 
+        recentPointerType: 'pen',
         position: null,
         context: null,
         initialImageData: null,
@@ -163,6 +165,7 @@ export default {
             }
         },
         onPointerMove(event) {
+            this.recentPointerType = event.pointerType;
             if (this.disabled || this.action == ACTION.NONE) return;
             
             let oldPos = toRaw(this.position);
@@ -316,7 +319,7 @@ export default {
     touch-action: none;
 }
 
-#SketchArea-main-canvas {
+.SketchArea-crosshair-cursor {
     cursor: crosshair;
 }
 
