@@ -3,11 +3,15 @@
 </template>
 
 <script>
+import { EditorView, minimalSetup } from 'codemirror';
 import { EditorState } from '@codemirror/state';
-import { basicSetup } from '@codemirror/basic-setup';
-import { indentWithTab } from '@codemirror/commands';
+import { keymap, scrollPastEnd, lineNumbers, highlightActiveLineGutter, drawSelection, highlightActiveLine } from '@codemirror/view';
+import { indentWithTab, history, historyKeymap } from '@codemirror/commands';
+import { foldGutter, foldKeymap, defaultHighlightStyle, syntaxHighlighting, bracketMatching } from '@codemirror/language';
+import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { markdown as langMarkdown } from '@codemirror/lang-markdown';
-import { EditorView, keymap, scrollPastEnd } from '@codemirror/view';
+
 
 import { hideLinesByPrefixField } from '../lib/codemirror-utils';
 import { getImageDataURLFromClipboardEvent } from '../lib/image-utils';
@@ -33,21 +37,36 @@ export default {
         },
     },
     mounted() {
-        const state = EditorState.create({
+        this.editorView = new EditorView({
             doc: this.modelValue,
             extensions: [ 
-                basicSetup,
+                minimalSetup,
+                lineNumbers(),
+                highlightActiveLine(),
+                highlightActiveLineGutter(),
+                history(),
+                foldGutter(),
+                drawSelection(),
+                EditorState.allowMultipleSelections.of(true),
+                syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+                bracketMatching(),
+                closeBrackets(),
+                search(),
+                highlightSelectionMatches(),
+                keymap.of([
+                    indentWithTab,
+                    ...historyKeymap,
+                    ...foldKeymap,
+                    ...closeBracketsKeymap,
+                    ...searchKeymap,
+                ]),
+
                 EditorView.lineWrapping,
                 scrollPastEnd(),
                 langMarkdown(),
-                EditorView.updateListener.of(this.onDocumentUpdate.bind(this)),
-                keymap.of([indentWithTab]),
                 hideLinesByPrefixField(IMAGE_LINE_START, 'Figure'),
+                EditorView.updateListener.of(this.onDocumentUpdate.bind(this)),
             ],
-        });
-
-        this.editorView = new EditorView({
-            state,
             parent: this.$refs.root,
         });
     },
