@@ -103,24 +103,25 @@ import FilePicker from '../components/FilePicker.vue';
 import AddMacro from '../components/AddMacro.vue';
 
 const renderMarkdown = markdownRenderer(window?.MathJax);
+import demoText from '../lib/demotext.txt';
 
 export default {
     data: () => ({
-        markdownSource: '',
+        markdownSource: demoText,
         renderedHtml: null,
 
         fragmentsOn: false,
         isDrawingOpen: false,
         openedImage: null,
         openedImageIsNew: false,
-        editorDisabled: true,
+        editorDisabled: false,
 
         isPickerOpen: false,
-        curFile: null,
+        curFile: { path: 'demo/demo', mtime: new Date(), md5: '1f9b84a8f34d3d930fbd93d158bde9b7' },
 
         isAddMacroOpen: false,
 
-        originalContentOnLoad: null,
+        originalContentOnLoad: demoText,
         toast: {
             color: 'black',
             message: '',
@@ -340,7 +341,6 @@ export default {
         }
     },
     mounted() {
-        this.initializeCurFile();
         document.addEventListener('keydown', event => {
             if (event.ctrlKey && event.key == ' ') {
                 event.preventDefault(); this.toggleDrawing();
@@ -374,6 +374,8 @@ export default {
             this.scrollFollow = (scrollHeight - scrollTop - clientHeight) == 0;
         });
         if (this.isSlides) this.initSlides();
+
+        this.renderContent();
     },
     watch: {
         markdownSource(newVal) {

@@ -1,6 +1,12 @@
 window.MathJax = {
     tex: {
-        macros: {},
+        macros: {
+            setbuilder: ["\\left\\{#1 : #2\\right\\}", 2],
+            qq: "\\mathbb{Q}",
+            what: ["\\widehat{#1}", 1],
+            Aut: "\\operatorname\{Aut\}",
+            inflim: ["\\lim\\limits_{#1 \\rightarrow \\infty}", 1],
+        },
     },
 };
 
