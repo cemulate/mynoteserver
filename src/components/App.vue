@@ -123,6 +123,8 @@ import CodeMirror from '../components/CodeMirror.vue';
 import FilePicker from '../components/FilePicker.vue';
 import AddMacro from '../components/AddMacro.vue';
 
+import demoText from '../lib/demotext.txt';
+
 export default {
     data: () => ({
         initialRender: true,
@@ -134,14 +136,14 @@ export default {
         isDrawingOpen: false,
         openedImage: null,
         openedImageIsNew: false,
-        editorDisabled: true,
+        editorDisabled: false,
 
         isPickerOpen: false,
-        curFile: null,
+        curFile: { path: 'demo/demo', mtime: new Date(), md5: '1f9b84a8f34d3d930fbd93d158bde9b7' },
 
         isAddMacroOpen: false,
 
-        originalContentOnLoad: null,
+        originalContentOnLoad: demoText,
         toast: {
             color: 'black',
             message: '',
@@ -379,7 +381,6 @@ export default {
         },
     },
     mounted() {
-        this.initializeCurFile();
         document.addEventListener('keydown', event => {
             if (event.ctrlKey && event.key == ' ') {
                 event.preventDefault(); this.toggleDrawing();
@@ -403,13 +404,16 @@ export default {
         this.$refs.codemirror?.focus?.(100);
         window.addEventListener('focus', () => this.$refs.codemirror?.focus?.(10));
         if (this.isSlides) this.initSlides();
+
+        this.setDocument(demoText);
     },
     watch: {
         markdownChunks(newVal) {
             if (!this.initialRender) return false;
             // First update of chunks after loading a new document; scroll to bottom
             this.initialRender = false;
-            this.$nextTick(() => this.$refs.renderView?.lastElementChild?.scrollIntoView?.(true));
+            // Don't do this for demo
+            // this.$nextTick(() => this.$refs.renderView?.lastElementChild?.scrollIntoView?.(true));
         },
         toast(newVal) {
             if (newVal == null) return;
