@@ -6,6 +6,7 @@ A simple, self-hosted note-taking and slide-making solution with the following k
 * **First-class support** for math with MathJax, including custom configurations and macros
     * Drop a file called `mathjax-config.js` in the top level of your notes directory and the app will find/include it.
     An [example of such a file](https://docs.mathjax.org/en/latest/input/tex/macros.html) is in the MathJax docs.
+        * Press `ctrl-alt-m` add a new MathJax macro definition to the bottom of your `mathjax-config.js` file; a reload is required before it takes effect on the page.
 * Notes are stored as _plain markdown files_ in a single directory with _one_ level of hierarchy: `collection/name`.
 * Insert drawings/figures instantly with a button or `ctrl-space`
     * Or `ctrl-v` to insert (and sketch on) an image from the clipboard.
@@ -36,6 +37,7 @@ $ mynoteserver -h [host] -p [port] -d [notes directory]
     * `ctrl-space`: Add/edit/open image under cursor
     * `ctrl-p`: File palette (switch, open, create new files)
     * `ctrl-s`: Save file
+    * `ctrl-alt-m`: Add MathJax macro to `mathjax-config.js`
 * Toolbar buttons
     * Folder/filename: Open file palette
     * Image button: Add/edit/open image under cursor
@@ -44,6 +46,6 @@ $ mynoteserver -h [host] -p [port] -d [notes directory]
 
 ## Deployment
 
-This is meant to be a self-hosted application.
+This is meant to be a self-hosted application; it does not implement any restrction functionality itself (password-protected accounts or permissions).
 Though the server implements basic security measures, it still accesses the filesystem and it is assumed that you "know what you're doing" when it comes to exposing the app to the internet. "Production" deployments should use standard solutions such as a reverse proxy, virtualization, proper user permissions, etc.
 
