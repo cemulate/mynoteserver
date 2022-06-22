@@ -119,7 +119,7 @@ export default {
         },
         staticLink() {
             if (this.curFile == null) return '#';
-            return `/collection/${ this.curFile.collection }/file/${ this.curFile.name }/print`;
+            return `/notes/${ this.curFile.collection }/${ this.curFile.name }`;
         },
         hasContentChanged() {
             return (this.markdownSource != this.originalContentOnLoad);

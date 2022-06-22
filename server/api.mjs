@@ -1,4 +1,5 @@
 import { basename, extname } from 'node:path';
+import { addMacroToMathjaxConfig } from './utils.mjs';
 
 async function routes(server, options) {
     const dir = options.directory;
@@ -21,6 +22,18 @@ async function routes(server, options) {
                 throw error;
             }
         }
+    });
+    server.post('/add-mathjax-macro', async (req, res) => {
+        let curContent;
+        try {
+            curContent = await dir.readFile('mathjax-config.js') ;
+        } catch (error) {
+            curContent = '';
+        }
+        let { key, value, arity } = req.body;
+        let newContent = addMacroToMathjaxConfig(curContent, key, value, arity);
+        await dir.writeFile(newContent, 'mathjax-config.js');
+        return {};
     });
     server.get('/collections', async (req, res) => {
         let result = await dir.subdirectories();
