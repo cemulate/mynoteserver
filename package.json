@@ -4,7 +4,7 @@
   "description": "Simple self-hosted note-taking using markdown with first-class support for math and inline drawings",
   "author": "Chase Meadors",
   "scripts": {
-    "development": "NODE_ENV=development nodemon -L --ignore src --inspect=0.0.0.0 server/server.mjs -- -p 8080 -h '0.0.0.0' -d `pwd`/notes",
+    "development": "NODE_ENV=development nodemon -L --ignore src --ignore notes --inspect=0.0.0.0 server/server.mjs -- -p 8080 -h '0.0.0.0' -d `pwd`/notes",
     "build": "webpack --mode production"
   },
   "bin": {
