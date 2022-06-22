@@ -14,7 +14,7 @@ function addMacroToMathjaxConfig(mathjaxConfigContent, key, value, arity) {
 
     // This needs to go inside a string literal inside the file, replace \ -> \\.
     let escapedValue = value.replace('\\', '\\\\');
-    let newLine = `window.MathJax.tex.macros['${ key }'] = ["${ escapedValue }", ${ arity }];\n`;
+    let newLine = `window.MathJax.tex.macros["${ key }"] = ["${ escapedValue }", ${ arity }];\n`;
     newContent += newLine;
     return newContent;
 }

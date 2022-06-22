@@ -69,6 +69,12 @@
             <file-picker ref="picker" v-model:selection="curFile" @update:selection="isPickerOpen = false"></file-picker>
         </div>
     </div>
+    <div class="modal" :class="{ 'is-active': isAddMacroOpen }">
+        <div class="modal-background" @click="isAddMacroOpen = false"></div>
+        <div class="modal-content">
+            <add-macro v-if="isAddMacroOpen" @close="isAddMacroOpen = false"></add-macro>
+        </div>
+    </div>
 </div>
 </template>
 
@@ -81,6 +87,7 @@ import Reveal from 'reveal.js';
 import SketchArea from '../components/SketchArea.vue';
 import CodeMirror from '../components/CodeMirror.vue';
 import FilePicker from '../components/FilePicker.vue';
+import AddMacro from '../components/AddMacro.vue';
 
 export default {
     data: () => ({
@@ -92,6 +99,8 @@ export default {
 
         isPickerOpen: false,
         curFile: null,
+
+        isAddMacroOpen: false,
 
         originalContentOnLoad: null,
         toast: {
@@ -250,12 +259,13 @@ export default {
                 event.preventDefault(); this.togglePicker();
             } else if (event.ctrlKey && event.key == 's') {
                 event.preventDefault(); this.saveCurFile();
-            } else if (event.ctrlKey && event.key == 'n') {
-                event.preventDefault(); this.createNewFile();
+            } else if (event.ctrlKey && event.altKey && event.key == 'm') {
+                event.preventDefault(); this.isAddMacroOpen = true;
             } else if (event.key == 'Escape') {
                 event.preventDefault();
                 if (this.isPickerOpen) this.togglePicker();
                 if (this.isDrawingOpen) this.toggleDrawing();
+                if (this.isAddMacroOpen) this.isAddMacroOpen = false;
             }
         });
         window.addEventListener('beforeunload', (event) => {
@@ -295,6 +305,7 @@ export default {
         'sketch-area': SketchArea,
         'code-mirror': CodeMirror,
         'file-picker': FilePicker,
+        'add-macro': AddMacro,
     },
 };
 </script>
