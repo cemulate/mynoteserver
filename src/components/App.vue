@@ -182,7 +182,7 @@ export default {
                 this.originalContentOnLoad = null;
                 this.toast = { color: 'green', message: 'New File' };
             } else {
-                let response = await network.get(`/collection/${ collection }/file/${ name }`);
+                let response = await network.get(`/api/collection/${ collection }/file/${ name }`);
                 if (response?.status == 200) {
                     let result = await response.json();
                     this.originalContentOnLoad = result.content;
@@ -199,7 +199,7 @@ export default {
         async saveCurFile() {
             if (this.curFile == null) return;
             let { collection, name } = toRaw(this.curFile);
-            let response = await network.post(`/collection/${ collection }/file/${ name }`, { content: this.markdownSource });
+            let response = await network.post(`/api/collection/${ collection }/file/${ name }`, { content: this.markdownSource });
             if (response?.status == 200) {
                 let { mtime } = await response.json();
                 this.originalContentOnLoad = this.markdownSource;

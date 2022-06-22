@@ -38,6 +38,6 @@ server.get('/', async (request, reply) => {
 });
 
 const directory = new Directory(options.directory);
-server.register(api, { directory });
+server.register(api, { prefix: '/api', directory });
 
 server.listen(options.port, options.host);

@@ -59,7 +59,7 @@ export default {
     },
     methods: {
         async getFiles() {
-            let response = await network.get('/files');
+            let response = await network.get('/api/files');
             if (response?.status == 200) {
                 let files = await response.json();
                 this.files = files;
