@@ -8,6 +8,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 import fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import api from './api.mjs';
+import staticNotes from './static-notes.mjs';
 import Directory from './Directory.mjs';
 
 if ('help' in options) {
@@ -39,5 +40,6 @@ server.get('/', async (request, reply) => {
 
 const directory = new Directory(options.directory);
 server.register(api, { prefix: '/api', directory });
+server.register(staticNotes, { prefix: '/notes', directory });
 
 server.listen(options.port, options.host);
