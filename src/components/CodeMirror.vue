@@ -193,7 +193,8 @@ export default {
             this.editorView.dispatch({
                 changes: { from: 0, to: this.editorView.state.doc.length, insert: newSource },
                 selection: EditorSelection.range(newSource.length, newSource.length),
-                effects: [ EditorView.scrollIntoView(newSource.length) ],
+                // Don't do this for demo
+                // effects: [ EditorView.scrollIntoView(newSource.length) ],
             });
             this.$nextTick(() => this.ignoreNextDocUpdate = false);
 

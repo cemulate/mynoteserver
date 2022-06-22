@@ -30,10 +30,14 @@ module.exports = {
         test: /\.(png|jpg|gif|svg|ico)$/i,
         type: 'asset/resource',
       },
+      {
+        test: /\.txt$/i,
+        type: 'asset/source',
+      },
     ]
   },
   output: {
-    publicPath: '/app/',
+    publicPath: '/mynoteserver/app/',
     assetModuleFilename: 'assets/[hash][ext][query]',
   },
   plugins: [
@@ -50,6 +54,10 @@ module.exports = {
         // Need to be able to (not) include these dynamically with script tags
         { from: 'node_modules/reveal.js/dist/reveal.css', to: 'resources/reveal.css' },
         { from: 'node_modules/reveal.js/dist/reveal.js', to: 'resources/reveal.js' },
+        { from: 'server/resources/reveal-theme-default.css', to: 'resources/reveal-theme-default.css' },
+        { from: 'node_modules/highlight.js/styles/default.css', to: 'resources/highlight-theme-default.css' },
+        { from: 'server/resources/config-default.js', to: 'resources/config-default.js' },
+        { from: 'src/styles/mathjax-chtml-stylesheet.css', to: 'resources/mathjax-chtml-stylesheet.css' },
       ],
     }),
     new VueLoaderPlugin(),

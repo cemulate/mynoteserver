@@ -127,13 +127,15 @@ import ImageIcon from '../components/icons/ImageIcon.vue';
 import SunIcon from '../components/icons/SunIcon.vue';
 import MoonIcon from '../components/icons/MoonIcon.vue';
 
+import demoText from '../lib/demotext.txt';
+
 export default {
     data: () => ({
         useDarkTheme: window.matchMedia('(prefers-color-scheme: dark)').matches,
         sourceWidthPx: parseInt(window.localStorage?.getItem?.('sourceWidthPx') ?? 0.4 * window.screen.width),
         gutterDragStart: null,
 
-        editorDisabled: true,
+        editorDisabled: false,
         initialRender: true,
         markdownChunks: [],
         isSlides: false,
@@ -145,7 +147,7 @@ export default {
         openedImageIsNew: false,
 
         isPickerOpen: false,
-        curFile: null,
+        curFile: 'demo/demo',
 
         isAddMacroOpen: false,
 
@@ -294,7 +296,6 @@ export default {
         },
     },
     mounted() {
-        this.initializeCurFile();
         document.addEventListener('keydown', event => {
             if (event.ctrlKey && event.key == ' ') {
                 event.preventDefault(); this.toggleDrawing();
@@ -319,13 +320,16 @@ export default {
         this.$refs.codemirror?.focus?.(100);
         window.addEventListener('focus', () => this.$refs.codemirror?.focus?.(10));
         if (this.isSlides) this.initSlides();
+
+        this.replaceDocument(demoText);
     },
     watch: {
         markdownChunks(newVal) {
             if (!this.initialRender) return false;
             // First update of chunks after loading a new document; scroll to bottom
             this.initialRender = false;
-            this.$nextTick(() => this.$refs.renderView?.lastElementChild?.scrollIntoView?.(true));
+            // Don't do this for demo
+            // this.$nextTick(() => this.$refs.renderView?.lastElementChild?.scrollIntoView?.(true));
         },
         toast(newVal) {
             if (newVal == null) return;
