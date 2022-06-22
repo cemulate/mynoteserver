@@ -20,23 +20,27 @@ html.no-scroll {
         text-align: center;
     }
 
-    &:not(.print-page) {
-        /* Extra bottom padding on render view in editor */
-        padding: 0.5rem 0.5rem 1in 0.5rem;
-    }
+    /* Extra bottom padding on render view in editor */
+    padding: 0.5rem 0.5rem 1in 0.5rem;
+}
 
-    &.print-page {
-        min-height: 100vh;
-        background: white;
-        padding: 0.5rem 1rem 0.5rem 1rem;
+body.static-page .rendered-note-content {
+    min-height: 100vh;
+    background: white;
+    padding: 0.5rem 1rem 0.5rem 1rem;
+    @include desktop {
         border-left: 2px solid black;
         border-right: 2px solid black;
-        @media print {
-            border: none;
-        }
+    }
+    @media print {
+        border: none;
     }
 }
 
-body.print-page {
+body.static-page.static-note-page {
     background: hsl(0, 0%, 95%);
+}
+
+body.static-page .datecell {
+    white-space: nowrap;
 }

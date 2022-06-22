@@ -13,17 +13,21 @@ const notePage = (collection, file, renderedContent) => `<!doctype html>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 
-<body class="print-page">
-<div class="container"><div class="rendered-note-content print-page content">${ renderedContent }</div></div>
+<body class="static-page static-note-page">
+<div class="container"><div class="rendered-note-content content">${ renderedContent }</div></div>
 </body>
 </html>
 `;
 
-const formatMtime = mtime => format(toDate(mtime), 'LL/dd/yy K:mm aaa');
+const formatMtime = mtime => format(toDate(mtime), 'LL/dd/yy h:mm aaa');
 
 const fileTableRow = ({ collection, name, mtime }) => `<tr>
-<td><a href="/notes/${ collection }/${ name }">${ collection } / ${ name }</a></td>
-<td>${ formatMtime(mtime) }</td>
+<td>
+<a class="is-hidden-mobile" href="/notes/${ collection }/${ name }">${ collection } / ${ name }</a>
+<a class="is-hidden-tablet" href="/notes/${ collection }/${ name }">${ name }</a>
+<br class="is-hidden-tablet"><small class="is-hidden-tablet">${ collection }</small>
+</td>
+<td class="datecell"><small>${ formatMtime(mtime) }</small></td>
 </tr>`;
 
 const listPage = (files) => `<!doctype html>
@@ -35,7 +39,7 @@ const listPage = (files) => `<!doctype html>
     <link rel="stylesheet" href="/app/styles.css">
 </head>
 
-<body>
+<body class="static-page">
 <div class="container is-max-desktop">
 <table class="table is-fullwidth">
 <tbody>
@@ -66,6 +70,7 @@ async function routes(server, options) {
             return files.map(f => ({ ...f, collection: d.name }));
         }));
         entries = entries.flat();
+        entries.sort((a, b) => Math.sign(b.mtime - a.mtime));
         let html = listPage(entries);
         res.header('Content-Type', 'text/html; charset=utf-8');
         return html;
