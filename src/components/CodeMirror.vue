@@ -10,10 +10,10 @@ import { indentWithTab, history, historyKeymap } from '@codemirror/commands';
 import { foldGutter, foldKeymap, defaultHighlightStyle, syntaxHighlighting, bracketMatching } from '@codemirror/language';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { markdown as langMarkdown } from '@codemirror/lang-markdown';
+import { markdown as langMarkdown, markdownLanguage } from '@codemirror/lang-markdown';
 
-
-import { hideLinesByPrefixField } from '../lib/codemirror-utils';
+import { hideLinesByPrefixField } from '../lib/codemirror/hide-lines-by-prefix';
+import { InlineMathConfig, BlockMathConfig, markdownTexHighlightStyle } from '../lib/codemirror/markdown-tex.js';
 import { getImageDataURLFromClipboardEvent } from '../lib/image-utils';
 
 const IMAGE_LINE_START = `<p class="inline-figure"><img src="`;
@@ -48,7 +48,7 @@ export default {
                 foldGutter(),
                 drawSelection(),
                 EditorState.allowMultipleSelections.of(true),
-                syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+                syntaxHighlighting(defaultHighlightStyle),
                 bracketMatching(),
                 closeBrackets(),
                 search(),
@@ -63,7 +63,11 @@ export default {
 
                 EditorView.lineWrapping,
                 scrollPastEnd(),
-                langMarkdown(),
+                langMarkdown({
+                    base: markdownLanguage,
+                    extensions: [ InlineMathConfig, BlockMathConfig ],
+                }),
+                syntaxHighlighting(markdownTexHighlightStyle),
                 hideLinesByPrefixField(IMAGE_LINE_START, 'Figure'),
                 EditorView.updateListener.of(this.onDocumentUpdate.bind(this)),
                 EditorView.domEventHandlers({ click: this.onClick.bind(this) }),
