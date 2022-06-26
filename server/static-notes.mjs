@@ -1,6 +1,6 @@
 import { renderer } from '../src/lib/markdown.mjs';
 import { format, toDate } from 'date-fns';
-renderer.set({ fragmentifyEnabled: false, highlightEnabled: false });
+renderer.set({ fragmentifyEnabled: false, highlightEnabled: true });
 
 const notePage = (collection, file, renderedContent) => `<!doctype html>
 <html>
@@ -9,6 +9,7 @@ const notePage = (collection, file, renderedContent) => `<!doctype html>
     <title>${ `${ collection }/${ file }` }</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="stylesheet" href="/app/styles.css">
+    <link rel="stylesheet" href="/api/custom-resource/highlight-theme.css">
     <script src="/api/custom-resource/mathjax-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
