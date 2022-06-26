@@ -1,7 +1,7 @@
 <template>
 <div class="App-root is-flex is-flex-direction-column" :style="{ '--screen-aspect': screenApsectRatio }">
-    <div class="App-mainview is-flex-grow-1 is-flex is-flex-direction-row">
-        <div class="App-codemirror-container">
+    <div class="App-mainview is-flex-grow-1 is-flex is-flex-direction-row" @pointermove="gutterDrag">
+        <div class="App-codemirror-container" :style="{ 'width': sourceWidthPx + 'px' }">
             <code-mirror 
                 v-model="markdownSource"
                 ref="codemirror"
@@ -10,6 +10,11 @@
                 @openImageAtCursor="toggleDrawing(null)"
             />
         </div>
+        <div class="App-gutter"
+            @pointerdown.prevent="event => gutterDragStart = { x: event.clientX, width: sourceWidthPx }"
+            @pointerup.prevent="gutterDragStart = null"
+            @dblclick.prevent="resetSourceWidthPx"
+        />
         <div class="App-render-container p-2" ref="renderContainer">
             <div v-if="!isSlides" ref="renderView" class="rendered-note-content content" v-html="renderedContent"></div>
             <div v-if="isSlides" class="App-print reveal reveal-custom" ref="reveal">
@@ -109,6 +114,8 @@ export default {
         },
         showToast: false,
         scrollFollow: true,
+        sourceWidthPx: parseInt(window.localStorage?.getItem?.('sourceWidthPx') ?? 0.4 * window.screen.width),
+        gutterDragStart: null,
     }),
     computed: {
         renderedContent() {
@@ -178,8 +185,12 @@ export default {
                 }
             }
         },
-        printContent() {
-            window.print();
+        gutterDrag(event) {
+            if (this.gutterDragStart == null) return;
+            this.sourceWidthPx = this.gutterDragStart.width + (event.clientX - this.gutterDragStart.x);
+        },
+        resetSourceWidthPx() {
+            this.sourceWidthPx = 0.4 * window.screen.width;
         },
         async loadCurFile() {
             if (this.curFile == null) return;
@@ -294,6 +305,10 @@ export default {
             await this.loadCurFile();
             document.title = this.documentTitle;
         },
+        sourceWidthPx(newVal) {
+            console.log(newVal);
+            window.localStorage.setItem('sourceWidthPx', newVal);
+        },
         hasContentChanged(newVal) {
             document.title = this.documentTitle;
         },
@@ -332,15 +347,21 @@ export default {
 
 .App-codemirror-container {
     @include mobile { display: none; }
-    @include tablet { flex-basis: 40%; height: 100% }
+    @include tablet { flex-grow: 0; flex-shrink: 0; height: 100% }
     > div {
         height: 100%;
     }
 }
 
+.App-gutter {
+    width: 8px;
+    background: lightgray;
+    cursor: col-resize;
+}
+
 .App-render-container {
-    @include mobile { flex-grow: 1; }
-    @include tablet { flex-basis: 60%; height: 100% }
+    flex-grow: 1;
+    height: 100%;
     overflow-y: auto;
 }
 
