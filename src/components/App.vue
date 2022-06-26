@@ -1,5 +1,5 @@
 <template>
-<div class="App-root is-flex is-flex-direction-column" :style="{ '--screen-aspect': screenApsectRatio }">
+<div class="App-root is-flex is-flex-direction-column">
     <div class="App-mainview is-flex-grow-1 is-flex is-flex-direction-row" @pointermove="gutterDrag">
         <div class="App-codemirror-container" :style="{ 'width': sourceWidthPx + 'px' }">
             <code-mirror 
@@ -125,11 +125,6 @@ export default {
         isSlides() {
             return this.markdownSource.startsWith('---');
         },
-        screenApsectRatio() {
-            // Bounds as a CSS variable on App-root to be used in the style
-            let { width, height } = window.screen;
-            return width / height;
-        },
         renderedSlides() {
             return this.renderedContent.split('<hr>').slice(1).map(x => x.trim());
         },
@@ -240,8 +235,9 @@ export default {
             let { width, height } = window.screen;
             this.slideDeck = new Reveal(this.$refs.reveal, {
                 embedded: true,
-                width,
-                height,
+                width: 1920 - 0.04 * 1920,
+                height: 1080 - 0.04 * 1080,
+                margin: 0.04,
                 keyboardCondition: 'focused',
                 help: false,
             });
@@ -365,12 +361,10 @@ export default {
     overflow-y: auto;
 }
 
-// The presentation's native viewport size is set to the screen size, for presenting,
-// in this mode, we want an accurate view that is downsized to fit on the right.
 .reveal {
     width: 100%;
     height: unset;
-    aspect-ratio: var(--screen-aspect);
+    aspect-ratio: 16/9;
 }
 
 .App-sketch-area-component {
