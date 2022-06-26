@@ -41,6 +41,7 @@ $ mynoteserver -h [host] -p [port] -d [notes directory]
     * `ctrl-p`: File palette (switch, open, create new files)
     * `ctrl-s`: Save file
     * `ctrl-alt-m`: Add MathJax macro to `mathjax-config.js`
+    * Double click split-view gutter: reset to default proportion
 * Toolbar buttons
     * Folder/filename: Open file palette
     * Image button: Add/edit/open image under cursor
