@@ -211,6 +211,13 @@ export default {
             }
             this.$refs.codemirror?.focus();
         },
+        updateSourceAndSave() {
+            if (this.curFile == null) return;
+            // Upon save command, update markdownSource immediately
+            // (instead of after debounce) before saving.
+            this.$refs?.codemirror?.commitDocument();
+            this.$nextTick(() => this.saveCurFile());
+        },
         async saveCurFile() {
             if (this.curFile == null) return;
             let { collection, name } = toRaw(this.curFile);
@@ -265,7 +272,7 @@ export default {
             } else if (event.ctrlKey && event.key == 'p') {
                 event.preventDefault(); this.togglePicker();
             } else if (event.ctrlKey && event.key == 's') {
-                event.preventDefault(); this.saveCurFile();
+                event.preventDefault(); this.updateSourceAndSave();
             } else if (event.ctrlKey && event.altKey && event.key == 'm') {
                 event.preventDefault(); this.isAddMacroOpen = true;
             } else if (event.key == 'Escape') {
