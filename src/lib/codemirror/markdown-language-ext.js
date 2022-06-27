@@ -2,6 +2,7 @@
 // https://github.com/personalizedrefrigerator/joplin/blob/pr/markdownToolbar/packages/app-mobile/components/NoteEditor/MarkdownTeXParser.ts
 import { tags, Tag } from '@lezer/highlight';
 import { HighlightStyle } from '@codemirror/language';
+import { markdownLanguage } from '@codemirror/lang-markdown';
 
 const DOLLAR_SIGN_CHAR_CODE = 36;
 const MATH_BLOCK_START_REGEX = /^\$\$/;
@@ -109,4 +110,10 @@ const markdownTexHighlightStyle = HighlightStyle.define([
     { tag: markdownTexTags.blockMath, color: '#4876d6' },
 ]);
 
-export { InlineMathConfig, BlockMathConfig, markdownTexTags, markdownTexHighlightStyle };
+const markdownBrackets = markdownLanguage.data.of({
+    closeBrackets: {
+        brackets: [ '(', '[', '{', '$', '`' ],
+    },
+});
+
+export { InlineMathConfig, BlockMathConfig, markdownTexTags, markdownTexHighlightStyle, markdownBrackets };
