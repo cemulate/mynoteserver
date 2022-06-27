@@ -502,7 +502,6 @@ export default [
     { "label": "\\rlap{#{1}}", "snippet": "\\rlap{#{1}}#{}" },
     { "label": "\\rm", "snippet": "\\rm#{}" },
     { "label": "\\rmoustache", "snippet": "\\rmoustache#{}" },
-    { "label": "\\root #{1} \\of #{2}", "snippet": "\\root #{1} \\of #{2}#{}" },
     { "label": "\\rtimes", "snippet": "\\rtimes#{}" },
     { "label": "\\rvert", "snippet": "\\rvert#{}" },
     { "label": "\\scriptscriptstyle", "snippet": "\\scriptscriptstyle#{}" },
