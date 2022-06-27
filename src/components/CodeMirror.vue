@@ -4,16 +4,17 @@
 
 <script>
 import { EditorView, minimalSetup } from 'codemirror';
-import { EditorState, EditorSelection } from '@codemirror/state';
+import { EditorState, EditorSelection, Prec } from '@codemirror/state';
 import { keymap, scrollPastEnd, lineNumbers, highlightActiveLineGutter, drawSelection, highlightActiveLine } from '@codemirror/view';
 import { indentWithTab, history, historyKeymap } from '@codemirror/commands';
 import { foldGutter, foldKeymap, defaultHighlightStyle, syntaxHighlighting, bracketMatching } from '@codemirror/language';
-import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { closeBrackets, closeBracketsKeymap, autocompletion, snippetKeymap } from '@codemirror/autocomplete';
 import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { markdown as langMarkdown, markdownLanguage } from '@codemirror/lang-markdown';
 
 import { hideLinesByPrefixField } from '../lib/codemirror/hide-lines-by-prefix';
 import { InlineMathConfig, BlockMathConfig, markdownTexHighlightStyle } from '../lib/codemirror/markdown-tex.js';
+import { addTexAutocompleteToLanguage, customAutocompletionKeymap } from '../lib/codemirror/tex-snippets';
 import { getImageDataURLFromClipboardEvent } from '../lib/image-utils';
 
 const IMAGE_LINE_START = `<p class="inline-figure"><img src="`;
@@ -51,15 +52,18 @@ export default {
                 syntaxHighlighting(defaultHighlightStyle),
                 bracketMatching(),
                 closeBrackets(),
+                autocompletion({ defaultKeymap: false }),
                 search(),
                 highlightSelectionMatches(),
                 keymap.of([
                     indentWithTab,
                     ...historyKeymap,
                     ...foldKeymap,
-                    ...closeBracketsKeymap,
                     ...searchKeymap,
+                    snippetKeymap,
                 ]),
+                Prec.high(keymap.of(closeBracketsKeymap)), // boost precedence
+                customAutocompletionKeymap,
 
                 EditorView.lineWrapping,
                 scrollPastEnd(),
@@ -67,6 +71,7 @@ export default {
                     base: markdownLanguage,
                     extensions: [ InlineMathConfig, BlockMathConfig ],
                 }),
+                addTexAutocompleteToLanguage(markdownLanguage),
                 syntaxHighlighting(markdownTexHighlightStyle),
                 hideLinesByPrefixField(IMAGE_LINE_START, 'Figure'),
                 EditorView.updateListener.of(this.onDocumentUpdate.bind(this)),
