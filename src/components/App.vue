@@ -85,7 +85,6 @@
 
 <script>
 import { renderer } from '../lib/markdown.mjs';
-import { toRaw } from 'vue';
 import * as network from '../lib/network';
 import Reveal from 'reveal.js';
 
@@ -220,7 +219,7 @@ export default {
         },
         async saveCurFile() {
             if (this.curFile == null) return;
-            let { collection, name } = toRaw(this.curFile);
+            let { collection, name } = this.curFile;
             let response = await network.post(`/api/collection/${ collection }/file/${ name }`, { content: this.markdownSource });
             if (response?.status == 200) {
                 let { mtime } = await response.json();
@@ -239,7 +238,6 @@ export default {
             this.curFile = curFile;
         },
         initSlides() {
-            let { width, height } = window.screen;
             this.slideDeck = new Reveal(this.$refs.reveal, {
                 embedded: true,
                 width: 1920 - 0.04 * 1920,

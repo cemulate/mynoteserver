@@ -34,7 +34,6 @@
 </template>
 
 <script>
-import { toRaw } from 'vue';
 import { getCropBoundsFromImageData } from '../lib/image-utils';
 
 const BUTTONS_ERASER = 32;
@@ -168,7 +167,7 @@ export default {
             this.recentPointerType = event.pointerType;
             if (this.disabled || this.action == ACTION.NONE) return;
             
-            let oldPos = toRaw(this.position);
+            let oldPos = this.position;
             this.updatePosition(event);
 
             // Perform the action, and continue the log in curStroke
