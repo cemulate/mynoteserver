@@ -10,7 +10,7 @@
     <script src="/api/custom-resource/mathjax-config.js"></script>
     <script>
         window.mynoteserver = {};
-        fetch('/api/custom-resource/snippets.json').then(r => r.json()).then(d => window.mynoteserver.userSnippets = d);
+        fetch('/api/custom-resource/snippets.json').then(r => r.status == 200 && r.json().then(d => window.mynoteserver.userSnippets = d));
     </script>
     <link rel="stylesheet" href="/app/reveal.css">
     <link rel="stylesheet" href="/api/custom-resource/reveal-theme.css">
