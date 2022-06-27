@@ -18,7 +18,6 @@ let userSnippets = Object.entries(macros).map(([ name, value ]) => {
     if (hasArgs) snippet += '#{}';
 
     let label = '\\' + name;
-    console.log(snippet, label);
     return snippetCompletion(snippet, { label });
 });
 

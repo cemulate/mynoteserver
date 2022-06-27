@@ -307,7 +307,6 @@ export default {
             document.title = this.documentTitle;
         },
         sourceWidthPx(newVal) {
-            console.log(newVal);
             window.localStorage.setItem('sourceWidthPx', newVal);
         },
         hasContentChanged(newVal) {
