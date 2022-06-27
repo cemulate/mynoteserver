@@ -27,10 +27,12 @@ const markdownTexSnippets = markdownLanguage.data.of({
 });
 
 // Autocomplete commands should be highest precedence
+// Mainly, bind Tab as well as Enter to "accept completion"
 const customAutocompletionKeymap = Prec.highest(keymap.of([
     { key: 'ArrowDown', run: moveCompletionSelection(true) },
     { key: 'ArrowUp', run: moveCompletionSelection(false) },
     { key: 'Tab', run: acceptCompletion },
+    { key: 'Enter', run: acceptCompletion },
 ]));
 
 export { markdownTexSnippets, customAutocompletionKeymap };
