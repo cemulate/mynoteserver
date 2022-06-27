@@ -5,10 +5,11 @@ import { markdownLanguage } from '@codemirror/lang-markdown';
 
 import builtinTexSnippets from './builtin-tex-snippets';
 
-let macros = window?.MathJax?.config?.tex?.macros ?? {};
+let mathjaxMacros = window?.MathJax?.config?.tex?.macros ?? {};
+let userSnippetData = window?.mynoteserver?.userSnippets ?? {};
 
-let baseSnippets = builtinTexSnippets.map(({ label, snippet }) => snippetCompletion(snippet, { label }));
-let userSnippets = Object.entries(macros).map(([ name, value ]) => {
+let baseSnippets = builtinTexSnippets.map(({ label, snippet }) => snippetCompletion(snippet, { label })).slice(0, 1000);
+let texSnippets = Object.entries(mathjaxMacros).map(([ name, value ]) => {
     let hasArgs = !(typeof value == 'string');
     let arity = hasArgs ? value[1] : 0;
     
@@ -20,9 +21,15 @@ let userSnippets = Object.entries(macros).map(([ name, value ]) => {
     let label = '\\' + name;
     return snippetCompletion(snippet, { label });
 });
+let userSnippets = Object.entries(userSnippetData).map(([ name, value ]) => {
+    let label = value.prefix;
+
+    let snippet = value.body.join('\n').replaceAll(/\$([1-9])/g, '${$1}').replaceAll('$0', '${}');
+    return snippetCompletion(snippet, { label });
+});
 
 const markdownTexSnippets = markdownLanguage.data.of({
-    autocomplete: [ ...baseSnippets, ...userSnippets ],
+    autocomplete: [ ...baseSnippets, ...texSnippets, ...userSnippets ],
 });
 
 // Autocomplete commands should be highest precedence
