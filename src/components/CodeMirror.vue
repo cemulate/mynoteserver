@@ -14,7 +14,7 @@ import { markdown as langMarkdown, markdownLanguage } from '@codemirror/lang-mar
 
 import { hideLinesByPrefixField } from '../lib/codemirror/hide-lines-by-prefix';
 import { InlineMathConfig, BlockMathConfig, markdownTexHighlightStyle, markdownBrackets } from '../lib/codemirror/markdown-language-ext.js';
-import { addTexAutocompleteToLanguage, customAutocompletionKeymap } from '../lib/codemirror/tex-snippets';
+import { markdownTexSnippets, customAutocompletionKeymap } from '../lib/codemirror/tex-snippets';
 import { getImageDataURLFromClipboardEvent } from '../lib/image-utils';
 
 const IMAGE_LINE_START = `<p class="inline-figure"><img src="`;
@@ -71,7 +71,7 @@ export default {
                     base: markdownLanguage,
                     extensions: [ InlineMathConfig, BlockMathConfig ],
                 }),
-                addTexAutocompleteToLanguage(markdownLanguage),
+                markdownTexSnippets,
                 markdownBrackets,
                 syntaxHighlighting(markdownTexHighlightStyle),
                 hideLinesByPrefixField(IMAGE_LINE_START, 'Figure'),
