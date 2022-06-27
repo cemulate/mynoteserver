@@ -5,7 +5,7 @@ async function routes(server, options) {
     const dir = options.directory;
 
     server.get('/custom-resource/:name', async (req, res) => {
-        const allowed = [ 'mathjax-config.js', 'reveal-theme.css', 'highlight-theme.css' ];
+        const allowed = [ 'mathjax-config.js', 'reveal-theme.css', 'highlight-theme.css', 'snippets.json' ];
         if (!allowed.includes(req.params.name)) throw new Error('No such custom resource');
         try {
             let ext = extname(req.params.name);
