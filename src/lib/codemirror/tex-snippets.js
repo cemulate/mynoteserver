@@ -1,4 +1,4 @@
-import { snippetCompletion, moveCompletionSelection, acceptCompletion } from '@codemirror/autocomplete';
+import { snippetCompletion, moveCompletionSelection, acceptCompletion, closeCompletion } from '@codemirror/autocomplete';
 import { keymap } from '@codemirror/view';
 import { Prec } from '@codemirror/state';
 import { markdownLanguage } from '@codemirror/lang-markdown';
@@ -39,6 +39,7 @@ const customAutocompletionKeymap = Prec.highest(keymap.of([
     { key: 'ArrowUp', run: moveCompletionSelection(false) },
     { key: 'Tab', run: acceptCompletion },
     { key: 'Enter', run: acceptCompletion },
+    { key: 'Escape', run: closeCompletion },
 ]));
 
 export { markdownTexSnippets, customAutocompletionKeymap };
