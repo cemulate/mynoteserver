@@ -18,6 +18,8 @@ async function routes(server, options) {
                 res.redirect(303, '/app/reveal-theme-default.css');
             } else if (req.params.name == 'highlight-theme.css') {
                 res.redirect(303, '/app/highlight-theme-default.css');
+            } else if (req.params.name == 'snippets.json') {
+                res.redirect(303, '/app/snippets-default.json');
             } else {
                 throw error;
             }
