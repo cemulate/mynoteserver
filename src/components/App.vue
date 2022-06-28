@@ -17,7 +17,7 @@
         />
         <div class="App-render-container p-2" ref="renderContainer">
             <div v-if="!isSlides" ref="renderView" class="rendered-note-content content" v-html="renderedContent"></div>
-            <div v-if="isSlides" class="App-print reveal reveal-custom" ref="reveal">
+            <div v-if="isSlides" class="App-print reveal" ref="reveal">
                 <div class="slides">
                     <section
                         v-for="slide in renderedSlides"
