@@ -13,7 +13,13 @@ import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/sea
 import { markdown as langMarkdown, markdownLanguage } from '@codemirror/lang-markdown';
 
 import { hideLinesByPrefixField } from '../lib/codemirror/hide-lines-by-prefix';
-import { InlineMathConfig, BlockMathConfig, markdownTexHighlightStyle, markdownBrackets } from '../lib/codemirror/markdown-language-ext.js';
+import {
+    InlineMathConfig,
+    BlockMathConfig,
+    markdownTexHighlightStyle,
+    markdownBrackets,
+    customCloseBrackets,
+} from '../lib/codemirror/markdown-language-ext.js';
 import { markdownTexSnippets, customAutocompletionKeymap } from '../lib/codemirror/tex-snippets';
 import { markdownStyleShortcutsKeymap } from '../lib/codemirror/markdown-shortcuts';
 import { getImageDataURLFromClipboardEvent } from '../lib/image-utils';
@@ -52,7 +58,10 @@ export default {
                 EditorState.allowMultipleSelections.of(true),
                 syntaxHighlighting(defaultHighlightStyle),
                 bracketMatching(),
-                closeBrackets(),
+                // Only take the state field, not the input handler from closeBrackets
+                // We replace the input handler with a custom version right below
+                closeBrackets()[1],
+                customCloseBrackets,
                 autocompletion({ defaultKeymap: false }),
                 search(),
                 highlightSelectionMatches(),

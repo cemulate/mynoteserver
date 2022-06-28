@@ -1,9 +1,11 @@
-// https://discuss.codemirror.net/t/markdown-and-latex-syntax-highlighting/4382/11
-// https://github.com/personalizedrefrigerator/joplin/blob/pr/markdownToolbar/packages/app-mobile/components/NoteEditor/MarkdownTeXParser.ts
 import { tags, Tag } from '@lezer/highlight';
 import { HighlightStyle } from '@codemirror/language';
 import { markdownLanguage } from '@codemirror/lang-markdown';
+import { EditorView } from 'codemirror';
+import { insertBracket, completionStatus } from '@codemirror/autocomplete';
 
+// https://discuss.codemirror.net/t/markdown-and-latex-syntax-highlighting/4382/11
+// https://github.com/personalizedrefrigerator/joplin/blob/pr/markdownToolbar/packages/app-mobile/components/NoteEditor/MarkdownTeXParser.ts
 const DOLLAR_SIGN_CHAR_CODE = 36;
 const MATH_BLOCK_START_REGEX = /^\$\$/;
 const MATH_BLOCK_STOP_REGEX = /^.*\$\$\s*$/;
@@ -116,4 +118,19 @@ const markdownBrackets = markdownLanguage.data.of({
     },
 });
 
-export { InlineMathConfig, BlockMathConfig, markdownTexTags, markdownTexHighlightStyle, markdownBrackets };
+// https://github.com/codemirror/closebrackets/blob/main/src/closebrackets.ts#L81
+const android = typeof navigator == "object" && /Android\b/.test(navigator.userAgent);
+const customCloseBrackets = EditorView.inputHandler.of((view, from, to, insert) => {
+    if ((android ? view.composing : view.compositionStarted) || view.state.readOnly) return false;
+    let sel = view.state.selection.main;
+    if (insert.length > 2 || insert.length == 2 && codePointSize(codePointAt(insert, 0)) == 1 ||
+        from != sel.from || to != sel.to) return false;
+    // Added line: prevent closeBrackets during autocompletion
+    if (completionStatus(view.state) != null) return false;
+    let tr = insertBracket(view.state, insert);
+    if (!tr) return false;
+    view.dispatch(tr);
+    return true;
+});
+
+export { InlineMathConfig, BlockMathConfig, markdownTexTags, markdownTexHighlightStyle, markdownBrackets, customCloseBrackets };
