@@ -56,7 +56,7 @@ module.exports = {
         { from: 'node_modules/reveal.js/dist/reveal.css', to: 'reveal.css' },
         { from: 'src/styles/reveal-theme-default.css', to: 'reveal-theme-default.css' },
         { from: 'node_modules/highlight.js/styles/default.css', to: 'highlight-theme-default.css' },
-        { from: 'src/lib/snippets-default.json', to: 'snippets-default.json' },
+        { from: 'src/lib/config-default.js', to: 'config-default.js' },
       ],
     }),
     new VueLoaderPlugin(),

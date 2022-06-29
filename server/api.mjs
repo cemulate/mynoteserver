@@ -5,7 +5,7 @@ async function routes(server, options) {
     const dir = options.directory;
 
     server.get('/custom-resource/:name', async (req, res) => {
-        const allowed = [ 'mathjax-config.js', 'reveal-theme.css', 'highlight-theme.css', 'snippets.json' ];
+        const allowed = [ 'config.js', 'reveal-theme.css', 'highlight-theme.css' ];
         if (!allowed.includes(req.params.name)) throw new Error('No such custom resource');
         try {
             let ext = extname(req.params.name);
@@ -18,8 +18,8 @@ async function routes(server, options) {
                 res.redirect(303, '/app/reveal-theme-default.css');
             } else if (req.params.name == 'highlight-theme.css') {
                 res.redirect(303, '/app/highlight-theme-default.css');
-            } else if (req.params.name == 'snippets.json') {
-                res.redirect(303, '/app/snippets-default.json');
+            } else if (req.params.name == 'config.js') {
+                res.redirect(303, '/app/config-default.js');
             } else {
                 throw error;
             }
