@@ -1,7 +1,7 @@
 // This file is also used on the server for server-side rendering, so it must be named .mjs
 import MarkdownIt from 'markdown-it';
 import markdownItMath from 'markdown-it-math/dist/markdown-it-math.js';
-import { markdownItFragmentify, markdownItCustomFence } from './markdown-it-plugins.mjs';
+import { markdownItFragmentify, markdownItCustomFence, markdownItTargetBlank } from './markdown-it-plugins.mjs';
 import hljs from 'highlight.js';
 
 const highlight = (str, language) => {
@@ -40,6 +40,7 @@ markdownIt.use(markdownItMath, {
 markdownIt.use(markdownItCustomFence);
 
 markdownIt.use(markdownItFragmentify);
+markdownIt.use(markdownItTargetBlank);
 
 const renderer = markdownIt;
 

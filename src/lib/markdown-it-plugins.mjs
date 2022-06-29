@@ -48,14 +48,6 @@ function markdownItCustomFence(markdownIt, options) {
             ? options?.highlight?.(token.content, langName, langAttrs) ?? escapeHtml(token.content)
             : escapeHtml(token.content);
 
-        // let cIndex = token.attrIndex('class');
-        // if (cIndex >= 0) {
-        //     let existing = token.attrs[cIndex][1];
-        //     token.attrs[cIndex][1] = existing + ' hljs';
-        // } else {
-        //     token.attrPush([ 'class', 'hljs' ]);
-        // }
-
         let codeAttrString = (info != null && shouldHighlight)
             ? ` class="hljs ${ options.langPrefix + langName }"`
             : '';
@@ -67,4 +59,22 @@ function markdownItCustomFence(markdownIt, options) {
     };
 }
 
-export { markdownItCustomFence, markdownItFragmentify };
+function markdownItTargetBlank(markdownIt, options) {
+    const defaultRender = markdownIt.renderer.rules.link_open || function(tokens, idx, options, env, self) {
+        return self.renderToken(tokens, idx, options);
+    };
+
+    markdownIt.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+        const aIndex = tokens[idx].attrIndex('target');
+
+        if (aIndex < 0) {
+            tokens[idx].attrPush(['target', '_blank']); // add new attribute
+        } else {
+            tokens[idx].attrs[aIndex][1] = '_blank';    // replace value of existing attr
+        }
+        // pass token to default renderer.
+        return defaultRender(tokens, idx, options, env, self);
+    };
+}
+
+export { markdownItCustomFence, markdownItFragmentify, markdownItTargetBlank };
