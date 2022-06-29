@@ -31,7 +31,7 @@ html.no-scroll {
     }
 }
 
-.rendered-note-content {
+.content.rendered-note-content {
     overflow-wrap: break-word;
 
     p.inline-figure {
@@ -40,6 +40,10 @@ html.no-scroll {
 
     /* Extra bottom padding on render view in editor */
     padding: 0.5rem 0.5rem 1in 0.5rem;
+
+    li p {
+        margin-bottom: 0;
+    }
 }
 
 body.static-page .rendered-note-content {
