@@ -71,7 +71,7 @@
     <div class="modal" :class="{ 'is-active': isPickerOpen }">
         <div class="modal-background" @click="togglePicker"></div>
         <div class="modal-content">
-            <file-picker ref="picker" v-model:selection="curFile" @update:selection="isPickerOpen = false"></file-picker>
+            <file-picker ref="picker" @selectFile="selectFile"></file-picker>
         </div>
     </div>
     <div class="modal" :class="{ 'is-active': isAddMacroOpen }">
@@ -186,6 +186,15 @@ export default {
         resetSourceWidthPx() {
             this.sourceWidthPx = 0.4 * window.screen.width;
         },
+        selectFile(file) {
+            if (this.hasContentChanged) {
+                let answer = window.confirm('Load another document?\n\nChanges you made will not be saved.');
+                if (!answer) return;
+            }
+            this.curFile = file;
+            this.isPickerOpen = false;
+            this.loadCurFile();
+        },
         async loadCurFile() {
             if (this.curFile == null) return;
             let { collection, name, mtime } = this.curFile;
@@ -236,6 +245,7 @@ export default {
                 curFile = JSON.parse(curFile);
             }
             this.curFile = curFile;
+            this.loadCurFile();
         },
         initSlides() {
             this.slideDeck = new Reveal(this.$refs.reveal, {
@@ -303,7 +313,6 @@ export default {
         },
         async curFile(newVal) {
             window.localStorage.setItem('curFile', JSON.stringify(newVal));
-            await this.loadCurFile();
             document.title = this.documentTitle;
         },
         sourceWidthPx(newVal) {

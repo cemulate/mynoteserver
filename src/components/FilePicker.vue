@@ -96,7 +96,7 @@ export default {
             }
         },
         selectFile(file) {
-            this.$emit('update:selection', file);
+            this.$emit('selectFile', file);
         },
         selectNewFile() {
             // New file
