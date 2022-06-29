@@ -95,10 +95,7 @@ export default {
     methods: {
         onDocumentUpdate(update) {
             if (!update.docChanged) return;
-            if (this.ignoreNextDocUpdate) {
-                this.ignoreNextDocUpdate = false;
-                return;
-            }
+            if (this.ignoreNextDocUpdate) return;
 
             if (this.debounceTimeoutID != null) window.clearTimeout(this.debounceTimeoutID);
             this.debounceTimeoutID = window.setTimeout(this.commitDocument.bind(this), this.debounce);
@@ -106,6 +103,7 @@ export default {
         commitDocument() {
             this.ignoreNextModelUpdate = true;
             this.$emit('update:modelValue', this.editorView.state.doc.toString());
+            this.$nextTick(() => this.ignoreNextModelUpdate = false);
         },
         addOrReplaceImageAtCursor(dataURL) {
             let cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
@@ -156,15 +154,13 @@ export default {
     },
     watch: {
         modelValue(newVal, oldVal) {
-            if (this.ignoreNextModelUpdate) {
-                this.ignoreNextModelUpdate = false;
-                return;
-            }
+            if (this.ignoreNextModelUpdate) return;
             
             this.ignoreNextDocUpdate = true;
             this.editorView.dispatch({
                 changes: { from: 0, to: this.editorView.state.doc.length, insert: newVal },
             });
+            this.$nextTick(() => this.ignoreNextDocUpdate = false);
         },
     },
 };
