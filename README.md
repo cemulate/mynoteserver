@@ -4,7 +4,8 @@ A simple, self-hosted note-taking and slide-making solution with the following k
 
 * Typed content comes _first_; full Markdown support
 * **First-class support** for math with MathJax, including custom configurations and macros
-    * Drop a file called `mathjax-config.js` in the top level of your notes directory and the app will find/include it.
+    * Create a file called `config.js` in the top level of your notes directory and the app will include it.
+    Among other things, you can use this file to configure MathJax and add macros.
     An [example of such a file](https://docs.mathjax.org/en/latest/input/tex/macros.html) is in the MathJax docs.
         * Press `ctrl-alt-m` add a new MathJax macro definition to the bottom of your `mathjax-config.js` file; a reload is required before it takes effect on the page.
 * Notes are stored as _plain markdown files_ in a single directory with _one_ level of hierarchy: `collection/name`.
@@ -21,6 +22,7 @@ In this case, horizontal rules (`---`) are treated as slide boundaries.
 * While the app is served at `/app` (and the api at `/api`), there is also a "static" view of your notes under `/notes`
     * `/notes` itself serves a basic directory of notes by modification date with links to a server-rendered print-ready view of each note.
     This is useful for printing to PDF or just reading on mobile.
+* The editor supports snippet completion, in the [style of vscode](https://code.visualstudio.com/docs/editor/userdefinedsnippets). By default, all builtin LaTeX commands as well as all user-defined MathJax macros have automatically created snippets. You can also use the `config.j` file to add additional snippets; the [default config file](/src/lib/config-default.js) has some included. The supported syntax is the same as as vscode snippet JSON files, but doesn't support all features such as variables and regex (only what [codemirror supports](https://codemirror.net/docs/ref/#autocomplete.snippet)).
 
 Check out [the demo](https://cemulate.github.io/mynoteserver/app/); this is a mocked-out copy of the front-end/app that you can use to test out the editor.
 
