@@ -29,7 +29,7 @@
     </div>
     <div class="App-statusbar is-family-monospace is-flex-grow-0 pt-1 pb-1 pl-2 pr-2">
         <div class="is-flex is-align-items-center">
-            <a class="App-icon App-open-file-indicator" @click="togglePicker"></a>
+            <button class="button is-black App-icon App-open-file-indicator" @click="togglePicker"></button>
             <span class="is-flex-grow-1 ml-2">
                 <a class="has-text-black" @click="togglePicker">
                     <span v-if="curFile != null">
@@ -41,9 +41,10 @@
                     <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
                 </Transition>
             </span>
-            <a class="is-hidden-mobile App-icon App-edit-image-button is-flex-grow-0 ml-4" @click="toggleDrawing(null)"></a>
-            <a target="_blank" class="is-hidden-mobile App-icon App-static-link-button is-flex-grow-0 ml-4" :href="staticLink"></a>
-            <a class="App-icon App-fullscreen-button is-flex-grow-0 ml-4" @click="toggleFullscreen"></a>
+            <a class="is-hidden-mobile button is-black App-icon App-edit-image-button ml-4"
+                @click="toggleDrawing(null)" title="Insert/edit image"></a>
+            <a class="button is-black App-icon App-fullscreen-button ml-4" @click="toggleFullscreen"
+                :title="isSlides ? 'Present' : 'Toggle fullscreen editor'"></a>
             <button v-if="isSlides"
                 class="button is-small is-rounded ml-4"
                 :class="{ 'is-primary': fragmentsOn }"
@@ -51,6 +52,8 @@
             >
             Fragmented
             </button>
+            <a target="_blank" class="is-hidden-mobile button is-link App-icon App-static-link-button ml-4" :href="staticLink"
+                title="Open print view in new tab"></a>
         </div>
     </div>
 
@@ -351,7 +354,7 @@ export default {
 
 .App-statusbar {
     background: #f5f5f5;
-    border-top: 1px dotted gray;
+    border-top: 2px solid lightgray;
 }
 
 .App-codemirror-container {
@@ -389,30 +392,27 @@ export default {
 }
 
 .App-icon {
-    display: inline-block;
     height: 1.8em;
     aspect-ratio: 1;
-    background-repeat: no-repeat;
-    background-position: center;
 }
 .App-fullscreen-button {
-    background-image: url('../assets/maximize.svg');
-    background-size: 100% 100%;
+    mask: url('../assets/maximize.svg') 0 0/100% 100%;
+    -webkit-mask: url('../assets/maximize.svg') 0 0/100% 100%;
 }
 
 .App-open-file-indicator {
-    background-image: url('../assets/folder.svg');
-    background-size: 80% 80%;
+    mask: url('../assets/folder.svg') 0 0/100% 100%;
+    -webkit-mask: url('../assets/folder.svg') 0 0/100% 100%;
 }
 
 .App-static-link-button {
-    background-image: url('../assets/link.svg');
-    background-size: 100% 100%;
+    mask: url('../assets/journal-page.svg') 0 0/100% 100% no-repeat;
+    -webkit-mask: url('../assets/journal-page.svg') 0 0/100% 100% no-repeat;
 }
 
 .App-edit-image-button {
-    background-image: url('../assets/image.svg');
-    background-size: 100% 100%;
+    mask: url('../assets/image.svg') 0 0/100% 100%;
+    -webkit-mask: url('../assets/image.svg') 0 0/100% 100%;
 }
 
 .App-fadeout-leave-active {

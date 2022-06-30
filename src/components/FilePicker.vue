@@ -15,9 +15,17 @@
     <a class="panel-block is-flex"
         v-for="(entry, index) in topMatchingFiles"
         v-bind:class="{ 'has-background-link-light': index == focusedIndex }"
-        @click="selectFile(entry)">
-        <span class="is-family-monospace">{{ entry.collection }}/{{ entry.name }}</span>
-        <small class="FilePicker-subdued ml-auto">{{ formatEditTime(entry.mtime) }}</small>
+        @click="selectFile(entry)"
+    >
+        <span class="is-family-monospace is-flex-grow-1">{{ entry.collection }}/{{ entry.name }}</span>
+        <small class="FilePicker-subdued">{{ formatEditTime(entry.mtime) }}</small>
+        <a 
+            class="button is-link FilePicker-open-new-tab-button"
+            target="_blank"
+            @click.stop=""
+            :href="`#${ entry.collection }/${ entry.name }`"
+            title="Open in new tab"
+        />
     </a>
     <a class="panel-block" v-if="loadError">
         Couldn't load files...
@@ -124,5 +132,12 @@ export default {
 }
 .FilePicker-subdued {
     color: hsl(0, 0%, 30%);
+}
+.FilePicker-open-new-tab-button {
+    height: 1.4em;
+    aspect-ratio: 1;
+    margin-left: 0.5em;
+    mask: url('../assets/newtab.svg') 0 0/100% 100% no-repeat;
+    -webkit-mask: url('../assets/newtab.svg') 0 0/100% 100% no-repeat;
 }
 </style>
