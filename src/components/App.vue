@@ -196,13 +196,16 @@ export default {
             }
             this.curFile = file;
             this.isPickerOpen = false;
+            window.localStorage.setItem('curFile', JSON.stringify(this.curFile));
             this.loadCurFile();
         },
         async loadCurFile() {
             if (this.curFile == null) return;
             let { collection, name, mtime } = this.curFile;
-            if (mtime == null) {
-                // If it doesn't have an mtime, this file doesn't exist yet.
+            let isFromHash = window.location.hash.length > 1;
+            if (!isFromHash && mtime == null) {
+                // If this file wasn't loaded from a hash doesn't have an mtime,
+                // FilePicker wanted to create a new file.
                 this.markdownSource = `# ${ name }`;
                 // Always compare false as to display the unsaved star
                 this.originalContentOnLoad = null;
@@ -213,6 +216,7 @@ export default {
                     let result = await response.json();
                     this.originalContentOnLoad = result.content;
                     this.markdownSource = result.content;
+                    this.curFile.mtime = response.mtime;
                     this.toast = { color: 'green', message: 'File loaded' };
                 } else {
                     this.markdownSource = '';
@@ -242,13 +246,20 @@ export default {
                 this.toast = { color: 'red', message: 'Save failed' };
             }
         },
-        initializeFromLocalStorage() {
-            let curFile = window.localStorage.getItem('curFile');
-            if (curFile != null) {
-                curFile = JSON.parse(curFile);
+        initializeCurFile() {
+            if (window.location.hash.length > 0) {
+                let [ collection, name ] = window.location.hash.slice(1).split('/');
+                if (collection.length == 0 || name == null || name.length == 0) return;
+                this.curFile = { collection, name };
+                this.loadCurFile(true);
+            } else {
+                let curFile = window.localStorage.getItem('curFile');
+                if (curFile != null) {
+                    curFile = JSON.parse(curFile);
+                }
+                this.curFile = curFile;
+                this.loadCurFile();
             }
-            this.curFile = curFile;
-            this.loadCurFile();
         },
         initSlides() {
             this.slideDeck = new Reveal(this.$refs.reveal, {
@@ -276,7 +287,7 @@ export default {
         }
     },
     mounted() {
-        this.initializeFromLocalStorage();
+        this.initializeCurFile();
         document.addEventListener('keydown', event => {
             if (event.ctrlKey && event.key == ' ') {
                 event.preventDefault(); this.toggleDrawing();
@@ -315,7 +326,6 @@ export default {
             }
         },
         async curFile(newVal) {
-            window.localStorage.setItem('curFile', JSON.stringify(newVal));
             document.title = this.documentTitle;
         },
         sourceWidthPx(newVal) {
