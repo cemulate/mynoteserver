@@ -1,6 +1,7 @@
 // This file is also used on the server for server-side rendering, so it must be named .mjs
 import MarkdownIt from 'markdown-it';
 import markdownItMath from 'markdown-it-math/dist/markdown-it-math.js';
+import { colorPlugin as markdownItColor } from 'markdown-it-color/dist/index.js';
 import { markdownItFragmentify, markdownItCustomFence, markdownItTargetBlank } from './markdown-it-plugins.mjs';
 import hljs from 'highlight.js';
 
@@ -31,6 +32,10 @@ markdownIt.use(markdownItMath, {
         if (token.attrs != null) attrString = token.attrs.map(([ attr, value ]) => ` ${ attr }="${ value }"`);
         return `<p${ attrString }>\n\\[\n${ str }\n\\]\n</p>`;
     },
+});
+
+markdownIt.use(markdownItColor, {
+    inline: true,
 });
 
 // Re-write the renderer for "fence" tags

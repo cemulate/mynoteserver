@@ -48,6 +48,7 @@
     "fastify": "^3.29.0",
     "highlight.js": "^11.5.1",
     "markdown-it": "^13.0.1",
+    "markdown-it-color": "^2.1.1",
     "markdown-it-math": "^4.1.1"
   }
 }
