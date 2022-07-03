@@ -21,7 +21,7 @@ import {
     customCloseBrackets,
 } from '../lib/codemirror/markdown-language-ext.js';
 import { markdownTexSnippets, customAutocompletionKeymap } from '../lib/codemirror/tex-snippets';
-import { markdownStyleShortcutsKeymap } from '../lib/codemirror/shortcuts';
+import { customShortcutsKeymap } from '../lib/codemirror/shortcuts';
 import { getImageDataURLFromClipboardEvent } from '../lib/image-utils';
 
 const IMAGE_LINE_START = `<p class="inline-figure"><img src="`;
@@ -71,7 +71,7 @@ export default {
                 ]),
                 Prec.high(keymap.of(closeBracketsKeymap)), // boost precedence
                 customAutocompletionKeymap,
-                Prec.high(markdownStyleShortcutsKeymap),
+                Prec.high(customShortcutsKeymap),
 
                 EditorView.lineWrapping,
                 scrollPastEnd(),

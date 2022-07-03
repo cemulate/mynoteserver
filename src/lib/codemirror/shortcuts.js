@@ -28,7 +28,7 @@ const multiSelectVertical = dir => view => {
     view.dispatch({ selection });
 };
 
-const markdownStyleShortcutsKeymap = keymap.of([
+const customShortcutsKeymap = keymap.of([
     { key: 'Ctrl-b', run: insertOnBothSides('**') },
     { key: 'Ctrl-i', run: insertOnBothSides('_') },
     { key: 'Ctrl-l', preventDefault: true, run: insertOnBothSides('~~') },
@@ -36,4 +36,4 @@ const markdownStyleShortcutsKeymap = keymap.of([
     { key: 'Ctrl-Alt-ArrowDown', run: multiSelectVertical('down') },
 ]);
 
-export { markdownStyleShortcutsKeymap };
+export { customShortcutsKeymap };
