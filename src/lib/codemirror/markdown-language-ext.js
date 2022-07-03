@@ -2,7 +2,7 @@ import { tags, Tag } from '@lezer/highlight';
 import { HighlightStyle } from '@codemirror/language';
 import { markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorView } from 'codemirror';
-import { insertBracket, completionStatus } from '@codemirror/autocomplete';
+import { closeBrackets, insertBracket, completionStatus } from '@codemirror/autocomplete';
 
 // https://discuss.codemirror.net/t/markdown-and-latex-syntax-highlighting/4382/11
 // https://github.com/personalizedrefrigerator/joplin/blob/pr/markdownToolbar/packages/app-mobile/components/NoteEditor/MarkdownTeXParser.ts
@@ -115,22 +115,30 @@ const markdownTexHighlightStyle = HighlightStyle.define([
 const markdownBrackets = markdownLanguage.data.of({
     closeBrackets: {
         brackets: [ '(', '[', '{', '$', '`' ],
+        // Close brackets after '$' as well
+        before: ')]}:;>$',
     },
 });
 
 // https://github.com/codemirror/closebrackets/blob/main/src/closebrackets.ts#L81
 const android = typeof navigator == "object" && /Android\b/.test(navigator.userAgent);
-const customCloseBrackets = EditorView.inputHandler.of((view, from, to, insert) => {
+const customCloseBracketsInputHandler = EditorView.inputHandler.of((view, from, to, insert) => {
     if ((android ? view.composing : view.compositionStarted) || view.state.readOnly) return false;
     let sel = view.state.selection.main;
     if (insert.length > 2 || insert.length == 2 && codePointSize(codePointAt(insert, 0)) == 1 ||
         from != sel.from || to != sel.to) return false;
-    // Added line: prevent closeBrackets during autocompletion
-    if (completionStatus(view.state) != null) return false;
     let tr = insertBracket(view.state, insert);
     if (!tr) return false;
+    // Prevent closing an opened bracket during autocompletion (snippets may involve brackets)
+    // However, still allow typing "through" closed brackets. If tr.docChanged is false, this
+    // was probably a "move" instruction from handleClosed; let it through.
+    if (tr.docChanged && completionStatus(view.state) != null) return false;
     view.dispatch(tr);
     return true;
 });
+
+// Only take the state field (second element), not the input handler from
+// closeBrackets(). We replace the input handler with a custom version
+const customCloseBrackets = [ customCloseBracketsInputHandler, closeBrackets()[1] ];
 
 export { InlineMathConfig, BlockMathConfig, markdownTexTags, markdownTexHighlightStyle, markdownBrackets, customCloseBrackets };

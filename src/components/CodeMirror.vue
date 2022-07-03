@@ -58,9 +58,6 @@ export default {
                 EditorState.allowMultipleSelections.of(true),
                 syntaxHighlighting(defaultHighlightStyle),
                 bracketMatching(),
-                // Only take the state field, not the input handler from closeBrackets
-                // We replace the input handler with a custom version right below
-                closeBrackets()[1],
                 customCloseBrackets,
                 autocompletion({ defaultKeymap: false }),
                 search(),
