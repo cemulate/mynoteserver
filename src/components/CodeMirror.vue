@@ -156,6 +156,8 @@ export default {
             this.ignoreNextDocUpdate = true;
             this.editorView.dispatch({
                 changes: { from: 0, to: this.editorView.state.doc.length, insert: newVal },
+                selection: EditorSelection.range(newVal.length, newVal.length),
+                effects: [ EditorView.scrollIntoView(newVal.length) ],
             });
             this.$nextTick(() => this.ignoreNextDocUpdate = false);
         },
