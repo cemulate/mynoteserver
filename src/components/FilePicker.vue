@@ -115,9 +115,11 @@ export default {
 
             this.selectFile({ collection: t1, name: t2 });
         },
-        clear() {
+        reset() {
+            this.files = [];
             this.searchTerm = '';
             this.focusedIndex = -1;
+            this.getFiles();
         },
     },
     updated() {

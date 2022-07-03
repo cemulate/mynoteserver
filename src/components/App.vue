@@ -166,10 +166,8 @@ export default {
         },
         togglePicker() {
             this.isPickerOpen = !this.isPickerOpen;
-            if (this.isPickerOpen) {
-                this.$refs.picker?.getFiles();
-                this.$refs.picker?.clear();
-            }
+            if (this.isPickerOpen) this.$refs.picker?.reset?.();
+            if (!this.isPickerOpen) this.$refs.codemirror?.focus?.();
         },
         toggleFullscreen() {
             if (document.fullscreenElement != null) {
