@@ -145,7 +145,8 @@ export default {
     },
     methods: {
         toggleDrawing(initialImage) {
-            if (!this.isDrawingOpen) {
+            this.isDrawingOpen = !this.isDrawingOpen;
+            if (this.isDrawingOpen) {
                 // Opening
                 if (this.$refs.codemirror == null) return;
                 let { valid, image: existingImage } = this.$refs.codemirror.checkCursorForImage();
@@ -161,8 +162,8 @@ export default {
                 // even if the user didn't edit it - so discardUnedited = false
                 const image = this.$refs.sketch?.getImage?.(!this.openedImageIsNew);
                 if (image != null) this.$refs.codemirror?.addOrReplaceImageAtCursor(image);
+                this.$refs.codemirror?.focus?.();
             }
-            this.isDrawingOpen = !this.isDrawingOpen;
         },
         togglePicker() {
             this.isPickerOpen = !this.isPickerOpen;
@@ -179,6 +180,7 @@ export default {
                     this.$refs.reveal.requestFullscreen();
                 }
             }
+            this.$refs.codemirror?.focus?.();
         },
         gutterDrag(event) {
             if (this.gutterDragStart == null) return;
@@ -306,6 +308,10 @@ export default {
         window.addEventListener('beforeunload', (event) => {
             if (!this.hasContentChanged) return;
             event.preventDefault(); event.returnValue = 1;
+        });
+        this.$refs.codemirror?.focus?.();
+        window.addEventListener('focus', () => {
+            this.$refs.codemirror?.focus?.();
         });
         let r = this.$refs.renderContainer;
         r.addEventListener('scroll', event => {
