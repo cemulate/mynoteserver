@@ -121,7 +121,7 @@ export default {
         },
     },
     updated() {
-        this.$refs.searchBar.focus();
+        this.$refs.searchBar?.focus?.();
     },
 };
 </script>

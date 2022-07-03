@@ -216,7 +216,7 @@ export default {
                     let result = await response.json();
                     this.originalContentOnLoad = result.content;
                     this.markdownSource = result.content;
-                    this.curFile.mtime = response.mtime;
+                    this.curFile.mtime = result.mtime;
                     this.toast = { color: 'green', message: 'File loaded' };
                 } else {
                     this.markdownSource = '';
@@ -224,7 +224,7 @@ export default {
                     this.toast = { color: 'red', message: 'Load failed' };
                 }
             }
-            this.$refs.codemirror?.focus();
+            this.$refs.codemirror?.focus?.();
         },
         updateSourceAndSave() {
             if (this.curFile == null) return;
@@ -282,7 +282,8 @@ export default {
             let el = this.$refs.renderView.parentElement;
             el.scrollTop = el.scrollHeight;
         } else {
-            let slide = this.$refs.codemirror?.getCursorRegion?.('---') ?? this.slideDeck.getHorizontalSlides().length;
+            if (this.slideDeck == null || this.$refs.codemirror == null) return;
+            let slide = this.$refs.codemirror.getCursorRegion('---') ?? this.slideDeck.getHorizontalSlides().length;
             this.slideDeck.slide(slide - 1, 0, 0);
         }
     },
