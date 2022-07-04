@@ -16,7 +16,6 @@
   "devDependencies": {
     "@babel/core": "^7.18.2",
     "@babel/preset-env": "^7.18.2",
-    "@codemirror/autocomplete": "https://github.com/cemulate/autocomplete#patch",
     "@codemirror/commands": "^6.0.1",
     "@codemirror/lang-markdown": "^6.0.0",
     "@codemirror/search": "^6.0.0",
