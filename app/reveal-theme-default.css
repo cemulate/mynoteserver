@@ -372,13 +372,12 @@ as it would be from another list item */
  * CUSTOM
  *********************************************/
 
-.reveal .slides p.inline-figure {
-  text-align: center;
-  margin-top: 0;
-  margin-bottom: 0;
+.reveal .slides p img {
+  display: block;
+  margin: 0 auto;
 }
 
-.reveal .slides p.inline-figure img {
+.reveal .slides p.framed-image img {
   background: white;
   padding: 20px;
   background-color: white;
