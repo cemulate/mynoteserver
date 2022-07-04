@@ -1,7 +1,8 @@
 // This file is also used on the server for server-side rendering, so it must be named .mjs
 import MarkdownIt from 'markdown-it';
 import markdownItMath from 'markdown-it-math/dist/markdown-it-math.js';
-import { colorPlugin as markdownItColor } from 'markdown-it-color/dist/index.js';
+import markdownItAttrs from 'markdown-it-attrs/index.js';
+import markdownItBracketedSpans from 'markdown-it-bracketed-spans';
 import { markdownItFragmentify, markdownItCustomFence, markdownItTargetBlank } from './markdown-it-plugins.mjs';
 import hljs from 'highlight.js';
 
@@ -17,7 +18,6 @@ const highlight = (str, language) => {
 }
 
 const markdownIt = new MarkdownIt({
-    html: true,
     highlight,
 });
 
@@ -34,9 +34,8 @@ markdownIt.use(markdownItMath, {
     },
 });
 
-markdownIt.use(markdownItColor, {
-    inline: true,
-});
+markdownIt.use(markdownItAttrs);
+markdownIt.use(markdownItBracketedSpans);
 
 // Re-write the renderer for "fence" tags
 // This makes the renderer put token.attrs on the <pre> element of a fence, instead of the <code>

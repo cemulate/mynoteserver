@@ -24,8 +24,8 @@ import { markdownTexSnippets, customAutocompletionKeymap } from '../lib/codemirr
 import { customShortcutsKeymap } from '../lib/codemirror/shortcuts';
 import { getImageDataURLFromClipboardEvent } from '../lib/image-utils';
 
-const IMAGE_LINE_START = `<p class="inline-figure"><img src="`;
-const IMAGE_LINE_END = `"/></p>`;
+const IMAGE_LINE_START = `![](`;
+const IMAGE_LINE_END = `)`;
 
 export default {
     data: () => ({
