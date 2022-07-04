@@ -176,8 +176,13 @@ section.has-dark-background, section.has-dark-background h1, section.has-dark-ba
 
 /* Make the first list item after a paragraph as close to it
 as it would be from another list item */
-.reveal p + ul {
+.reveal p+ul {
   margin-top: calc(0.3em - var(--r-block-margin));
+}
+
+/* But li's contain p's if in a markdown loose list... */
+.reveal li p+ul {
+  margin-top: unset;
 }
 
 /* Prevent extra spacing in markdown "loose lists" */
