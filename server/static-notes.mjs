@@ -20,6 +20,34 @@ const notePage = (collection, file, renderedContent) => `<!doctype html>
 </html>
 `;
 
+const revealSlides = rawHtml => rawHtml.split('<hr>').slice(1).map(x => '<section>\n' + x + '\n</section>').join('');
+
+const slidesPage = (collection, file, renderedContent) => `<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>${ `${ collection }/${ file }` }</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="/app/styles.css">
+    <link rel="stylesheet" href="/api/custom-resource/highlight-theme.css">
+    <link rel="stylesheet" href="/app/resources/reveal.css">
+    <link rel="stylesheet" href="/api/custom-resource/reveal-theme.css">
+    <script src="/api/custom-resource/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+
+<body class="static-page static-slides-page">
+<div class="reveal">
+<div class="slides">
+${ revealSlides(renderedContent) }
+</slides>
+</div>
+<script src="/app/resources/reveal.js"></script>
+<script>Reveal.initialize({ width: 1920 - 0.04 * 1920, height: 1080 - 0.04 * 1080, margin: 0.04 });</script>
+</body>
+</html>
+`;
+
 const formatMtime = mtime => format(toDate(mtime), 'LL/dd/yy h:mm aaa');
 
 const fileTableRow = ({ collection, name, mtime }) => `<tr>
@@ -58,8 +86,12 @@ async function routes(server, options) {
 
     server.get('/:collection/:file', async (req, res) => {
         let content = await dir.readFile(req.params.collection, req.params.file + '.md');
+        let isSlides = content.startsWith('---');
+        let fragmentifyEnabled = isSlides && req.query.fragmentify != null;
+        renderer.set({ fragmentifyEnabled });
         let renderedContent = renderer.render(content);
-        let html = notePage(req.params.collection, req.params.file, renderedContent);
+        let args = [ req.params.collection, req.params.file, renderedContent ];
+        let html =  isSlides ? slidesPage(...args) : notePage(...args);
         res.header('Content-Type', 'text/html; charset=utf-8');
         return html;
     });
