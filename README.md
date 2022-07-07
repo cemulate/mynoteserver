@@ -19,10 +19,12 @@ In this case, horizontal rules (`---`) are treated as slide boundaries.
     * In this mode, the fullscreen button will easily present the slides
     * Use the "Fragmented" button to *automatically* add the `fragment` class to all block elements, making your presentation **automatically proceed step-by-step**.
     * There is a default reveal.js theme, but you can drop a file called `reveal-theme.css` in the top level of your notes directory to use include that css, this can be an existing reveal.js theme or your own.
+    * [markdown-it-attrs](https://github.com/arve0/markdown-it-attrs) is included so you can arbitrary alter attributes/classes on output HTML; this is particular useful for coloring text (for which some utility css classes are incldued) or for "floating" images in slides with `position: absolute`.
 * While the app is served at `/app` (and the api at `/api`), there is also a "static" view of your notes under `/notes`
-    * `/notes` itself serves a basic directory of notes by modification date with links to a server-rendered print-ready view of each note.
-    This is useful for printing to PDF or just reading on mobile.
-* The editor supports snippet completion, in the [style of vscode](https://code.visualstudio.com/docs/editor/userdefinedsnippets). By default, all builtin LaTeX commands as well as all user-defined MathJax macros have automatically created snippets. You can also use the `config.j` file to add additional snippets; the [default config file](/src/lib/config-default.js) has some included. The supported syntax is the same as as vscode snippet JSON files, but doesn't support all features such as variables and regex (only what [codemirror supports](https://codemirror.net/docs/ref/#autocomplete.snippet)).
+    * `/notes` itself serves a basic directory of notes by modification date.
+    * `/notes/collection/file` will produce a static server-rendered view of the note, useful for reading on mobile or printing to PDF.
+    * If the file is a presentation, the same url will render a standalone Reveal.js fullscreen presentation; use `fragmentify` in the query string to enable fragmented mode on the presentation. In particular, you can use this page to export the presentation to PDF [per the reveal.js docs](https://revealjs.com/pdf-export/)
+* The editor supports snippet completion, in the [style of vscode](https://code.visualstudio.com/docs/editor/userdefinedsnippets). By default, all builtin LaTeX commands as well as all user-defined MathJax macros have automatically created snippets. You can also use the `config.js` file to add additional snippets; the [default config file](/src/lib/config-default.js) has some included. The supported syntax is the same as as vscode snippet JSON files, but doesn't support all features such as variables and regex (only what [codemirror supports](https://codemirror.net/docs/ref/#autocomplete.snippet)).
 
 Check out [the demo](https://cemulate.github.io/mynoteserver/app/); this is a mocked-out copy of the front-end/app that you can use to test out the editor.
 
