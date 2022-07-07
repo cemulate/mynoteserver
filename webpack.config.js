@@ -53,10 +53,10 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         // Need to be able to (not) include these dynamically with script tags
-        { from: 'node_modules/reveal.js/dist/reveal.css', to: 'reveal.css' },
-        { from: 'src/styles/reveal-theme-default.css', to: 'reveal-theme-default.css' },
-        { from: 'node_modules/highlight.js/styles/default.css', to: 'highlight-theme-default.css' },
-        { from: 'src/lib/config-default.js', to: 'config-default.js' },
+        { from: 'node_modules/reveal.js/dist/reveal.css', to: 'resources/reveal.css' },
+        { from: 'src/styles/reveal-theme-default.css', to: 'resources/reveal-theme-default.css' },
+        { from: 'node_modules/highlight.js/styles/default.css', to: 'resources/highlight-theme-default.css' },
+        { from: 'src/lib/config-default.js', to: 'resources/config-default.js' },
       ],
     }),
     new VueLoaderPlugin(),

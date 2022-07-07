@@ -15,11 +15,11 @@ async function routes(server, options) {
             return content;
         } catch (error) {
             if (req.params.name == 'reveal-theme.css') {
-                res.redirect(303, '/app/reveal-theme-default.css');
+                res.redirect(303, '/app/resources/reveal-theme-default.css');
             } else if (req.params.name == 'highlight-theme.css') {
-                res.redirect(303, '/app/highlight-theme-default.css');
+                res.redirect(303, '/app/resources/highlight-theme-default.css');
             } else if (req.params.name == 'config.js') {
-                res.redirect(303, '/app/config-default.js');
+                res.redirect(303, '/app/resources/config-default.js');
             } else {
                 throw error;
             }
