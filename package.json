@@ -50,6 +50,7 @@
     "markdown-it": "^13.0.1",
     "markdown-it-attrs": "^4.1.4",
     "markdown-it-bracketed-spans": "^1.0.1",
-    "markdown-it-math": "^4.1.1"
+    "markdown-it-math": "^4.1.1",
+    "md5": "^2.3.0"
   }
 }

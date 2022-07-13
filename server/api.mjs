@@ -54,22 +54,19 @@ async function routes(server, options) {
         return result.map(f => basename(f.name, '.md'));
     });
     server.get('/collection/:collection/file/:fileName', async (req, res) => {
-        let mtimeOnly = req.query.stat != null;
+        let statOnly = req.query.stat != null;
         let { collection, fileName } = req.params;
         let file = fileName + '.md';
 
-        let jobs = [ dir.getFileMtime(collection, file) ];
-        if (!mtimeOnly) jobs.push(dir.readFile(collection, file));
-
-        let [ mtime, content ] = await Promise.all(jobs);
-        return mtimeOnly ? { mtime } : { mtime, content };
+        let data = await dir.getFileData(!statOnly, collection, file);
+        return data;
     });
     server.post('/collection/:collection/file/:file', async (req, res) => {
         let { content } = req.body;
         let { collection, file } = req.params;
         await dir.writeFile(content, collection, file + '.md');
-        let mtime = await dir.getFileMtime(collection, file + '.md');
-        return { mtime };
+        let stats = await dir.statFile(collection, file + '.md');
+        return stats;
     });
 };
 
