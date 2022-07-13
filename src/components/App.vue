@@ -267,37 +267,38 @@ export default {
             }
         },
         async initializeCurFile() {
-            if (window.location.hash.length > 0) {
+            let curFile = window.localStorage.getItem('curFile');
+            if (curFile != null) {
+                curFile = JSON.parse(curFile);
+            }
+            this.curFile = curFile;
+
+            if (window.location.hash.length > 1) {
                 let [ collection, name ] = window.location.hash.slice(1).split('/');
                 if (collection.length == 0 || name == null || name.length == 0) return;
-                this.curFile = { collection, name };
-                this.downloadCurFile();
-            } else {
-                let curFile = window.localStorage.getItem('curFile');
-                if (curFile != null) {
-                    curFile = JSON.parse(curFile);
+                if (this.curFile.collection != collection || this.curFile.name != name) {
+                    this.curFile = { collection, name };
                 }
-                this.curFile = curFile;
-
-                let loadedFromLocalStorage = false;
-                let savedBuffer = window.localStorage.getItem('buffer');
-                let response = await network.get(`/api/collection/${ curFile.collection }/file/${ curFile.name }?stat`);
-                if (response?.status == 200) {
-                    let { mtime, md5 } = await response.json();
-                    if (md5 == this.curFile.md5 && savedBuffer != null) {
-                        this.markdownSource = savedBuffer;
-                        // Even though we don't have the file content from the server,
-                        // we can see if the saved buffer differs by computing its md5.
-                        // If so, ensure that hasContentChanged says true.
-                        let bufferMd5 = md5sum(savedBuffer);
-                        this.originalContentOnLoad = bufferMd5 == md5 ? savedBuffer : null;
-
-                        this.editorDisabled = false;
-                        loadedFromLocalStorage = true;
-                    }
-                }
-                if (!loadedFromLocalStorage) this.downloadCurFile();
             }
+
+            let loadedFromLocalStorage = false;
+            let savedBuffer = window.localStorage.getItem('buffer');
+            let response = await network.get(`/api/collection/${ this.curFile.collection }/file/${ this.curFile.name }?stat`);
+            if (response?.status == 200) {
+                let { mtime, md5 } = await response.json();
+                if (md5 == this.curFile.md5 && savedBuffer != null) {
+                    this.markdownSource = savedBuffer;
+                    // Even though we don't have the file content from the server,
+                    // we can see if the saved buffer differs by computing its md5.
+                    // If so, ensure that hasContentChanged says true.
+                    let bufferMd5 = md5sum(savedBuffer);
+                    this.originalContentOnLoad = bufferMd5 == md5 ? savedBuffer : null;
+
+                    this.editorDisabled = false;
+                    loadedFromLocalStorage = true;
+                }
+            }
+            if (!loadedFromLocalStorage) this.downloadCurFile();
         },
         initSlides() {
             this.slideDeck = new Reveal(this.$refs.reveal, {
