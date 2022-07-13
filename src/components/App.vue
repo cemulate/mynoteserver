@@ -8,6 +8,8 @@
                 :debounce="500"
                 @pasteImage="onPasteImage"
                 @openImageAtCursor="toggleDrawing(null)"
+                :disabled="editorDisabled"
+                :style="{ 'opacity': editorDisabled ? '0.5' : '1' }"
             />
         </div>
         <div class="App-gutter"
@@ -103,6 +105,7 @@ export default {
         isDrawingOpen: false,
         openedImage: null,
         openedImageIsNew: false,
+        editorDisabled: false,
 
         isPickerOpen: false,
         curFile: null,
