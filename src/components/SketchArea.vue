@@ -141,6 +141,7 @@ export default {
             this.context.beginPath(); this.context.moveTo(x1, y1); this.context.lineTo(x2, y2); this.context.stroke();
         },
         onPointerDown(event) {
+            this.recentPointerType = event.pointerType;
             if (this.disabled) return;
 
             this.updatePosition(event);
@@ -164,7 +165,6 @@ export default {
             }
         },
         onPointerMove(event) {
-            this.recentPointerType = event.pointerType;
             if (this.disabled || this.action == ACTION.NONE) return;
             
             let oldPos = this.position;
