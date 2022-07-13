@@ -3,7 +3,7 @@ import MarkdownIt from 'markdown-it';
 import markdownItMath from 'markdown-it-math/dist/markdown-it-math.js';
 import markdownItAttrs from 'markdown-it-attrs/index.js';
 import markdownItBracketedSpans from 'markdown-it-bracketed-spans';
-import { markdownItFragmentify, markdownItCustomFence, markdownItTargetBlank } from './markdown-it-plugins.mjs';
+import { markdownItFragmentify, markdownItCustomFence } from './markdown-it-plugins.mjs';
 import hljs from 'highlight.js';
 
 const highlight = (str, language) => {
@@ -45,7 +45,6 @@ markdownIt.use(markdownItBracketedSpans);
 markdownIt.use(markdownItCustomFence);
 
 markdownIt.use(markdownItFragmentify);
-markdownIt.use(markdownItTargetBlank);
 
 const renderer = markdownIt;
 

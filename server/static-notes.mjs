@@ -2,15 +2,20 @@ import { renderer } from '../src/lib/markdown.mjs';
 import { format, toDate } from 'date-fns';
 renderer.set({ fragmentifyEnabled: false, highlightEnabled: true });
 
+const HEADER = `
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <base href="/" target="_blank">
+`;
+
 const notePage = (collection, file, renderedContent) => `<!doctype html>
 <html>
 <head>
-    <meta charset="utf-8">
+    ${ HEADER }
     <title>${ `${ collection }/${ file }` }</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="stylesheet" href="/app/styles.css">
-    <link rel="stylesheet" href="/api/custom-resource/highlight-theme.css">
-    <script src="/api/custom-resource/config.js"></script>
+    <link rel="stylesheet" href="app/styles.css">
+    <link rel="stylesheet" href="api/custom-resource/highlight-theme.css">
+    <script src="api/custom-resource/config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 
@@ -25,14 +30,13 @@ const revealSlides = rawHtml => rawHtml.split('<hr>').slice(1).map(x => '<sectio
 const slidesPage = (collection, file, renderedContent) => `<!doctype html>
 <html>
 <head>
-    <meta charset="utf-8">
+    ${ HEADER }
     <title>${ `${ collection }/${ file }` }</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="stylesheet" href="/app/styles.css">
-    <link rel="stylesheet" href="/api/custom-resource/highlight-theme.css">
-    <link rel="stylesheet" href="/app/resources/reveal.css">
-    <link rel="stylesheet" href="/api/custom-resource/reveal-theme.css">
-    <script src="/api/custom-resource/config.js"></script>
+    <link rel="stylesheet" href="app/styles.css">
+    <link rel="stylesheet" href="api/custom-resource/highlight-theme.css">
+    <link rel="stylesheet" href="app/resources/reveal.css">
+    <link rel="stylesheet" href="api/custom-resource/reveal-theme.css">
+    <script src="api/custom-resource/config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 
@@ -52,8 +56,8 @@ const formatMtime = mtime => format(toDate(mtime), 'LL/dd/yy h:mm aaa');
 
 const fileTableRow = ({ collection, name, mtime }) => `<tr>
 <td>
-<a class="is-hidden-mobile" href="/notes/${ collection }/${ name }">${ collection } / ${ name }</a>
-<a class="is-hidden-tablet" href="/notes/${ collection }/${ name }">${ name }</a>
+<a class="is-hidden-mobile" href="notes/${ collection }/${ name }">${ collection } / ${ name }</a>
+<a class="is-hidden-tablet" href="notes/${ collection }/${ name }">${ name }</a>
 <br class="is-hidden-tablet"><small class="is-hidden-tablet">${ collection }</small>
 </td>
 <td class="datecell"><small>${ formatMtime(mtime) }</small></td>
@@ -62,10 +66,9 @@ const fileTableRow = ({ collection, name, mtime }) => `<tr>
 const listPage = (files) => `<!doctype html>
 <html>
 <head>
-    <meta charset="utf-8">
+    ${ HEADER }
     <title>Notes</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="stylesheet" href="/app/styles.css">
+    <link rel="stylesheet" href="app/styles.css">
 </head>
 
 <body class="static-page">
