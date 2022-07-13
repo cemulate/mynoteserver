@@ -22,8 +22,10 @@ class BadgeWidget extends WidgetType {
     ignoreEvent() { return false }
 }
 
-function hideLinesByPrefixField(prefix, replacement) {
-    const rep = Decoration.replace({ widget: new BadgeWidget(replacement) });
+function hideLinesByPrefixField(replacementInfo) {
+    const replacements = replacementInfo.map(entry => {
+        return { ...entry, decoration: Decoration.replace({ widget: new BadgeWidget(entry.replacement) })}
+    });
     return StateField.define({
         create() {
             return Decoration.none;
@@ -34,11 +36,16 @@ function hideLinesByPrefixField(prefix, replacement) {
             let newHiddens = [];
             while (pos < tr.newDoc.length) {
                 let line = tr.newDoc.lineAt(pos);
+                // See if there is already a range on this line
                 let duplicate = false;
-                // Set duplicate if there is already a range on this line
                 hiddens.between(line.from, line.to, () => duplicate = true);
-                if (!duplicate && line.text.startsWith(prefix)) {
-                    newHiddens.push(rep.range(line.from, line.to));
+
+                // Skip/don't check if duplicate
+                for (let { prefix, decoration } of duplicate ? [] : replacements) {
+                    if (line.text.startsWith(prefix)) {
+                        newHiddens.push(decoration.range(line.from, line.to));
+                        break;
+                    }
                 }
                 pos = line.to + 1;
             }
