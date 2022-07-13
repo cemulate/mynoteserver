@@ -47,7 +47,7 @@ export default {
     mounted() {
         this.editorView = new EditorView({
             doc: this.modelValue,
-            extensions: [ 
+            extensions: [
                 minimalSetup,
                 lineNumbers(),
                 highlightActiveLine(),
@@ -82,7 +82,10 @@ export default {
                 markdownTexSnippets,
                 markdownBrackets,
                 syntaxHighlighting(markdownTexHighlightStyle),
-                hideLinesByPrefixField(IMAGE_LINE_START, 'Figure'),
+                hideLinesByPrefixField([
+                    { prefix: IMAGE_LINE_START, replacement: 'Figure' },
+                    { prefix: '<svg', replacement: 'SVG' },
+                ]),
                 EditorView.updateListener.of(this.onDocumentUpdate.bind(this)),
                 EditorView.domEventHandlers({ click: this.onClick.bind(this) }),
             ],
@@ -133,7 +136,7 @@ export default {
         },
         onClick(event, view) {
             let el = event.target;
-            if (!el.classList.contains('cm-badge-widget')) return;
+            if (!(el.classList.contains('cm-badge-widget') && el.innerHTML == 'Figure')) return;
             let n = view.posAtDOM(el);
             let line = view.state.doc.lineAt(n);
             this.editorView.dispatch({

@@ -19,6 +19,7 @@ const highlight = (str, language) => {
 
 const markdownIt = new MarkdownIt({
     highlight,
+    html: true,
 });
 
 markdownIt.use(markdownItMath, {
