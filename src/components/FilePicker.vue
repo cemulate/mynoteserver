@@ -21,10 +21,9 @@
         <small class="FilePicker-subdued">{{ formatEditTime(entry.mtime) }}</small>
         <a 
             class="button is-link FilePicker-open-new-tab-button"
-            target="_blank"
             @click.stop=""
-            :href="`#${ entry.collection }/${ entry.name }`"
-            title="Open in new tab"
+            :href="`notes/${ entry.collection }/${ entry.name }`"
+            title="Open note in new tab"
         />
     </a>
     <a class="panel-block" v-if="loadError">
