@@ -92,6 +92,7 @@
 import { renderer } from '../lib/markdown.mjs';
 import * as network from '../lib/network';
 import Reveal from 'reveal.js';
+import md5sum from 'md5';
 
 import SketchArea from '../components/SketchArea.vue';
 import CodeMirror from '../components/CodeMirror.vue';
@@ -105,7 +106,7 @@ export default {
         isDrawingOpen: false,
         openedImage: null,
         openedImageIsNew: false,
-        editorDisabled: false,
+        editorDisabled: true,
 
         isPickerOpen: false,
         curFile: null,
@@ -116,6 +117,7 @@ export default {
         toast: {
             color: 'black',
             message: '',
+            timeout: null,
         },
         showToast: false,
         scrollFollow: true,
@@ -199,35 +201,44 @@ export default {
             }
             this.curFile = file;
             this.isPickerOpen = false;
-            window.localStorage.setItem('curFile', JSON.stringify(this.curFile));
-            this.loadCurFile();
-        },
-        async loadCurFile() {
-            if (this.curFile == null) return;
-            let { collection, name, mtime } = this.curFile;
-            let isFromHash = window.location.hash.length > 1;
-            if (!isFromHash && mtime == null) {
-                // If this file wasn't loaded from a hash doesn't have an mtime,
+            this.persistCurFile();
+
+            if (this.curFile.mtime == null) {
+                // If this file doesn't have an mtime,
                 // FilePicker wanted to create a new file.
-                this.markdownSource = `# ${ name }`;
+                this.markdownSource = `# ${ this.curFile.name }`;
                 // Always compare false as to display the unsaved star
                 this.originalContentOnLoad = null;
-                this.toast = { color: 'green', message: 'New File' };
+                this.toast = { color: 'green', message: 'New File', timeout: 3000 };
             } else {
-                let response = await network.get(`/api/collection/${ collection }/file/${ name }`);
-                if (response?.status == 200) {
-                    let result = await response.json();
-                    this.originalContentOnLoad = result.content;
-                    this.markdownSource = result.content;
-                    this.curFile.mtime = result.mtime;
-                    this.toast = { color: 'green', message: 'File loaded' };
-                } else {
-                    this.markdownSource = '';
-                    this.curFile = null;
-                    this.toast = { color: 'red', message: 'Load failed' };
-                }
+                this.downloadCurFile();
             }
-            this.$refs.codemirror?.focus?.();
+        },
+        async downloadCurFile() {
+            if (this.curFile == null) return;
+            this.editorDisabled = true;
+            this.toast = { color: 'gray', message: 'Loading...' };
+
+            let { collection, name, mtime } = this.curFile;
+            let response = await network.get(`/api/collection/${ collection }/file/${ name }`);
+            if (response?.status == 200) {
+                let { content, mtime, md5 } = await response.json();
+                this.originalContentOnLoad = content;
+                this.markdownSource = content;
+                this.curFile = { ...this.curFile, mtime, md5 };
+                this.persistCurFile();
+                this.toast = { color: 'green', message: 'File loaded', timeout: 3000 };
+            } else {
+                this.markdownSource = '';
+                this.toast = { color: 'red', message: 'Load failed' };
+                // Persist curFile but set .md5 = null; Enforce that the
+                // app thinks this file is out of date on next load.
+                this.persistCurFile(true);
+                this.curFile = null;
+            }
+
+            this.editorDisabled = false;
+            this.$nextTick(() => this.$refs.codemirror?.focus?.());
         },
         updateSourceAndSave() {
             if (this.curFile == null) return;
@@ -236,32 +247,56 @@ export default {
             this.$refs?.codemirror?.commitDocument();
             this.$nextTick(() => this.saveCurFile());
         },
+        persistCurFile(nullHash) {
+            let data = nullHash ? { ...this.curFile, md5: null } : this.curFile;
+            window.localStorage.setItem('curFile', JSON.stringify(data));
+        },
         async saveCurFile() {
             if (this.curFile == null) return;
             let { collection, name } = this.curFile;
             let response = await network.post(`/api/collection/${ collection }/file/${ name }`, { content: this.markdownSource });
             if (response?.status == 200) {
-                let { mtime } = await response.json();
+                let { mtime, md5 } = await response.json();
                 this.originalContentOnLoad = this.markdownSource;
-                window.localStorage.setItem('curFile', JSON.stringify({ ...this.curFile, mtime }));
-                this.toast = { color: 'green', message: 'Saved!' };
+                this.curFile.mtime = mtime;
+                this.curFile.md5 = md5;
+                this.persistCurFile();
+                this.toast = { color: 'green', message: 'Saved!', timeout: 3000 };
             } else {
                 this.toast = { color: 'red', message: 'Save failed' };
             }
         },
-        initializeCurFile() {
+        async initializeCurFile() {
             if (window.location.hash.length > 0) {
                 let [ collection, name ] = window.location.hash.slice(1).split('/');
                 if (collection.length == 0 || name == null || name.length == 0) return;
                 this.curFile = { collection, name };
-                this.loadCurFile(true);
+                this.downloadCurFile();
             } else {
                 let curFile = window.localStorage.getItem('curFile');
                 if (curFile != null) {
                     curFile = JSON.parse(curFile);
                 }
                 this.curFile = curFile;
-                this.loadCurFile();
+
+                let loadedFromLocalStorage = false;
+                let savedBuffer = window.localStorage.getItem('buffer');
+                let response = await network.get(`/api/collection/${ curFile.collection }/file/${ curFile.name }?stat`);
+                if (response?.status == 200) {
+                    let { mtime, md5 } = await response.json();
+                    if (md5 == this.curFile.md5 && savedBuffer != null) {
+                        this.markdownSource = savedBuffer;
+                        // Even though we don't have the file content from the server,
+                        // we can see if the saved buffer differs by computing its md5.
+                        // If so, ensure that hasContentChanged says true.
+                        let bufferMd5 = md5sum(savedBuffer);
+                        this.originalContentOnLoad = bufferMd5 == md5 ? savedBuffer : null;
+
+                        this.editorDisabled = false;
+                        loadedFromLocalStorage = true;
+                    }
+                }
+                if (!loadedFromLocalStorage) this.downloadCurFile();
             }
         },
         initSlides() {
@@ -327,11 +362,13 @@ export default {
         if (this.isSlides) this.initSlides();
     },
     watch: {
+        markdownSource(newVal) {
+            window.localStorage.setItem('buffer', newVal);
+        },
         toast(newVal) {
-            if (newVal) {
-                this.showToast = true;
-                window.setTimeout(() => this.showToast = false, 5000);
-            }
+            if (newVal == null) return;
+            this.showToast = true;
+            if (newVal.timeout != null) window.setTimeout(() => this.showToast = false, newVal.timeout);
         },
         async curFile(newVal) {
             document.title = this.documentTitle;
