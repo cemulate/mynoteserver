@@ -4,7 +4,7 @@
 
 <script>
 import { EditorView, minimalSetup } from 'codemirror';
-import { EditorState, EditorSelection, Prec } from '@codemirror/state';
+import { EditorState, EditorSelection, Prec, Compartment } from '@codemirror/state';
 import { keymap, scrollPastEnd, lineNumbers, highlightActiveLineGutter, drawSelection, highlightActiveLine } from '@codemirror/view';
 import { indentWithTab, history, historyKeymap } from '@codemirror/commands';
 import { foldGutter, foldKeymap, defaultHighlightStyle, syntaxHighlighting, bracketMatching } from '@codemirror/language';
@@ -33,6 +33,7 @@ export default {
         debounceTimeoutID: null,
         ignoreNextDocUpdate: false,
         ignoreNextModelUpdate: false,
+        editableCompartment: null,
     }),
     props: {
         modelValue: {
@@ -43,8 +44,13 @@ export default {
             type: Number,
             default: 500,
         },
+        disabled: {
+            type: Boolean,
+            default: false,
+        },
     },
     mounted() {
+        this.editableCompartment = new Compartment();
         this.editorView = new EditorView({
             doc: this.modelValue,
             extensions: [
@@ -86,6 +92,7 @@ export default {
                     { prefix: IMAGE_LINE_START, replacement: 'Figure' },
                     { prefix: '<svg', replacement: 'SVG' },
                 ]),
+                this.editableCompartment.of(EditorView.editable.of(!this.disabled)),
                 EditorView.updateListener.of(this.onDocumentUpdate.bind(this)),
                 EditorView.domEventHandlers({ click: this.onClick.bind(this) }),
             ],
@@ -163,6 +170,11 @@ export default {
                 effects: [ EditorView.scrollIntoView(newVal.length) ],
             });
             this.$nextTick(() => this.ignoreNextDocUpdate = false);
+        },
+        disabled(newVal) {
+            this.editorView.dispatch({
+                effects: this.editableCompartment.reconfigure(EditorView.editable.of(!newVal)),
+            });
         },
     },
 };
