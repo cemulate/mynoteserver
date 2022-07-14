@@ -14,10 +14,9 @@ A simple, self-hosted note-taking and slide-making solution with the following k
     * Rich sketch interface with full support for stylus pressure & erasers, colors, etc.
     * **No managing image files and links!** Images are stored _directly_ in the markdown document as an image tag with a data URL, conveniently hidden from view in the editor.
     * Edit images easily by re-opening the sketch area with your cursor on the line of an existing figure tag.
-    * Including SVG images is supported by pasting a raw `<svg>` into the editor; as long as the svg code is on one line, such tags will be hidden in the editor like other images
-        * Stripping white space to get just one line can be done by a tool like [SVGOMG](https://jakearchibald.github.io/svgomg/)
-        * For best positioning results, avoid setting `width` and `height` attributes on your svg; instead use `viewBox` to ensure the image takes up its whole container ([SVGOMG](https://jakearchibald.github.io/svgomg/) can do this via the "Prefer viewBox to width/height" option).
-        You can use [markdown-it-attrs](https://github.com/arve0/markdown-it-attrs) to then set the width and position of the containing paragraph (see below for more about using this to position images in presentations).
+    * Including SVG images is supported by pasting a raw `<svg>` into the editor; as long as the svg code is on one line, such tags will be hidden in the editor like other images.
+        * For best results, use `viewBox` instead of `width` and `height` to ensure the image takes up its whole container, and use prefixed ids to avoid id conflicts if including multiple SVGs. Inkscape's "Optimized SVG" export has various settings to do both of these things, and can also collapse the output file to one line.
+        * For choosing the figure size, you can use [markdown-it-attrs](https://github.com/arve0/markdown-it-attrs) to then set the width and position of the containing paragraph (see below for more about using this to position images in presentations).
 * Instead of notes, **make [Reveal.js](https://revealjs.com) presentations** by starting the document with `---`. 
 In this case, horizontal rules (`---`) are treated as slide boundaries.
     * In this mode, the fullscreen button will easily present the slides
