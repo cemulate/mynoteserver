@@ -1,5 +1,6 @@
 import { renderer } from '../src/lib/markdown.mjs';
 import { format, toDate } from 'date-fns';
+import { dirname, basename } from 'node:path';
 renderer.set({ fragmentifyEnabled: false, highlightEnabled: true });
 
 const HEADER = `
@@ -8,11 +9,11 @@ const HEADER = `
     <base href="/" target="_blank">
 `;
 
-const notePage = (collection, file, renderedContent) => `<!doctype html>
+const notePage = (path, renderedContent) => `<!doctype html>
 <html>
 <head>
     ${ HEADER }
-    <title>${ `${ collection }/${ file }` }</title>
+    <title>${ `${ path }` }</title>
     <link rel="stylesheet" href="app/styles.css">
     <link rel="stylesheet" href="api/custom-resource/highlight-theme.css">
     <script src="api/custom-resource/config.js"></script>
@@ -27,11 +28,11 @@ const notePage = (collection, file, renderedContent) => `<!doctype html>
 
 const revealSlides = rawHtml => rawHtml.split('<hr>').slice(1).map(x => '<section>\n' + x + '\n</section>').join('');
 
-const slidesPage = (collection, file, renderedContent) => `<!doctype html>
+const slidesPage = (path, renderedContent) => `<!doctype html>
 <html>
 <head>
     ${ HEADER }
-    <title>${ `${ collection }/${ file }` }</title>
+    <title>${ `${ path }` }</title>
     <link rel="stylesheet" href="app/styles.css">
     <link rel="stylesheet" href="api/custom-resource/highlight-theme.css">
     <link rel="stylesheet" href="app/resources/reveal.css">
@@ -54,11 +55,11 @@ ${ revealSlides(renderedContent) }
 
 const formatMtime = mtime => format(toDate(mtime), 'LL/dd/yy h:mm aaa');
 
-const fileTableRow = ({ collection, name, mtime }) => `<tr>
+const fileTableRow = ({ path, mtime }) => `<tr>
 <td>
-<a class="is-hidden-mobile" href="notes/${ collection }/${ name }">${ collection } / ${ name }</a>
-<a class="is-hidden-tablet" href="notes/${ collection }/${ name }">${ name }</a>
-<br class="is-hidden-tablet"><small class="is-hidden-tablet">${ collection }</small>
+<a class="is-hidden-mobile" href="notes/${ path }">${ path }</a>
+<a class="is-hidden-tablet" href="notes/${ path }">${ basename(path) }</a>
+<br class="is-hidden-tablet"><small class="is-hidden-tablet">${ dirname(path) }</small>
 </td>
 <td class="datecell"><small>${ formatMtime(mtime) }</small></td>
 </tr>`;
@@ -87,25 +88,21 @@ ${ files.map(fileTableRow).join('\n') }
 async function routes(server, options) {
     const dir = options.directory;
 
-    server.get('/:collection/:file', async (req, res) => {
-        let content = await dir.readFile(req.params.collection, req.params.file + '.md');
+    server.get('/*', async (req, res) => {
+        let path = req.params['*'].split('/');
+        let content = await dir.readFile(path);
         let isSlides = content.startsWith('---');
         let fragmentifyEnabled = isSlides && req.query.fragmentify != null;
         renderer.set({ fragmentifyEnabled });
         let renderedContent = renderer.render(content);
-        let args = [ req.params.collection, req.params.file, renderedContent ];
+        let args = [ path.join('/'), renderedContent ];
         let html =  isSlides ? slidesPage(...args) : notePage(...args);
         res.header('Content-Type', 'text/html; charset=utf-8');
         return html;
     });
 
     server.get('/', async (req, res) => {
-        let dirs = await dir.subdirectories();
-        let entries = await Promise.all(dirs.map(async d => {
-            let files = await dir.files(d.name, '.md');
-            return files.map(f => ({ ...f, collection: d.name }));
-        }));
-        entries = entries.flat();
+        let entries = await dir.ls();
         entries.sort((a, b) => Math.sign(b.mtime - a.mtime));
         let html = listPage(entries);
         res.header('Content-Type', 'text/html; charset=utf-8');

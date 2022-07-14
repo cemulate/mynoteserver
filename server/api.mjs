@@ -10,7 +10,7 @@ async function routes(server, options) {
         try {
             let ext = extname(req.params.name);
             const type = { '.js': 'text/javascript', '.css': 'text/css' };
-            let content = await dir.readFile(req.params.name);
+            let content = await dir.readFile([ req.params.name ]);
             res.header('Content-Type', `${ type[ext] }; charset=utf-8`);
             return content;
         } catch (error) {
@@ -28,44 +28,31 @@ async function routes(server, options) {
     server.post('/add-mathjax-macro', async (req, res) => {
         let curContent;
         try {
-            curContent = await dir.readFile('mathjax-config.js') ;
+            curContent = await dir.readFile([ 'config.js' ]) ;
         } catch (error) {
             curContent = '';
         }
         let { key, value, arity } = req.body;
         let newContent = addMacroToMathjaxConfig(curContent, key, value, arity);
-        await dir.writeFile(newContent, 'mathjax-config.js');
+        await dir.writeFile(newContent, [ 'config.js' ]);
         return {};
     });
-    server.get('/collections', async (req, res) => {
-        let result = await dir.subdirectories();
-        return result.map(d => d.name);
+    server.get('/ls', async (req, res) => {
+        return dir.ls();
     });
-    server.get('/files', async (req, res) => {
-        let dirs = await dir.subdirectories();
-        let entries = await Promise.all(dirs.map(async d => {
-            let files = await dir.files(d.name, '.md');
-            return files.map(f => ({ ...f, collection: d.name }));
-        }));
-        return entries.flat();
+    server.get('/file/*', async (req, res) => {
+        let path = req.params['*'].split('/');
+        return dir.getFileData(true, path);
     });
-    server.get('/collection/:collection', async (req, res) => {
-        let result = await dir.files(req.params.collection, '.md');
-        return result.map(f => basename(f.name, '.md'));
+    server.get('/stat/*', async (req, res) => {
+        let path = req.params['*'].split('/');
+        return dir.statFile(path);
     });
-    server.get('/collection/:collection/file/:fileName', async (req, res) => {
-        let statOnly = req.query.stat != null;
-        let { collection, fileName } = req.params;
-        let file = fileName + '.md';
-
-        let data = await dir.getFileData(!statOnly, collection, file);
-        return data;
-    });
-    server.post('/collection/:collection/file/:file', async (req, res) => {
+    server.post('/file/*', async (req, res) => {
         let { content } = req.body;
-        let { collection, file } = req.params;
-        await dir.writeFile(content, collection, file + '.md');
-        let stats = await dir.statFile(collection, file + '.md');
+        let path = req.params['*'].split('/');
+        await dir.writeFile(content, path);
+        let stats = await dir.statFile(path);
         return stats;
     });
 };

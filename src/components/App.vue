@@ -35,7 +35,7 @@
             <span class="is-flex-grow-1 ml-2">
                 <a class="has-text-black" @click="togglePicker">
                     <span v-if="curFile != null">
-                    {{ curFile.collection }} / {{ curFile.name }}{{ hasContentChanged ? '*' : '' }}
+                    {{ curFile.path }}{{ hasContentChanged ? '*' : '' }}
                     </span>
                     <span v-else>Select file</span>
                 </a>
@@ -137,14 +137,14 @@ export default {
         },
         staticLink() {
             if (this.curFile == null) return '#';
-            return `/notes/${ this.curFile.collection }/${ this.curFile.name }`;
+            return `notes/${ this.curFile.path }`;
         },
         hasContentChanged() {
             return (this.markdownSource != this.originalContentOnLoad);
         },
         documentTitle() {
             if (this.curFile == null) return 'My Notes';
-            let base = `${ this.curFile.collection }/${ this.curFile.name }`;
+            let base = `${ this.curFile.path }`;
             return this.hasContentChanged ? base + '*' : base;
         },
     },
@@ -206,7 +206,7 @@ export default {
             if (this.curFile.mtime == null) {
                 // If this file doesn't have an mtime,
                 // FilePicker wanted to create a new file.
-                this.markdownSource = `# ${ this.curFile.name }`;
+                this.markdownSource = `# ${ this.curFile.path }`;
                 // Always compare false as to display the unsaved star
                 this.originalContentOnLoad = null;
                 this.toast = { color: 'green', message: 'New File', timeout: 3000 };
@@ -219,8 +219,8 @@ export default {
             this.editorDisabled = true;
             this.toast = { color: 'gray', message: 'Loading...' };
 
-            let { collection, name, mtime } = this.curFile;
-            let response = await network.get(`/api/collection/${ collection }/file/${ name }`);
+            let { path, mtime } = this.curFile;
+            let response = await network.get(`/api/file/${ path }`);
             if (response?.status == 200) {
                 let { content, mtime, md5 } = await response.json();
                 this.originalContentOnLoad = content;
@@ -253,8 +253,8 @@ export default {
         },
         async saveCurFile() {
             if (this.curFile == null) return;
-            let { collection, name } = this.curFile;
-            let response = await network.post(`/api/collection/${ collection }/file/${ name }`, { content: this.markdownSource });
+            let { path } = this.curFile;
+            let response = await network.post(`/api/file/${ path }`, { content: this.markdownSource });
             if (response?.status == 200) {
                 let { mtime, md5 } = await response.json();
                 this.originalContentOnLoad = this.markdownSource;
@@ -274,31 +274,35 @@ export default {
             this.curFile = curFile;
 
             if (window.location.hash.length > 1) {
-                let [ collection, name ] = window.location.hash.slice(1).split('/');
-                if (collection.length == 0 || name == null || name.length == 0) return;
-                if (this.curFile.collection != collection || this.curFile.name != name) {
-                    this.curFile = { collection, name };
+                let hashPath = window.location.hash.slice(1);
+                if (this.curFile.path != hashPath) {
+                    this.curFile = { path: hashPath };
                 }
             }
 
-            let loadedFromLocalStorage = false;
-            let savedBuffer = window.localStorage.getItem('buffer');
-            let response = await network.get(`/api/collection/${ this.curFile.collection }/file/${ this.curFile.name }?stat`);
+            let serverFileData = null;
+            let response = await network.get(`/api/stat/${ this.curFile.path }`);
             if (response?.status == 200) {
-                let { mtime, md5 } = await response.json();
-                if (md5 == this.curFile.md5 && savedBuffer != null) {
-                    this.markdownSource = savedBuffer;
-                    // Even though we don't have the file content from the server,
-                    // we can see if the saved buffer differs by computing its md5.
-                    // If so, ensure that hasContentChanged says true.
-                    let bufferMd5 = md5sum(savedBuffer);
-                    this.originalContentOnLoad = bufferMd5 == md5 ? savedBuffer : null;
-
-                    this.editorDisabled = false;
-                    loadedFromLocalStorage = true;
-                }
+                serverFileData = await response.json();
             }
-            if (!loadedFromLocalStorage) this.downloadCurFile();
+
+            if (serverFileData != null && serverFileData.md5 != this.curFile?.md5) {
+                // We affirmatively know that the file is out of date (or we're loading from hash)
+                this.downloadCurFile();
+            } else {
+                // This file isn't out of date or we're offline / can't tell
+                let savedBuffer = window.localStorage.getItem('buffer');
+                this.markdownSource = savedBuffer ?? '';
+                // Even though we don't have the file content from the server,
+                // we can see if the saved buffer differs by computing its md5.
+                // If so, ensure that hasContentChanged says true.
+                let bufferMd5 = md5sum(savedBuffer);
+                let serverMd5 = serverFileData?.md5;
+                this.originalContentOnLoad = bufferMd5 == serverMd5 ? savedBuffer : null;
+
+                if (serverFileData == null) this.toast = { color: 'red', message: 'Offline' };
+                this.editorDisabled = false;
+            }
         },
         initSlides() {
             this.slideDeck = new Reveal(this.$refs.reveal, {

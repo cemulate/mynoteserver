@@ -17,12 +17,12 @@
         v-bind:class="{ 'has-background-link-light': index == focusedIndex }"
         @click="selectFile(entry)"
     >
-        <span class="is-family-monospace is-flex-grow-1">{{ entry.collection }}/{{ entry.name }}</span>
+        <span class="is-family-monospace is-flex-grow-1">{{ entry.path }}</span>
         <small class="FilePicker-subdued">{{ formatEditTime(entry.mtime) }}</small>
         <a 
             class="button is-link FilePicker-open-new-tab-button"
             @click.stop=""
-            :href="`notes/${ entry.collection }/${ entry.name }`"
+            :href="`notes/${ entry.path }`"
             title="Open note in new tab"
         />
     </a>
@@ -48,13 +48,9 @@ export default {
     },
     computed: {
         topMatchingFiles() {
-            let [ t1, t2 ] = this.searchTerm.split('/');
-            let result;
-            if (t2 == undefined) {
-                result = this.files.filter(f => f.collection.includes(t1) || f.name.includes(t1));
-            } else {
-                result = this.files.filter(f => f.collection.includes(t1) && f.name.includes(t2));
-            }
+            let searchParts = this.searchTerm.split('/');
+            let fixed = searchParts.slice(0, -1).join('/');
+            let result = this.files.filter(f => f.path.startsWith(fixed) && f.path.slice(fixed.length).includes(searchParts.at(-1)));
             result.sort((a, b) => Math.sign(b.mtime - a.mtime));
             return result.slice(0, 10);
         },
@@ -66,7 +62,7 @@ export default {
     },
     methods: {
         async getFiles() {
-            let response = await network.get('/api/files');
+            let response = await network.get('/api/ls');
             if (response?.status == 200) {
                 let files = await response.json();
                 this.files = files;
@@ -107,12 +103,8 @@ export default {
         },
         selectNewFile() {
             // New file
-            let [ t1, t2 ] = this.searchTerm.split('/');
-            // TODO: errors for these cases
-            if (t2 == undefined) return;
-            if (t1.length == 0 || t2.length == 0) return;
-
-            this.selectFile({ collection: t1, name: t2 });
+            let parts = this.searchTerm.split('/').filter(x => x.length > 0);
+            this.selectFile({ path: parts.join('/') });
         },
         reset() {
             this.files = [];

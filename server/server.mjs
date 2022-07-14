@@ -38,7 +38,7 @@ server.get('/', async (request, reply) => {
     return reply.redirect('/app/');
 });
 
-const directory = new Directory(options.directory);
+const directory = new Directory(options.directory, '.md');
 server.register(api, { prefix: '/api', directory });
 server.register(staticNotes, { prefix: '/notes', directory });
 
