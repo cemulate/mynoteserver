@@ -4,6 +4,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
+const { InjectManifest } = require('workbox-webpack-plugin');
 
 module.exports = {
   entry: process.env.NODE_ENV == 'development' ? ['webpack-hot-middleware/client', './src/index.js'] : './src/index.js',
@@ -56,6 +57,10 @@ module.exports = {
       ],
     }),
     new VueLoaderPlugin(),
+    new InjectManifest({
+      swSrc: './src/service-worker.js',
+      maximumFileSizeToCacheInBytes: 1024*1024*10,
+    }),
     new webpack.HotModuleReplacementPlugin(),
   ],
 };
