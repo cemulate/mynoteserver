@@ -21,7 +21,7 @@
             @dblclick.prevent="resetSourceWidthPx"
         />
         <div class="App-render-container p-2" ref="renderContainer">
-            <div v-if="!isSlides" ref="renderView" class="rendered-note-content content" v-html="renderedContent"></div>
+            <div v-if="!isSlides" ref="renderView" class="rendered-note-content content" v-html="renderedHtml"></div>
             <div v-if="isSlides" class="App-print reveal" ref="reveal">
                 <div class="slides">
                     <section
@@ -65,8 +65,6 @@
 <div class="modal" :class="{ 'is-active': isDrawingOpen }">
     <div class="modal-background">
         <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
-            <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
-        <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
         read the DOM to set the correct dimensions -->
         <sketch-area class="App-sketch-area-component"
             ref="sketch"
@@ -93,7 +91,7 @@
 </template>
 
 <script>
-import { renderer } from '../lib/markdown.mjs';
+import { markdownRenderer } from '../lib/markdown.mjs';
 import * as network from '../lib/network';
 import Reveal from 'reveal.js';
 import md5sum from 'md5';
@@ -104,9 +102,13 @@ import CodeMirror from '../components/CodeMirror.vue';
 import FilePicker from '../components/FilePicker.vue';
 import AddMacro from '../components/AddMacro.vue';
 
+const renderMarkdown = markdownRenderer(window?.MathJax);
+
 export default {
     data: () => ({
         markdownSource: '',
+        renderedHtml: null,
+
         fragmentsOn: false,
         isDrawingOpen: false,
         openedImage: null,
@@ -130,15 +132,11 @@ export default {
         gutterDragStart: null,
     }),
     computed: {
-        renderedContent() {
-            renderer.set({ fragmentifyEnabled: this.fragmentsOn, highlightEnabled: true });
-            return renderer.render(this.markdownSource);
-        },
         isSlides() {
             return this.markdownSource.startsWith('---');
         },
         renderedSlides() {
-            return this.renderedContent.split('<hr>').slice(1).map(x => x.trim());
+            return this.renderedHtml.split('<hr>').slice(1).map(x => x.trim());
         },
         staticLink() {
             if (this.curFile == null) return '#';
@@ -149,11 +147,18 @@ export default {
         },
         documentTitle() {
             if (this.curFile == null) return 'My Notes';
-            let base = `${ this.curFile.path }`;
+            let base = `${ this.curFile.path.split('/').at(-1) }`;
             return this.hasContentChanged ? base + '*' : base;
         },
     },
     methods: {
+        renderContent() {
+            let opts = { fragmentifyEnabled: this.fragmentsOn, highlightEnabled: true };
+            let { html, styleSheet } = renderMarkdown(this.markdownSource, opts);
+            this.renderedHtml = html;
+            console.log('style sheet length: ', styleSheet.length);
+            document.getElementById('mathjax-chtml-styles').textContent = styleSheet;
+        },
         toggleDrawing(initialImage) {
             this.isDrawingOpen = !this.isDrawingOpen;
             if (this.isDrawingOpen) {
@@ -374,6 +379,7 @@ export default {
     watch: {
         markdownSource(newVal) {
             window.localStorage.setItem('buffer', newVal);
+            this.renderContent();
         },
         toast(newVal) {
             if (newVal == null) return;

@@ -1,7 +1,10 @@
-import { renderer } from '../src/lib/markdown.mjs';
+import { markdownRenderer } from '../src/lib/markdown.mjs';
 import { format, toDate } from 'date-fns';
-import { dirname, basename } from 'node:path';
-renderer.set({ fragmentifyEnabled: false, highlightEnabled: true });
+import { dirname, basename, join } from 'node:path';
+import * as fs from 'node:fs/promises';
+import * as vm from 'node:vm';
+import { fileURLToPath } from 'url';
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 const HEADER = `
     <meta charset="utf-8">
@@ -9,7 +12,7 @@ const HEADER = `
     <base href="/" target="_blank">
 `;
 
-const notePage = (path, renderedContent) => `<!doctype html>
+const notePage = (path, renderedContent, styleSheet) => `<!doctype html>
 <html>
 <head>
     ${ HEADER }
@@ -17,7 +20,7 @@ const notePage = (path, renderedContent) => `<!doctype html>
     <link rel="stylesheet" href="app/styles.css">
     <link rel="stylesheet" href="api/custom-resource/highlight-theme.css">
     <script src="api/custom-resource/config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>${ styleSheet }</style>
 </head>
 
 <body class="static-page static-note-page">
@@ -28,7 +31,7 @@ const notePage = (path, renderedContent) => `<!doctype html>
 
 const revealSlides = rawHtml => rawHtml.split('<hr>').slice(1).map(x => '<section>\n' + x + '\n</section>').join('');
 
-const slidesPage = (path, renderedContent) => `<!doctype html>
+const slidesPage = (path, renderedContent, styleSheet) => `<!doctype html>
 <html>
 <head>
     ${ HEADER }
@@ -38,7 +41,7 @@ const slidesPage = (path, renderedContent) => `<!doctype html>
     <link rel="stylesheet" href="app/resources/reveal.css">
     <link rel="stylesheet" href="api/custom-resource/reveal-theme.css">
     <script src="api/custom-resource/config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>${ styleSheet }</style>
 </head>
 
 <body class="static-page static-slides-page">
@@ -85,17 +88,35 @@ ${ files.map(fileTableRow).join('\n') }
 </html>
 `;
 
+async function getMathjaxConfig(customDir) {
+    // Normally, window.MathJax is set in config[-default].js, to configure it on the client
+    // We need to use the same config file to configure it on the server.
+    const context = { window: {} };
+    vm.createContext(context);
+    let code;
+    try {
+        code = await customDir.readFile([ 'config.js' ]);
+    } catch (error) {
+        code = await fs.readFile(join(__dirname, 'resources', 'config-default.js'), { encoding: 'utf-8' });
+    }
+    vm.runInContext(code, context);
+    return context.window.MathJax;
+}
+
 async function routes(server, options) {
     const dir = options.directory;
 
     server.get('/*', async (req, res) => {
+        // Do this on every request to ensure we're respecting new config files
+        let mathjaxConfig = await getMathjaxConfig(dir);
+        const renderMarkdown = markdownRenderer(mathjaxConfig);
+
         let path = req.params['*'].split('/');
         let content = await dir.readFile(path);
         let isSlides = content.startsWith('---');
         let fragmentifyEnabled = isSlides && req.query.fragmentify != null;
-        renderer.set({ fragmentifyEnabled });
-        let renderedContent = renderer.render(content);
-        let args = [ path.join('/'), renderedContent ];
+        let { html: renderedContent, styleSheet } = renderMarkdown(content, { fragmentifyEnabled, highlightEnabled: true });
+        let args = [ path.join('/'), renderedContent, styleSheet ];
         let html =  isSlides ? slidesPage(...args) : notePage(...args);
         res.header('Content-Type', 'text/html; charset=utf-8');
         return html;

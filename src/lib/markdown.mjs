@@ -4,6 +4,7 @@ import markdownItMath from 'markdown-it-math/dist/markdown-it-math.js';
 import markdownItAttrs from 'markdown-it-attrs/index.js';
 import markdownItBracketedSpans from 'markdown-it-bracketed-spans';
 import { markdownItFragmentify, markdownItCustomFence } from './markdown-it-plugins.mjs';
+import { MathRenderer } from './mathjax.mjs';
 import hljs from 'highlight.js';
 
 const highlight = (str, language) => {
@@ -17,35 +18,47 @@ const highlight = (str, language) => {
     return null;
 }
 
-const markdownIt = new MarkdownIt({
-    highlight,
-    html: true,
-});
+function markdownRenderer(mathjaxConfig) {
 
-markdownIt.use(markdownItMath, {
-    inlineOpen: '$',
-    inlineClose: '$',
-    blockOpen: '$$',
-    blockClose: '$$',
-    inlineRenderer: str => `\\(${ str }\\)`,
-    blockRenderer: (str, token) => {
-        let attrString = '';
-        if (token.attrs != null) attrString = token.attrs.map(([ attr, value ]) => ` ${ attr }="${ value }"`);
-        return `<p${ attrString }>\n\\[\n${ str }\n\\]\n</p>`;
-    },
-});
+    const markdownIt = new MarkdownIt({
+        highlight,
+        html: true,
+    });
 
-markdownIt.use(markdownItAttrs);
-markdownIt.use(markdownItBracketedSpans);
+    markdownIt.use(markdownItAttrs);
+    markdownIt.use(markdownItBracketedSpans);
 
-// Re-write the renderer for "fence" tags
-// This makes the renderer put token.attrs on the <pre> element of a fence, instead of the <code>
-// In particular this makes the following plugin work correctly, since "fragment" will go on the <pre>
-// Also allows the renderer to respect the 'highlightEnabled' option.
-markdownIt.use(markdownItCustomFence);
+    // Re-write the renderer for "fence" tags
+    // This makes the renderer put token.attrs on the <pre> element of a fence, instead of the <code>
+    // In particular this makes the following plugin work correctly, since "fragment" will go on the <pre>
+    // Also allows the renderer to respect the 'highlightEnabled' option.
+    markdownIt.use(markdownItCustomFence);
+    markdownIt.use(markdownItFragmentify);
 
-markdownIt.use(markdownItFragmentify);
+    const mathRenderer = new MathRenderer(mathjaxConfig);
 
-const renderer = markdownIt;
+    markdownIt.use(markdownItMath, {
+        inlineOpen: '$',
+        inlineClose: '$',
+        blockOpen: '$$',
+        blockClose: '$$',
+        inlineRenderer: str => mathRenderer.render(str, false),
+        blockRenderer: (str, token) => {
+            let attrString = '';
+            if (token.attrs != null) attrString = token.attrs.map(([ attr, value ]) => ` ${ attr }="${ value }"`);
+            let mathContent = mathRenderer.render(str, true);
+            return `<p${ attrString }>\n${ mathContent }\n</p>`;
+        },
+    });
 
-export { renderer };
+    return (content, opts = {}) => {
+        let { fragmentifyEnabled, highlightEnabled } = opts;
+        markdownIt.set({ fragmentifyEnabled, highlightEnabled });
+
+        let html = markdownIt.render(content);
+
+        return { html, styleSheet: mathRenderer.getStyleSheet() };
+    }
+}
+
+export { markdownRenderer };
