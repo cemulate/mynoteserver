@@ -1,28 +1,31 @@
-import { basename, extname } from 'node:path';
+import path, { basename, extname, join } from 'node:path';
 import { addMacroToMathjaxConfig } from './utils.mjs';
+import * as fs from 'node:fs/promises';
+import { fileURLToPath } from 'url';
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 async function routes(server, options) {
     const dir = options.directory;
 
     server.get('/custom-resource/:name', async (req, res) => {
-        const allowed = [ 'config.js', 'reveal-theme.css', 'highlight-theme.css' ];
-        if (!allowed.includes(req.params.name)) throw new Error('No such custom resource');
+        const defaultPaths = {
+            'config.js': path.join(__dirname, 'resources', 'config-default.js'),
+            'reveal-theme.css': path.join(__dirname, 'resources', 'reveal-theme-default.css'),
+            'highlight-theme.css': path.join(__dirname, '..', 'node_modules', 'highlight.js', 'styles', 'default.css'),
+        };
+        const contentType = { '.js': 'text/javascript', '.css': 'text/css' };
+
+        if (!Object.keys(defaultPaths).includes(req.params.name)) throw new Error('No such custom resource');
+        let resource = req.params.name;
+        let type = contentType[extname(resource)];
+        res.header('Content-Type', `${ type }; charset=utf-8`);
         try {
-            let ext = extname(req.params.name);
-            const type = { '.js': 'text/javascript', '.css': 'text/css' };
-            let content = await dir.readFile([ req.params.name ]);
-            res.header('Content-Type', `${ type[ext] }; charset=utf-8`);
+            let content = await dir.readFile([ resource ]);
             return content;
         } catch (error) {
-            if (req.params.name == 'reveal-theme.css') {
-                res.redirect(303, '/app/resources/reveal-theme-default.css');
-            } else if (req.params.name == 'highlight-theme.css') {
-                res.redirect(303, '/app/resources/highlight-theme-default.css');
-            } else if (req.params.name == 'config.js') {
-                res.redirect(303, '/app/resources/config-default.js');
-            } else {
-                throw error;
-            }
+            let path = defaultPaths[resource];
+            let content = await fs.readFile(path, { encoding: 'utf-8' });
+            return content;
         }
     });
     server.post('/add-mathjax-macro', async (req, res) => {
