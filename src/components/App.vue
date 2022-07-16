@@ -61,32 +61,33 @@
                 title="Open print view in new tab"></a>
         </div>
     </div>
-
-    <div class="modal" :class="{ 'is-active': isDrawingOpen }">
-        <div class="modal-background">
+</div>
+<div class="modal" :class="{ 'is-active': isDrawingOpen }">
+    <div class="modal-background">
+        <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
             <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
-            read the DOM to set the correct dimensions -->
-            <sketch-area class="App-sketch-area-component"
-                ref="sketch"
-                :image="openedImage"
-                v-if="isDrawingOpen"
-                @close="toggleDrawing"
-            />
-        </div>
-        <div class="modal-content">
-        </div>
+        <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
+        read the DOM to set the correct dimensions -->
+        <sketch-area class="App-sketch-area-component"
+            ref="sketch"
+            :image="openedImage"
+            v-if="isDrawingOpen"
+            @close="toggleDrawing"
+        />
     </div>
-    <div class="modal" :class="{ 'is-active': isPickerOpen }">
-        <div class="modal-background" @click="togglePicker"></div>
-        <div class="modal-content">
-            <file-picker ref="picker" @selectFile="selectFile"></file-picker>
-        </div>
+    <div class="modal-content">
     </div>
-    <div class="modal" :class="{ 'is-active': isAddMacroOpen }">
-        <div class="modal-background" @click="isAddMacroOpen = false"></div>
-        <div class="modal-content">
-            <add-macro v-if="isAddMacroOpen" @close="isAddMacroOpen = false"></add-macro>
-        </div>
+</div>
+<div class="modal" :class="{ 'is-active': isPickerOpen }">
+    <div class="modal-background" @click="togglePicker"></div>
+    <div class="modal-content">
+        <file-picker ref="picker" @selectFile="selectFile"></file-picker>
+    </div>
+</div>
+<div class="modal" :class="{ 'is-active': isAddMacroOpen }">
+    <div class="modal-background" @click="isAddMacroOpen = false"></div>
+    <div class="modal-content">
+        <add-macro v-if="isAddMacroOpen" @close="isAddMacroOpen = false"></add-macro>
     </div>
 </div>
 </template>
