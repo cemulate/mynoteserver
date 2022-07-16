@@ -296,8 +296,8 @@ export default {
                 this.downloadCurFile();
             } else {
                 // This file isn't out of date or we're offline / can't tell
-                let savedBuffer = window.localStorage.getItem('buffer');
-                this.markdownSource = savedBuffer ?? '';
+                let savedBuffer = window.localStorage.getItem('buffer') ?? '';
+                this.markdownSource = savedBuffer;
                 // Even though we don't have the file content from the server,
                 // we can see if the saved buffer differs by computing its md5.
                 // If so, ensure that hasContentChanged says true.
