@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import * as url from 'url';
+import { fileURLToPath } from 'url';
 import { options, usage } from './cli-options.mjs';
 import { exit } from 'process';
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 import fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
