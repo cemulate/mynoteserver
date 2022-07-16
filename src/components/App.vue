@@ -1,4 +1,7 @@
 <template>
+<Head>
+    <title>{{ documentTitle }}</title>
+</Head>
 <div class="App-root is-flex is-flex-direction-column">
     <div class="App-mainview is-flex-grow-1 is-flex is-flex-direction-row" @pointermove="gutterDrag">
         <div class="App-codemirror-container" :style="{ 'width': sourceWidthPx + 'px' }">
@@ -94,6 +97,7 @@ import * as network from '../lib/network';
 import Reveal from 'reveal.js';
 import md5sum from 'md5';
 
+import { Head } from '@vueuse/head'
 import SketchArea from '../components/SketchArea.vue';
 import CodeMirror from '../components/CodeMirror.vue';
 import FilePicker from '../components/FilePicker.vue';
@@ -375,20 +379,15 @@ export default {
             this.showToast = true;
             if (newVal.timeout != null) window.setTimeout(() => this.showToast = false, newVal.timeout);
         },
-        async curFile(newVal) {
-            document.title = this.documentTitle;
-        },
         sourceWidthPx(newVal) {
             window.localStorage.setItem('sourceWidthPx', newVal);
-        },
-        hasContentChanged(newVal) {
-            document.title = this.documentTitle;
         },
         isSlides(newVal) {
             if (newVal) this.$nextTick(() => this.initSlides());
         },
     },
     components: {
+        Head,
         'sketch-area': SketchArea,
         'code-mirror': CodeMirror,
         'file-picker': FilePicker,
