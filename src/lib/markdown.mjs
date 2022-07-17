@@ -2,7 +2,6 @@
 import MarkdownIt from 'markdown-it';
 import markdownItMath from 'markdown-it-math/dist/markdown-it-math.js';
 import markdownItAttrs from 'markdown-it-attrs/index.js';
-import markdownItBracketedSpans from 'markdown-it-bracketed-spans';
 import { markdownItFragmentify, markdownItCustomFence } from './markdown-it-plugins.mjs';
 import { MathRenderer } from './mathjax.mjs';
 import hljs from 'highlight.js';
@@ -26,7 +25,6 @@ function markdownRenderer(mathjaxConfig) {
     });
 
     markdownIt.use(markdownItAttrs);
-    markdownIt.use(markdownItBracketedSpans);
 
     // Re-write the renderer for "fence" tags
     // This makes the renderer put token.attrs on the <pre> element of a fence, instead of the <code>
