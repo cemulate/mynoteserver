@@ -156,7 +156,6 @@ export default {
             let opts = { fragmentifyEnabled: this.fragmentsOn, highlightEnabled: true };
             let { html, styleSheet } = renderMarkdown(this.markdownSource, opts);
             this.renderedHtml = html;
-            console.log('style sheet length: ', styleSheet.length);
             document.getElementById('mathjax-chtml-styles').textContent = styleSheet;
         },
         toggleDrawing(initialImage) {
