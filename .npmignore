@@ -4,6 +4,7 @@ src/**/*
 # files under src that needs to be included
 !src/lib/markdown.mjs
 !src/lib/markdown-it-plugins.mjs
+!src/lib/mathjax.mjs
 notes
 .gitignore
 .babelrc
