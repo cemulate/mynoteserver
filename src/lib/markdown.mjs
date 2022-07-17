@@ -2,7 +2,7 @@
 import MarkdownIt from 'markdown-it';
 import markdownItMath from 'markdown-it-math/dist/markdown-it-math.js';
 import markdownItAttrs from 'markdown-it-attrs/index.js';
-import markdownItSpan from 'markdown-it-span';
+import { colorPlugin as markdownItColor } from 'markdown-it-color/dist/index.js';
 import { markdownItFragmentify, markdownItCustomFence } from './markdown-it-plugins.mjs';
 import { MathRenderer } from './mathjax.mjs';
 import hljs from 'highlight.js';
@@ -25,7 +25,7 @@ function markdownRenderer(mathjaxConfig) {
         html: true,
     });
 
-    markdownIt.use(markdownItSpan);
+    markdownIt.use(markdownItColor);
     markdownIt.use(markdownItAttrs);
 
     // Re-write the renderer for "fence" tags
