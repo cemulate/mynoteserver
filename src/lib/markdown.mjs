@@ -25,7 +25,7 @@ function markdownRenderer(mathjaxConfig) {
         html: true,
     });
 
-    markdownIt.use(markdownItColor);
+    markdownIt.use(markdownItColor, { inline: true });
     markdownIt.use(markdownItAttrs);
 
     // Re-write the renderer for "fence" tags
