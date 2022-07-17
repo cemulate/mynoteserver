@@ -20,6 +20,8 @@ html.no-scroll {
 // Small tweaks to editor and rendered markdown content 
 // (perhaps break this out into a custom resource?)
 
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
 .cm-editor {
     background-color: #fbfbfb;
     font-size: 14px;
@@ -33,6 +35,10 @@ html.no-scroll {
 
 .content.rendered-note-content {
     overflow-wrap: break-word;
+
+    font-size: 1.1em;
+    line-height: 1.6;
+    font-family: Noto Serif, $body-family;
 
     p img {
         display: block;
