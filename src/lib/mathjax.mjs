@@ -10,7 +10,11 @@ class MathRenderer {
     constructor(mathjaxConfig) {
         this.documentOptions = {
             InputJax: new TeX({ packages: AllPackages, ...mathjaxConfig?.tex }),
-            OutputJax: new CHTML({ fontURL: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2', ...mathjaxConfig?.chtml }),
+            OutputJax: new CHTML({
+                fontURL: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2',
+                scale: 1.2,
+                ...mathjaxConfig?.chtml,
+            }),
         }
 
         this.adaptor = liteAdaptor();
