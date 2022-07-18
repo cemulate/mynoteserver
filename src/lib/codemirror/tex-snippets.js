@@ -5,7 +5,7 @@ import { markdownLanguage } from '@codemirror/lang-markdown';
 
 import builtinTexSnippets from './builtin-tex-snippets';
 
-let mathjaxMacros = window?.MathJax?.config?.tex?.macros ?? {};
+let mathjaxMacros = window?.MathJax?.tex?.macros ?? {};
 let userSnippetData = window?.mynoteserver?.userSnippets ?? {};
 
 let baseSnippets = builtinTexSnippets.map(({ label, snippet }) => snippetCompletion(snippet, { label })).slice(0, 1000);
