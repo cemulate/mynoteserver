@@ -52,10 +52,11 @@
                 :title="isSlides ? 'Present' : 'Toggle fullscreen editor'"></a>
             <button v-if="isSlides"
                 class="button is-small is-rounded ml-4"
-                :class="{ 'is-primary': fragmentsOn }"
-                @click="fragmentsOn = !fragmentsOn"
+                :class="{ 'is-primary': fragmentify }"
+                @click="toggleFragmentify"
+                title="Make presentation proceed step-by-step through all block elements"
             >
-            Fragmented
+            Auto Pause
             </button>
             <a target="_blank" class="is-hidden-mobile button is-link App-icon App-static-link-button ml-4" :href="staticLink"
                 title="Open print view in new tab"></a>
@@ -109,7 +110,7 @@ export default {
         markdownSource: '',
         renderedHtml: null,
 
-        fragmentsOn: false,
+        fragmentify: false,
         isDrawingOpen: false,
         openedImage: null,
         openedImageIsNew: false,
@@ -153,10 +154,14 @@ export default {
     },
     methods: {
         renderContent() {
-            let opts = { fragmentifyEnabled: this.fragmentsOn, highlightEnabled: true };
+            let opts = { fragmentifyEnabled: this.fragmentify, highlightEnabled: true };
             let { html, styleSheet } = renderMarkdown(this.markdownSource, opts);
             this.renderedHtml = html;
             document.getElementById('mathjax-chtml-styles').textContent = styleSheet;
+        },
+        toggleFragmentify() {
+            this.fragmentify = !this.fragmentify;
+            this.renderContent();
         },
         toggleDrawing(initialImage) {
             this.isDrawingOpen = !this.isDrawingOpen;
