@@ -1,4 +1,4 @@
-import { markdownRenderer } from '../src/lib/markdown.mjs';
+import { markdownRenderer } from '../src/lib/markdown/markdown.mjs';
 import { format, toDate } from 'date-fns';
 import { dirname, basename, join } from 'node:path';
 import * as fs from 'node:fs/promises';

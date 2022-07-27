@@ -92,7 +92,7 @@
 </template>
 
 <script>
-import { markdownRenderer } from '../lib/markdown.mjs';
+import { markdownRenderer } from '../lib/markdown/markdown.mjs';
 import * as network from '../lib/network';
 import Reveal from 'reveal.js';
 import md5sum from 'md5';

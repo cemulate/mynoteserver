@@ -2,9 +2,7 @@
 src/**/*
 # These modules are used both on the client and server; they are the only
 # files under src that needs to be included
-!src/lib/markdown.mjs
-!src/lib/markdown-it-plugins.mjs
-!src/lib/mathjax.mjs
+!src/lib/markdown/**/*
 notes
 .gitignore
 .babelrc
