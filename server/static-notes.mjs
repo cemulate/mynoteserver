@@ -1,10 +1,7 @@
 import { markdownRenderer } from '../src/lib/markdown/markdown.mjs';
 import { format, toDate } from 'date-fns';
 import { dirname, basename, join } from 'node:path';
-import * as fs from 'node:fs/promises';
-import * as vm from 'node:vm';
-import { fileURLToPath } from 'url';
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
+import { getMathjaxConfig } from './utils.mjs';
 
 const HEADER = `
     <meta charset="utf-8">
@@ -87,21 +84,6 @@ ${ files.map(fileTableRow).join('\n') }
 </body>
 </html>
 `;
-
-async function getMathjaxConfig(customDir) {
-    // Normally, window.MathJax is set in config[-default].js, to configure it on the client
-    // We need to use the same config file to configure it on the server.
-    const context = { window: {} };
-    vm.createContext(context);
-    let code;
-    try {
-        code = await customDir.readFile([ 'config.js' ]);
-    } catch (error) {
-        code = await fs.readFile(join(__dirname, 'resources', 'config-default.js'), { encoding: 'utf-8' });
-    }
-    vm.runInContext(code, context);
-    return context.window.MathJax;
-}
 
 async function routes(server, options) {
     const dir = options.directory;
