@@ -8,12 +8,28 @@ export default {
         'fragmentify',
         'highlight',
         'wrap',
-        'scrollFollow',
+        'autoScrollIntoView',
     ],
     computed: {
         renderedHtml() {
             return defaultMarkdownRenderer.render(this.source, { fragmentifyEnabled: this.fragmentify, highlightEnabled: this.highlight });
         },
+    },
+    methods: {
+        scrollIntoView() {
+            let el = this.$el;
+            if (el.nodeType != Node.ELEMENT_NODE) el = el?.nextElementSibling;
+            if (el == null) return;
+            let image = el.querySelector('img');
+            if (image != null) {
+                image.onload = () => {
+                    image.scrollIntoView(true);
+                    image.onload = null;
+                }
+            } else {
+                el.scrollIntoView(true);
+            }
+        }
     },
     render() {
         if (this.wrap != null) {
@@ -29,19 +45,6 @@ export default {
         }
     },
     updated() {
-        if (!this.scrollFollow) return;
-
-        let el = this.$el;
-        if (el.nodeType != Node.ELEMENT_NODE) el = el?.nextElementSibling;
-        if (el == null) return;
-        let image = el.querySelector('img');
-        if (image != null) {
-            image.onload = () => {
-                image.scrollIntoView(true);
-                image.onload = null;
-            }
-        } else {
-            el.scrollIntoView(true);
-        }
+        if (this.autoScrollIntoView) this.scrollIntoView();
     },
 };

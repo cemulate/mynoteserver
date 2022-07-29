@@ -32,7 +32,7 @@
                     :fragmentify="fragmentify"
                     :highlight="true"
                     :wrap="null"
-                    :scrollFollow="true"
+                    :autoScrollIntoView="true"
                 />
             </div>
             <div v-if="isSlides" class="App-print reveal" ref="reveal">
@@ -43,7 +43,7 @@
                         :fragmentify="fragmentify"
                         :highlight="true"
                         :wrap="'section'"
-                        :scrollFollow="false"
+                        :autoScrollIntoView="false"
                     />
                 </div>
             </div>
