@@ -39,7 +39,11 @@ export default {
             template.innerHTML = this.renderedHtml;
             let nodes = [];
             for (let node of template.content.children) {
-                nodes.push(h(node.tagName, { innerHTML: node.innerHTML }));
+                let vattrs = {};
+                for (let attr of node.attributes) {
+                    vattrs[attr.nodeName] = attr.nodeValue;
+                }
+                nodes.push(h(node.tagName, { innerHTML: node.innerHTML, ...vattrs }));
             }
             return nodes;
         }
