@@ -29,7 +29,6 @@
                 <markdown-chunk
                     v-for="chunk in markdownChunks"
                     :source="chunk"
-                    :renderer="markdownRenderer"
                     :fragmentify="fragmentify"
                     :highlight="true"
                     :wrap="null"
@@ -41,7 +40,6 @@
                     <markdown-chunk
                         v-for="chunk in markdownChunks"
                         :source="chunk"
-                        :renderer="markdownRenderer"
                         :fragmentify="fragmentify"
                         :highlight="true"
                         :wrap="'section'"
@@ -125,7 +123,6 @@ import AddMacro from '../components/AddMacro.vue';
 
 export default {
     data: () => ({
-        markdownRenderer: null,
         markdownChunks: [],
         isSlides: false,
         hasContentChanged: false,
@@ -148,7 +145,6 @@ export default {
             timeout: null,
         },
         showToast: false,
-        scrollFollow: true,
         sourceWidthPx: parseInt(window.localStorage?.getItem?.('sourceWidthPx') ?? 0.4 * window.screen.width),
         gutterDragStart: null,
     }),
@@ -380,18 +376,7 @@ export default {
         window.addEventListener('focus', () => {
             this.$refs.codemirror?.focus?.();
         });
-        let r = this.$refs.renderContainer;
-        r.addEventListener('scroll', event => {
-            let { scrollTop, scrollHeight, clientHeight } = event.target;
-            // RHS true iff the rendered content is scrolled to the bottom.
-            // if the user scrolls back up, remember to not snap the scroll
-            // position to bottom upon render until they scroll back down.
-            this.scrollFollow = (scrollHeight - scrollTop - clientHeight) == 0;
-        });
         if (this.isSlides) this.initSlides();
-    },
-    created() {
-        this.markdownRenderer = new MarkdownRenderer(window?.MathJax);
     },
     watch: {
         toast(newVal) {

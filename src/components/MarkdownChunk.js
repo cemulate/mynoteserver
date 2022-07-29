@@ -1,10 +1,10 @@
 import { h } from 'vue/dist/vue.esm-bundler.js';
+import { defaultMarkdownRenderer } from '../lib/markdown/markdown.mjs';
 
 export default {
     data: () => ({}),
     props: [
         'source',
-        'renderer',
         'fragmentify',
         'highlight',
         'wrap',
@@ -12,7 +12,7 @@ export default {
     ],
     computed: {
         renderedHtml() {
-            return this.renderer.render(this.source, { fragmentifyEnabled: this.fragmentify, highlightEnabled: this.highlight });
+            return defaultMarkdownRenderer.render(this.source, { fragmentifyEnabled: this.fragmentify, highlightEnabled: this.highlight });
         },
     },
     render() {

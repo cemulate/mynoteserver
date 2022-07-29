@@ -64,4 +64,6 @@ class MarkdownRenderer {
     }
 }
 
-export { MarkdownRenderer };
+const defaultMarkdownRenderer = new MarkdownRenderer(window?.MathJax);
+
+export { MarkdownRenderer, defaultMarkdownRenderer };
