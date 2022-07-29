@@ -1,5 +1,5 @@
 import path, { basename, extname, join } from 'node:path';
-import { addMacroToMathjaxConfig } from './utils.mjs';
+import { addMacroToMathjaxConfig, getMathjaxConfig, getMathjaxCHTMLStyleSheet } from './utils.mjs';
 import * as fs from 'node:fs/promises';
 import { fileURLToPath } from 'url';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -27,6 +27,12 @@ async function routes(server, options) {
             let content = await fs.readFile(path, { encoding: 'utf-8' });
             return content;
         }
+    });
+    server.get('/mathjax-chtml-stylesheet.css', async (req, res) => {
+        let mathjaxConfig = await getMathjaxConfig(dir);
+        let styleSheet = getMathjaxCHTMLStyleSheet(mathjaxConfig);
+        res.header('Content-Type', 'text/css; charset=utf-8');
+        return styleSheet;
     });
     server.post('/add-mathjax-macro', async (req, res) => {
         let curContent;

@@ -1,5 +1,6 @@
 import * as vm from 'node:vm';
 import * as fs from 'node:fs/promises';
+import { MarkdownRenderer } from '../src/lib/markdown/markdown.mjs';
 import { fileURLToPath } from 'url';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -39,4 +40,16 @@ async function getMathjaxConfig(customDir) {
     return context.window.MathJax;
 }
 
-export { addMacroToMathjaxConfig, getMathjaxConfig };
+async function getMathjaxCHTMLStyleSheet(mathjaxConfig) {
+    // By setting adaptive CSS to false, we can get all the CSS MathJax's
+    // CHTML output will ever need and serve it at an api route
+    // This way the client can just request it in a link tag instead of
+    // generating it at runtime
+    // Adaptive CSS is appropriate for the static render page
+    mathjaxConfig.chtml = mathjaxConfig.chtml ?? {};
+    mathjaxConfig.chtml.adaptiveCSS = false;
+    const renderer = new MarkdownRenderer(mathjaxConfig);
+    return renderer.getStyleSheet();
+}
+
+export { addMacroToMathjaxConfig, getMathjaxConfig, getMathjaxCHTMLStyleSheet };
