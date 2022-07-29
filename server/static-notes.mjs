@@ -1,4 +1,4 @@
-import { markdownRenderer } from '../src/lib/markdown/markdown.mjs';
+import { MarkdownRenderer } from '../src/lib/markdown/markdown.mjs';
 import { format, toDate } from 'date-fns';
 import { dirname, basename, join } from 'node:path';
 import { getMathjaxConfig } from './utils.mjs';
@@ -91,13 +91,17 @@ async function routes(server, options) {
     server.get('/*', async (req, res) => {
         // Do this on every request to ensure we're respecting new config files
         let mathjaxConfig = await getMathjaxConfig(dir);
-        const renderMarkdown = markdownRenderer(mathjaxConfig);
+        // Adaptive CSS is appropriate for the static render page
+        mathjaxConfig.chtml = mathjaxConfig.chtml ?? {};
+        mathjaxConfig.chtml.adaptiveCSS = true;
+        const renderer = new MarkdownRenderer(mathjaxConfig);
 
         let path = req.params['*'].split('/');
         let content = await dir.readFile(path);
         let isSlides = content.startsWith('---');
         let fragmentifyEnabled = isSlides && req.query.fragmentify != null;
-        let { html: renderedContent, styleSheet } = renderMarkdown(content, { fragmentifyEnabled, highlightEnabled: true });
+        let renderedContent = renderer.render(content, { fragmentifyEnabled, highlightEnabled: true });
+        let styleSheet = renderer.getStyleSheet();
         let args = [ path.join('/'), renderedContent, styleSheet ];
         let html =  isSlides ? slidesPage(...args) : notePage(...args);
         res.header('Content-Type', 'text/html; charset=utf-8');

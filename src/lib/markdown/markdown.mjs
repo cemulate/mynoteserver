@@ -18,47 +18,50 @@ const highlight = (str, language) => {
     return null;
 }
 
-function markdownRenderer(mathjaxConfig) {
+class MarkdownRenderer {
+    constructor(mathjaxConfig) {
+        this.markdownIt = new MarkdownIt({
+            highlight,
+            html: true,
+        });
+    
+        this.markdownIt.use(markdownItColor, { inline: true });
+        this.markdownIt.use(markdownItAttrs);
+    
+        // Re-write the renderer for "fence" tags
+        // This makes the renderer put token.attrs on the <pre> element of a fence, instead of the <code>
+        // In particular this makes the following plugin work correctly, since "fragment" will go on the <pre>
+        // Also allows the renderer to respect the 'highlightEnabled' option.
+        this.markdownIt.use(markdownItCustomFence);
+        this.markdownIt.use(markdownItFragmentify);
+    
+        this.mathRenderer = new MathRenderer(mathjaxConfig);
+    
+        this.markdownIt.use(markdownItMath, {
+            inlineOpen: '$',
+            inlineClose: '$',
+            blockOpen: '$$',
+            blockClose: '$$',
+            inlineRenderer: str => this.mathRenderer.render(str, false),
+            blockRenderer: (str, token) => {
+                let attrString = '';
+                if (token.attrs != null) attrString = token.attrs.map(([ attr, value ]) => ` ${ attr }="${ value }"`);
+                let mathContent = this.mathRenderer.render(str, true);
+                return `<p${ attrString }>\n${ mathContent }\n</p>`;
+            },
+        });
+    }
 
-    const markdownIt = new MarkdownIt({
-        highlight,
-        html: true,
-    });
-
-    markdownIt.use(markdownItColor, { inline: true });
-    markdownIt.use(markdownItAttrs);
-
-    // Re-write the renderer for "fence" tags
-    // This makes the renderer put token.attrs on the <pre> element of a fence, instead of the <code>
-    // In particular this makes the following plugin work correctly, since "fragment" will go on the <pre>
-    // Also allows the renderer to respect the 'highlightEnabled' option.
-    markdownIt.use(markdownItCustomFence);
-    markdownIt.use(markdownItFragmentify);
-
-    const mathRenderer = new MathRenderer(mathjaxConfig);
-
-    markdownIt.use(markdownItMath, {
-        inlineOpen: '$',
-        inlineClose: '$',
-        blockOpen: '$$',
-        blockClose: '$$',
-        inlineRenderer: str => mathRenderer.render(str, false),
-        blockRenderer: (str, token) => {
-            let attrString = '';
-            if (token.attrs != null) attrString = token.attrs.map(([ attr, value ]) => ` ${ attr }="${ value }"`);
-            let mathContent = mathRenderer.render(str, true);
-            return `<p${ attrString }>\n${ mathContent }\n</p>`;
-        },
-    });
-
-    return (content, opts = {}) => {
+    render(content, opts) {
         let { fragmentifyEnabled, highlightEnabled } = opts;
-        markdownIt.set({ fragmentifyEnabled, highlightEnabled });
+        this.markdownIt.set({ fragmentifyEnabled, highlightEnabled });
 
-        let html = markdownIt.render(content);
+        return this.markdownIt.render(content);
+    }
 
-        return { html, styleSheet: mathRenderer.getStyleSheet() };
+    getStyleSheet() {
+        return this.mathRenderer.getStyleSheet();
     }
 }
 
-export { markdownRenderer };
+export { MarkdownRenderer };
