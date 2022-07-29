@@ -6,11 +6,13 @@
     <div class="App-mainview is-flex-grow-1 is-flex is-flex-direction-row" @pointermove="gutterDrag">
         <div class="App-codemirror-container" :style="{ 'width': sourceWidthPx + 'px' }">
             <code-mirror 
-                v-model="markdownSource"
+                v-model:chunks="markdownChunks"
+                v-model:isSlides="isSlides"
                 ref="codemirror"
                 :debounce="500"
-                @pasteImage="onPasteImage"
+                @pasteImage="image => toggleDrawing(image)"
                 @openImageAtCursor="toggleDrawing(null)"
+                @edited="documentEdited"
                 :disabled="editorDisabled"
                 :style="{ 'opacity': editorDisabled ? '0.5' : '1' }"
             />
@@ -21,12 +23,29 @@
             @dblclick.prevent="resetSourceWidthPx"
         />
         <div class="App-render-container p-2" ref="renderContainer">
-            <div v-if="!isSlides" ref="renderView" class="rendered-note-content content" v-html="renderedHtml"></div>
+            <!-- <div v-if="!isSlides" ref="renderView" class="rendered-note-content content" v-html="renderedHtml"></div> -->
+            <div v-if="!isSlides" ref="renderView" class="rendered-note-content content">
+                <p v-if="markdownChunks.length == 0" style="opacity: 0.5">Initial render...</p>
+                <markdown-chunk
+                    v-for="chunk in markdownChunks"
+                    :source="chunk"
+                    :renderer="markdownRenderer"
+                    :fragmentify="fragmentify"
+                    :highlight="true"
+                    :wrap="null"
+                    :scrollFollow="true"
+                />
+            </div>
             <div v-if="isSlides" class="App-print reveal" ref="reveal">
                 <div class="slides">
-                    <section
-                        v-for="slide in renderedSlides"
-                        v-html="slide"
+                    <markdown-chunk
+                        v-for="chunk in markdownChunks"
+                        :source="chunk"
+                        :renderer="markdownRenderer"
+                        :fragmentify="fragmentify"
+                        :highlight="true"
+                        :wrap="'section'"
+                        :scrollFollow="false"
                     />
                 </div>
             </div>
@@ -92,23 +111,24 @@
 </template>
 
 <script>
-import { markdownRenderer } from '../lib/markdown/markdown.mjs';
+import { MarkdownRenderer } from '../lib/markdown/markdown.mjs';
 import * as network from '../lib/network';
 import Reveal from 'reveal.js';
 import md5sum from 'md5';
 
 import { Head } from '@vueuse/head'
+import MarkdownChunk from './MarkdownChunk.js';
 import SketchArea from '../components/SketchArea.vue';
 import CodeMirror from '../components/CodeMirror.vue';
 import FilePicker from '../components/FilePicker.vue';
 import AddMacro from '../components/AddMacro.vue';
 
-const renderMarkdown = markdownRenderer(window?.MathJax);
-
 export default {
     data: () => ({
-        markdownSource: '',
-        renderedHtml: null,
+        markdownRenderer: null,
+        markdownChunks: [],
+        isSlides: false,
+        hasContentChanged: false,
 
         fragmentify: false,
         isDrawingOpen: false,
@@ -133,18 +153,12 @@ export default {
         gutterDragStart: null,
     }),
     computed: {
-        isSlides() {
-            return this.markdownSource.startsWith('---');
-        },
         renderedSlides() {
             return this.renderedHtml.split('<hr>').slice(1).map(x => x.trim());
         },
         staticLink() {
             if (this.curFile == null) return '#';
             return `notes/${ this.curFile.path }`;
-        },
-        hasContentChanged() {
-            return (this.markdownSource != this.originalContentOnLoad);
         },
         documentTitle() {
             if (this.curFile == null) return 'My Notes';
@@ -153,15 +167,8 @@ export default {
         },
     },
     methods: {
-        renderContent() {
-            let opts = { fragmentifyEnabled: this.fragmentify, highlightEnabled: true };
-            let { html, styleSheet } = renderMarkdown(this.markdownSource, opts);
-            this.renderedHtml = html;
-            document.getElementById('mathjax-chtml-styles').textContent = styleSheet;
-        },
         toggleFragmentify() {
             this.fragmentify = !this.fragmentify;
-            this.renderContent();
         },
         toggleDrawing(initialImage) {
             this.isDrawingOpen = !this.isDrawingOpen;
@@ -213,6 +220,8 @@ export default {
                 let answer = window.confirm('Load another document?\n\nChanges you made will not be saved.');
                 if (!answer) return;
             }
+
+            this.markdownChunks = [];
             this.curFile = file;
             this.isPickerOpen = false;
             this.persistCurFile();
@@ -220,12 +229,22 @@ export default {
             if (this.curFile.mtime == null) {
                 // If this file doesn't have an mtime,
                 // FilePicker wanted to create a new file.
-                this.markdownSource = `# ${ this.curFile.path }`;
-                // Always compare false as to display the unsaved star
-                this.originalContentOnLoad = null;
+                this.$refs.codemirror.setDocument(`# ${ this.curFile.path }`);
+                // Assume "edited"
+                this.hasContentChanged = true;
                 this.toast = { color: 'green', message: 'New File', timeout: 3000 };
             } else {
                 this.downloadCurFile();
+            }
+        },
+        documentEdited(editedSlideNumber) {
+            this.hasContentChanged = true;
+            this.persistBuffer();
+            if (this.isSlides) {
+                // "Manually" implement MarkdownChunk's scrollFollow when the chunks are slides
+                // In this case, the 'editedChunkIndex' from this event represents the slide number.
+                if (editedSlideNumber == null) editedSlideNumber = this.slideDeck.getHorizontalSlides().length;
+                this.slideDeck.slide(editedSlideNumber, 0, 0);
             }
         },
         async downloadCurFile() {
@@ -237,13 +256,12 @@ export default {
             let response = await network.get(`/api/file/${ path }`);
             if (response?.status == 200) {
                 let { content, mtime, md5 } = await response.json();
-                this.originalContentOnLoad = content;
-                this.markdownSource = content;
+                this.$refs.codemirror.setDocument(content);
                 this.curFile = { ...this.curFile, mtime, md5 };
                 this.persistCurFile();
                 this.toast = { color: 'green', message: 'File loaded', timeout: 3000 };
             } else {
-                this.markdownSource = '';
+                this.$refs.codemirror.setDocument('');
                 this.toast = { color: 'red', message: 'Load failed' };
                 // Persist curFile but set .md5 = null; Enforce that the
                 // app thinks this file is out of date on next load.
@@ -251,27 +269,31 @@ export default {
                 this.curFile = null;
             }
 
+            this.persistBuffer();
+            this.hasContentChanged = false;
             this.editorDisabled = false;
             this.$nextTick(() => this.$refs.codemirror?.focus?.());
         },
         updateSourceAndSave() {
             if (this.curFile == null) return;
-            // Upon save command, update markdownSource immediately
-            // (instead of after debounce) before saving.
-            this.$refs?.codemirror?.commitDocument();
-            this.$nextTick(() => this.saveCurFile());
+            this.saveCurFile();
         },
         persistCurFile(nullHash) {
             let data = nullHash ? { ...this.curFile, md5: null } : this.curFile;
             window.localStorage.setItem('curFile', JSON.stringify(data));
         },
+        persistBuffer() {
+            let buffer = this.$refs.codemirror.getDocument();
+            window.localStorage.setItem('buffer', buffer);
+        },
         async saveCurFile() {
             if (this.curFile == null) return;
             let { path } = this.curFile;
-            let response = await network.post(`/api/file/${ path }`, { content: this.markdownSource });
+            let content = this.$refs.codemirror.getDocument();
+            let response = await network.post(`/api/file/${ path }`, { content });
             if (response?.status == 200) {
                 let { mtime, md5 } = await response.json();
-                this.originalContentOnLoad = this.markdownSource;
+                this.hasContentChanged = false;
                 this.curFile.mtime = mtime;
                 this.curFile.md5 = md5;
                 this.persistCurFile();
@@ -306,13 +328,13 @@ export default {
             } else {
                 // This file isn't out of date or we're offline / can't tell
                 let savedBuffer = window.localStorage.getItem('buffer') ?? '';
-                this.markdownSource = savedBuffer;
+                this.$refs.codemirror.setDocument(savedBuffer);
                 // Even though we don't have the file content from the server,
                 // we can see if the saved buffer differs by computing its md5.
                 // If so, ensure that hasContentChanged says true.
                 let bufferMd5 = md5sum(savedBuffer);
                 let serverMd5 = serverFileData?.md5;
-                this.originalContentOnLoad = bufferMd5 == serverMd5 ? savedBuffer : null;
+                this.hasContentChanged = bufferMd5 != serverMd5;
 
                 if (serverFileData == null) this.toast = { color: 'red', message: 'Offline' };
                 this.editorDisabled = false;
@@ -329,20 +351,6 @@ export default {
             });
             this.slideDeck.initialize();
         },
-        onPasteImage(image) {
-            this.toggleDrawing(image);
-        },
-    },
-    async updated() {
-        await window.MathJax?.typesetPromise?.([ this.$refs.renderContainer ]);
-        if (!this.isSlides && this.scrollFollow) {
-            let el = this.$refs.renderView.parentElement;
-            el.scrollTop = el.scrollHeight;
-        } else {
-            if (this.slideDeck == null || this.$refs.codemirror == null) return;
-            let slide = this.$refs.codemirror.getCursorRegion('---') ?? this.slideDeck.getHorizontalSlides().length;
-            this.slideDeck.slide(slide - 1, 0, 0);
-        }
     },
     mounted() {
         this.initializeCurFile();
@@ -380,11 +388,10 @@ export default {
         });
         if (this.isSlides) this.initSlides();
     },
+    created() {
+        this.markdownRenderer = new MarkdownRenderer(window?.MathJax);
+    },
     watch: {
-        markdownSource(newVal) {
-            window.localStorage.setItem('buffer', newVal);
-            this.renderContent();
-        },
         toast(newVal) {
             if (newVal == null) return;
             this.showToast = true;
@@ -399,6 +406,7 @@ export default {
     },
     components: {
         Head,
+        'markdown-chunk': MarkdownChunk,
         'sketch-area': SketchArea,
         'code-mirror': CodeMirror,
         'file-picker': FilePicker,

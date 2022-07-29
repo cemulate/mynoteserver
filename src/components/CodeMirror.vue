@@ -4,10 +4,10 @@
 
 <script>
 import { EditorView, minimalSetup } from 'codemirror';
-import { EditorState, EditorSelection, Prec, Compartment } from '@codemirror/state';
+import { EditorState, EditorSelection, Prec, Compartment, Text } from '@codemirror/state';
 import { keymap, scrollPastEnd, lineNumbers, highlightActiveLineGutter, drawSelection, highlightActiveLine } from '@codemirror/view';
 import { indentWithTab, history, historyKeymap } from '@codemirror/commands';
-import { foldGutter, foldKeymap, defaultHighlightStyle, syntaxHighlighting, bracketMatching } from '@codemirror/language';
+import { foldGutter, foldKeymap, defaultHighlightStyle, syntaxHighlighting, bracketMatching, syntaxTree, ensureSyntaxTree } from '@codemirror/language';
 import { closeBrackets, closeBracketsKeymap, autocompletion, snippetKeymap } from '@codemirror/autocomplete';
 import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { markdown as langMarkdown, markdownLanguage } from '@codemirror/lang-markdown';
@@ -27,19 +27,17 @@ import { getImageDataURLFromClipboardEvent } from '../lib/image-utils';
 const IMAGE_LINE_START = `![](`;
 const IMAGE_LINE_END = `)`;
 
+const SLIDE_BOUNDARY = '---';
+
 export default {
     data: () => ({
         editorView: null,
         debounceTimeoutID: null,
         ignoreNextDocUpdate: false,
-        ignoreNextModelUpdate: false,
+        firstCommit: false,
         editableCompartment: null,
     }),
     props: {
-        modelValue: {
-            type: String,
-            default: 'Hello, world!',
-        },
         debounce: {
             type: Number,
             default: 500,
@@ -49,10 +47,15 @@ export default {
             default: false,
         },
     },
+    emits: [
+        'update:chunks',
+        'update:isSlides',
+        'edited',
+    ],
     mounted() {
         this.editableCompartment = new Compartment();
         this.editorView = new EditorView({
-            doc: this.modelValue,
+            doc: 'Initializing...',
             extensions: [
                 minimalSetup,
                 lineNumbers(),
@@ -102,15 +105,69 @@ export default {
     methods: {
         onDocumentUpdate(update) {
             if (!update.docChanged) return;
-            if (this.ignoreNextDocUpdate) return;
+            if (this.ignoreNextDocUpdate) return false;
 
             if (this.debounceTimeoutID != null) window.clearTimeout(this.debounceTimeoutID);
-            this.debounceTimeoutID = window.setTimeout(this.commitDocument.bind(this), this.debounce);
+            this.debounceTimeoutID = window.setTimeout(this.commitChunks.bind(this), this.debounce);
         },
-        commitDocument() {
-            this.ignoreNextModelUpdate = true;
-            this.$emit('update:modelValue', this.editorView.state.doc.toString());
-            this.$nextTick(() => this.ignoreNextModelUpdate = false);
+        async commitChunks() {
+            const isSlides = this.editorView.state.doc.line(1).text.startsWith(SLIDE_BOUNDARY);
+            let chunks = [];
+            const cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
+            let editedChunkIndex = null;
+
+            if (!isSlides) {
+                const t = ensureSyntaxTree(this.editorView.state, this.editorView.state.doc.length, 5000);
+                let node = t.topNode.firstChild;
+                while (node != null) {
+                    chunks.push(this.editorView.state.sliceDoc(node.from, node.to));
+                    if (cursor >= node.from && cursor < node.to) editedChunkIndex = chunks.length - 1;
+                    node = node.nextSibling;
+                }
+            } else {
+                let pos = this.editorView.state.doc.line(1).to + 1;
+                let curStart = pos;
+                while (pos < this.editorView.state.doc.length) {
+                    let line = this.editorView.state.doc.lineAt(pos);
+                    if (line.text.startsWith(SLIDE_BOUNDARY)) {
+                        chunks.push(this.editorView.state.sliceDoc(curStart, line.from).trim());
+                        if (cursor >= curStart && cursor < line.from) editedChunkIndex = chunks.length - 1;
+                        curStart = line.to + 1;
+                    }
+                    pos = line.to + 1;
+                }
+            }
+            
+            if (!this.firstCommit) this.$emit('edited', editedChunkIndex);
+            this.firstCommit = false;
+            this.$emit('update:isSlides', isSlides);
+            this.$emit('update:chunks', chunks);
+        },
+        async setDocument(newSource) {
+            this.ignoreNextDocUpdate = true;
+            this.firstCommit = true;
+            this.editorView.dispatch({
+                changes: { from: 0, to: this.editorView.state.doc.length, insert: newSource },
+                selection: EditorSelection.range(newSource.length, newSource.length),
+                effects: [ EditorView.scrollIntoView(newSource.length) ],
+            });
+            this.$nextTick(() => this.ignoreNextDocUpdate = false);
+
+            // All this is to ensure that, on a new (perhaps large) document change,
+            // The UI will satisfy this desirable property:
+            // The editor/CodeMirror buffer will load once the syntax is fully parsed, but
+            // will not be blocked by the large render resulting from commitChunks(); the rendered
+            // content will appear later when THAT is done.
+            return new Promise((resolve, reject) => {
+                const t = ensureSyntaxTree(this.editorView.state, this.editorView.state.doc.length, 5000);
+                if (t == null) reject();
+                resolve();
+            }).then(() => {
+                setTimeout(() => this.commitChunks(), 0);
+            });
+        },
+        getDocument() {
+            return this.editorView.state.doc.toString();
         },
         addOrReplaceImageAtCursor(dataURL) {
             let cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
@@ -160,17 +217,6 @@ export default {
         },
     },
     watch: {
-        modelValue(newVal, oldVal) {
-            if (this.ignoreNextModelUpdate) return;
-            
-            this.ignoreNextDocUpdate = true;
-            this.editorView.dispatch({
-                changes: { from: 0, to: this.editorView.state.doc.length, insert: newVal },
-                selection: EditorSelection.range(newVal.length, newVal.length),
-                effects: [ EditorView.scrollIntoView(newVal.length) ],
-            });
-            this.$nextTick(() => this.ignoreNextDocUpdate = false);
-        },
         disabled(newVal) {
             this.editorView.dispatch({
                 effects: this.editableCompartment.reconfigure(EditorView.editable.of(!newVal)),
