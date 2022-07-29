@@ -25,7 +25,7 @@
         <div class="App-render-container p-2" ref="renderContainer">
             <!-- <div v-if="!isSlides" ref="renderView" class="rendered-note-content content" v-html="renderedHtml"></div> -->
             <div v-if="!isSlides" ref="renderView" class="rendered-note-content content">
-                <p v-if="markdownChunks.length == 0" style="opacity: 0.5">Initial render...</p>
+                <p v-if="initialRender" style="opacity: 0.5">Initial render...</p>
                 <markdown-chunk
                     v-for="chunk in markdownChunks"
                     :source="chunk"
@@ -123,6 +123,7 @@ import AddMacro from '../components/AddMacro.vue';
 
 export default {
     data: () => ({
+        initialRender: true,
         markdownChunks: [],
         isSlides: false,
         hasContentChanged: false,
@@ -225,7 +226,7 @@ export default {
             if (this.curFile.mtime == null) {
                 // If this file doesn't have an mtime,
                 // FilePicker wanted to create a new file.
-                this.$refs.codemirror.setDocument(`# ${ this.curFile.path }`);
+                this.setDocument(`# ${ this.curFile.path }`);
                 // Assume "edited"
                 this.hasContentChanged = true;
                 this.toast = { color: 'green', message: 'New File', timeout: 3000 };
@@ -254,12 +255,12 @@ export default {
             let response = await network.get(`/api/file/${ path }`);
             if (response?.status == 200) {
                 let { content, mtime, md5 } = await response.json();
-                this.$refs.codemirror.setDocument(content);
+                this.setDocument(content);
                 this.curFile = { ...this.curFile, mtime, md5 };
                 this.persistCurFile();
                 this.toast = { color: 'green', message: 'File loaded', timeout: 3000 };
             } else {
-                this.$refs.codemirror.setDocument('');
+                this.setDocument('');
                 this.toast = { color: 'red', message: 'Load failed' };
                 // Persist curFile but set .md5 = null; Enforce that the
                 // app thinks this file is out of date on next load.
@@ -271,6 +272,11 @@ export default {
             this.hasContentChanged = false;
             this.editorDisabled = false;
             this.$nextTick(() => this.$refs.codemirror?.focus?.());
+        },
+        setDocument(document) {
+            // Set the whole document to something new
+            this.initialRender = true;
+            this.$refs.codemirror.setDocument(document);
         },
         updateSourceAndSave() {
             if (this.curFile == null) return;
@@ -326,7 +332,7 @@ export default {
             } else {
                 // This file isn't out of date or we're offline / can't tell
                 let savedBuffer = window.localStorage.getItem('buffer') ?? '';
-                this.$refs.codemirror.setDocument(savedBuffer);
+                this.setDocument(savedBuffer);
                 // Even though we don't have the file content from the server,
                 // we can see if the saved buffer differs by computing its md5.
                 // If so, ensure that hasContentChanged says true.
@@ -379,6 +385,12 @@ export default {
         if (this.isSlides) this.initSlides();
     },
     watch: {
+        markdownChunks(newVal) {
+            if (!this.initialRender) return false;
+            // First update of chunks after loading a new document; scroll to bottom
+            this.initialRender = false;
+            this.$nextTick(() => this.$refs.renderView.lastElementChild.scrollIntoView(true));
+        },
         toast(newVal) {
             if (newVal == null) return;
             this.showToast = true;
