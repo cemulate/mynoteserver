@@ -240,12 +240,14 @@ export default {
         documentEdited(editedSlideNumber) {
             this.hasContentChanged = true;
             this.persistBuffer();
-            if (this.isSlides) {
+            this.$nextTick(() => {
+                if (!this.isSlides) return;
                 // "Manually" implement MarkdownChunk's scrollFollow when the chunks are slides
                 // In this case, the 'editedChunkIndex' from this event represents the slide number.
-                if (editedSlideNumber == null) editedSlideNumber = this.slideDeck.getHorizontalSlides().length;
+                this.slideDeck.sync();
+                if (editedSlideNumber == null) editedSlideNumber = this.slideDeck.getHorizontalSlides().length - 1;
                 this.slideDeck.slide(editedSlideNumber, 0, 0);
-            }
+            });
         },
         async downloadCurFile() {
             if (this.curFile == null) return;

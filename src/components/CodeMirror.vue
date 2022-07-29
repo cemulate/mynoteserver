@@ -111,37 +111,40 @@ export default {
             this.debounceTimeoutID = window.setTimeout(this.commitChunks.bind(this), this.debounce);
         },
         async commitChunks() {
-            const isSlides = this.editorView.state.doc.line(1).text.startsWith(SLIDE_BOUNDARY);
+            const state = this.editorView.state;
+            const isSlides = state.doc.line(1).text.startsWith(SLIDE_BOUNDARY);
             let chunks = [];
-            const cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
+            const cursor = state.selection.ranges.map(r => r.head)[0];
             let editedChunkIndex = null;
 
             if (!isSlides) {
-                const t = ensureSyntaxTree(this.editorView.state, this.editorView.state.doc.length, 5000);
+                const t = ensureSyntaxTree(state, state.doc.length, 5000);
                 let node = t.topNode.firstChild;
                 while (node != null) {
-                    chunks.push(this.editorView.state.sliceDoc(node.from, node.to));
+                    chunks.push(state.sliceDoc(node.from, node.to));
                     if (cursor >= node.from && cursor < node.to) editedChunkIndex = chunks.length - 1;
                     node = node.nextSibling;
                 }
             } else {
-                let pos = this.editorView.state.doc.line(1).to + 1;
+                let pos = state.doc.line(1).to + 1;
                 let curStart = pos;
-                while (pos < this.editorView.state.doc.length) {
-                    let line = this.editorView.state.doc.lineAt(pos);
+                while (pos < state.doc.length) {
+                    let line = state.doc.lineAt(pos);
                     if (line.text.startsWith(SLIDE_BOUNDARY)) {
-                        chunks.push(this.editorView.state.sliceDoc(curStart, line.from).trim());
+                        chunks.push(state.sliceDoc(curStart, line.from).trim());
                         if (cursor >= curStart && cursor < line.from) editedChunkIndex = chunks.length - 1;
                         curStart = line.to + 1;
                     }
                     pos = line.to + 1;
                 }
+                chunks.push(state.sliceDoc(curStart, state.doc.length));
+                if (cursor >= curStart) editedChunkIndex = chunks.length - 1;
             }
             
-            if (!this.firstCommit) this.$emit('edited', editedChunkIndex);
-            this.firstCommit = false;
             this.$emit('update:isSlides', isSlides);
             this.$emit('update:chunks', chunks);
+            if (!this.firstCommit) this.$emit('edited', editedChunkIndex);
+            this.firstCommit = false;
         },
         async setDocument(newSource) {
             this.ignoreNextDocUpdate = true;
