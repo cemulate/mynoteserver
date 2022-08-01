@@ -23,6 +23,7 @@ import {
 import { markdownTexSnippets, customAutocompletionKeymap } from '../lib/codemirror/tex-snippets';
 import { customShortcutsKeymap } from '../lib/codemirror/shortcuts';
 import { getImageDataURLFromClipboardEvent } from '../lib/image-utils';
+import MurmurHash3 from 'imurmurhash';
 
 const IMAGE_LINE_START = `![](`;
 const IMAGE_LINE_END = `)`;
@@ -114,15 +115,38 @@ export default {
             const state = this.editorView.state;
             const isSlides = state.doc.line(1).text.startsWith(SLIDE_BOUNDARY);
             let chunks = [];
+            let contentHistory = {};
             const cursor = state.selection.ranges.map(r => r.head)[0];
             let editedChunkIndex = null;
+
+            // We need to give each chunk some sort of unique id; this allows Vue's
+            // v-for to be smarter about moving existing elements and only re-rendering
+            // inserted/changed elements (otherwise, a new chunk in the middle causes all
+            // chunks after to re-render).
+            // We use a hash of the chunk's content, but it may very well be that multiple
+            // chunks have the exact same text content, so we maintain a history and append
+            // the hash with a simple counting postfix on duplicates.
+            // This does introduce some edge cases when a document contains identical chunks,
+            // in particular multiple of them may get re-rendered and they may shuffle amongst 
+            // themselves. But this is not a problem if you rely on editedChunkIndex to scroll
+            // the updated chunk into view.
+            const makeChunkId = content => {
+                let hash = MurmurHash3(content).result().toString();
+                let count = (hash in contentHistory) ? contentHistory[hash] + 1 : 0;
+                contentHistory[hash] = count;
+                return hash + '-' + count.toString();
+            }
 
             if (!isSlides) {
                 const t = ensureSyntaxTree(state, state.doc.length, 5000);
                 let node = t.topNode.firstChild;
                 while (node != null) {
-                    chunks.push(state.sliceDoc(node.from, node.to));
-                    if (cursor >= node.from && cursor < node.to) editedChunkIndex = chunks.length - 1;
+                    let content = state.sliceDoc(node.from, node.to);
+                    let id = makeChunkId(content);
+                    // let id = (contentHistory.size << 16) + count;
+                    chunks.push({ id, sourcePos: node.from, content });
+                    let nextStart = node.nextSibling?.from ?? state.doc.length;
+                    if (cursor >= node.from && cursor <= nextStart) editedChunkIndex = chunks.length - 1;
                     node = node.nextSibling;
                 }
             } else {
@@ -131,7 +155,9 @@ export default {
                 while (pos < state.doc.length) {
                     let line = state.doc.lineAt(pos);
                     if (line.text.startsWith(SLIDE_BOUNDARY)) {
-                        chunks.push(state.sliceDoc(curStart, line.from).trim());
+                        let content = state.sliceDoc(curStart, line.from).trim();
+                        let id = makeChunkId(content);
+                        chunks.push({ id, sourcePos: curStart, content });
                         if (cursor >= curStart && cursor < line.from) editedChunkIndex = chunks.length - 1;
                         curStart = line.to + 1;
                     }
