@@ -58,6 +58,17 @@ html.no-scroll {
 .color-green { color: green; }
 .color-orange { color: orange; }
 
+.markdown-chunk-update-flash {
+    animation-name: markdown-chunk-update-flash-animation;
+    animation-duration: 0.4s;
+    animation-timing-function: ease-out;
+}
+
+@keyframes markdown-chunk-update-flash-animation {
+    from { background: lightgoldenrodyellow }
+    to   { background: default }
+}
+
 body.static-page .rendered-note-content {
     min-height: 100vh;
     background: white;

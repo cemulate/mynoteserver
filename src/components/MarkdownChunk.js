@@ -3,12 +3,17 @@ import { defaultMarkdownRenderer } from '../lib/markdown/markdown.mjs';
 
 export default {
     data: () => ({}),
-    props: [
-        'source',
-        'fragmentify',
-        'highlight',
-        'wrap',
-        'autoScrollIntoView',
+    props: {
+        id: { default: null },
+        source: { default: '' },
+        fragmentify: { default: false },
+        highlight: { default: true },
+        wrap: { default: null },
+        autoScrollIntoView: { default: false },
+        flashOnUpdate: { default: null },
+    },
+    emits: [
+        'click',
     ],
     computed: {
         renderedHtml() {
@@ -27,13 +32,18 @@ export default {
                     image.onload = null;
                 }
             } else {
-                el.scrollIntoView(true);
+                el.scrollIntoView({ block: 'center' });
             }
-        }
+
+            if (this.flashOnUpdate) {
+                el.classList.add(this.flashOnUpdate.class);
+                setTimeout(() => el.classList.remove(this.flashOnUpdate.class), this.flashOnUpdate.timeout);
+            }
+        },
     },
     render() {
         if (this.wrap != null) {
-            return h(this.wrap, { innerHTML: this.renderedHtml });
+            return h(this.wrap, { innerHTML: this.renderedHtml, onClick: () => this.$emit('click') });
         } else {
             var template = document.createElement('template');
             template.innerHTML = this.renderedHtml;
@@ -43,6 +53,7 @@ export default {
                 for (let attr of node.attributes) {
                     vattrs[attr.nodeName] = attr.nodeValue;
                 }
+                vattrs.onClick = () => this.$emit('click');
                 nodes.push(h(node.tagName, { innerHTML: node.innerHTML, ...vattrs }));
             }
             return nodes;

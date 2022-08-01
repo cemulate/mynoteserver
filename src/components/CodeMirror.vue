@@ -227,6 +227,12 @@ export default {
             }
             return region;
         },
+        setCursorAtPos(n) {
+            this.editorView.dispatch({
+                selection: EditorSelection.cursor(n),
+                effects: [ EditorView.scrollIntoView(n, { y: 'center' }) ],
+            });
+        },
         onClick(event, view) {
             let el = event.target;
             if (!(el.classList.contains('cm-badge-widget') && el.innerHTML == 'Figure')) return;

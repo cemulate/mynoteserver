@@ -5,8 +5,6 @@
 <div class="App-root" :style="{ '--source-width-px': sourceWidthPx + 'px' }" @pointermove="gutterDrag">
     <div class="App-codemirror-container">
         <code-mirror 
-            <code-mirror 
-        <code-mirror 
             v-model:chunks="markdownChunks"
             v-model:isSlides="isSlides"
             ref="codemirror"
@@ -24,27 +22,32 @@
         @dblclick.prevent="resetSourceWidthPx"
     />
     <div class="App-render-container p-2" ref="renderContainer">
-        <!-- <div v-if="!isSlides" ref="renderView" class="rendered-note-content content" v-html="renderedHtml"></div> -->
+        <p v-if="initialRender" style="opacity: 0.5">Initial render...</p>
         <div v-if="!isSlides" ref="renderView" class="rendered-note-content content">
-            <p v-if="initialRender" style="opacity: 0.5">Initial render...</p>
             <markdown-chunk
                 v-for="chunk in markdownChunks"
-                :source="chunk"
+                ref="markdownChunks"
+                :key="chunk.id"
+                :id="chunk.id"
+                :source="chunk.content"
                 :fragmentify="fragmentify"
                 :highlight="true"
-                :wrap="null"
-                :autoScrollIntoView="true"
+                :flashOnUpdate="{ class: 'markdown-chunk-update-flash', timeout: 500 }"
+                @click="scrollEditorToPos(chunk.sourcePos)"
             />
         </div>
         <div v-if="isSlides" class="App-print reveal" ref="reveal">
             <div class="slides">
                 <markdown-chunk
                     v-for="chunk in markdownChunks"
-                    :source="chunk"
+                    ref="markdownChunks"
+                    :key="chunk.id"
+                    :id="chunk.id"
+                    :source="chunk.content"
                     :fragmentify="fragmentify"
                     :highlight="true"
                     :wrap="'section'"
-                    :autoScrollIntoView="false"
+                    @click="scrollEditorToPos(chunk.sourcePos)"
                 />
             </div>
         </div>
@@ -212,6 +215,10 @@ export default {
         resetSourceWidthPx() {
             this.sourceWidthPx = 0.4 * window.screen.width;
         },
+        scrollEditorToPos(n) {
+            this.$refs.codemirror.setCursorAtPos(n);
+            this.$refs.codemirror.focus();
+        },
         selectFile(file) {
             if (this.hasContentChanged) {
                 let answer = window.confirm('Load another document?\n\nChanges you made will not be saved.');
@@ -234,16 +241,22 @@ export default {
                 this.downloadCurFile();
             }
         },
-        documentEdited(editedSlideNumber) {
+        documentEdited(editedChunkIndex) {
             this.hasContentChanged = true;
             this.persistBuffer();
             this.$nextTick(() => {
-                if (!this.isSlides) return;
-                // "Manually" implement MarkdownChunk's scrollFollow when the chunks are slides
-                // In this case, the 'editedChunkIndex' from this event represents the slide number.
-                this.slideDeck.sync();
-                if (editedSlideNumber == null) editedSlideNumber = this.slideDeck.getHorizontalSlides().length - 1;
-                this.slideDeck.slide(editedSlideNumber, 0, 0);
+                if (this.isSlides) {
+                    // In this case, editedChunkIndex is the slide number.
+                    this.slideDeck.sync();
+                    let slide = editedChunkIndex ?? this.slideDeck.getHorizontalSlides().length - 1;
+                    this.slideDeck.slide(slide, 0, 0);
+                } else {
+                    // refs on a v-for are not necessarily in the same order as the source array :(
+                    let chunkIndex = editedChunkIndex ?? this.markdownChunks.length - 1;
+                    let id = this.markdownChunks[chunkIndex].id;
+                    let chunk = this.$refs.markdownChunks.find(x => x.id == id);
+                    chunk.scrollIntoView();
+                }
             });
         },
         async downloadCurFile() {
@@ -389,7 +402,7 @@ export default {
             if (!this.initialRender) return false;
             // First update of chunks after loading a new document; scroll to bottom
             this.initialRender = false;
-            this.$nextTick(() => this.$refs.renderView.lastElementChild.scrollIntoView(true));
+            this.$nextTick(() => this.$refs.renderView?.lastElementChild?.scrollIntoView?.(true));
         },
         toast(newVal) {
             if (newVal == null) return;
