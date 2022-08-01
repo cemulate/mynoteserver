@@ -2,54 +2,54 @@
 <Head>
     <title>{{ documentTitle }}</title>
 </Head>
-<div class="App-root is-flex is-flex-direction-column">
-    <div class="App-mainview is-flex-grow-1 is-flex is-flex-direction-row" @pointermove="gutterDrag">
-        <div class="App-codemirror-container" :style="{ 'width': sourceWidthPx + 'px' }">
+<div class="App-root" :style="{ '--source-width-px': sourceWidthPx + 'px' }" @pointermove="gutterDrag">
+    <div class="App-codemirror-container">
+        <code-mirror 
             <code-mirror 
-                v-model:chunks="markdownChunks"
-                v-model:isSlides="isSlides"
-                ref="codemirror"
-                :debounce="500"
-                @pasteImage="image => toggleDrawing(image)"
-                @openImageAtCursor="toggleDrawing(null)"
-                @edited="documentEdited"
-                :disabled="editorDisabled"
-                :style="{ 'opacity': editorDisabled ? '0.5' : '1' }"
+        <code-mirror 
+            v-model:chunks="markdownChunks"
+            v-model:isSlides="isSlides"
+            ref="codemirror"
+            :debounce="500"
+            @pasteImage="image => toggleDrawing(image)"
+            @openImageAtCursor="toggleDrawing(null)"
+            @edited="documentEdited"
+            :disabled="editorDisabled"
+            :style="{ 'opacity': editorDisabled ? '0.5' : '1' }"
+        />
+    </div>
+    <div class="App-gutter"
+        @pointerdown.prevent="event => gutterDragStart = { x: event.clientX, width: sourceWidthPx }"
+        @pointerup.prevent="gutterDragStart = null"
+        @dblclick.prevent="resetSourceWidthPx"
+    />
+    <div class="App-render-container p-2" ref="renderContainer">
+        <!-- <div v-if="!isSlides" ref="renderView" class="rendered-note-content content" v-html="renderedHtml"></div> -->
+        <div v-if="!isSlides" ref="renderView" class="rendered-note-content content">
+            <p v-if="initialRender" style="opacity: 0.5">Initial render...</p>
+            <markdown-chunk
+                v-for="chunk in markdownChunks"
+                :source="chunk"
+                :fragmentify="fragmentify"
+                :highlight="true"
+                :wrap="null"
+                :autoScrollIntoView="true"
             />
         </div>
-        <div class="App-gutter"
-            @pointerdown.prevent="event => gutterDragStart = { x: event.clientX, width: sourceWidthPx }"
-            @pointerup.prevent="gutterDragStart = null"
-            @dblclick.prevent="resetSourceWidthPx"
-        />
-        <div class="App-render-container p-2" ref="renderContainer">
-            <!-- <div v-if="!isSlides" ref="renderView" class="rendered-note-content content" v-html="renderedHtml"></div> -->
-            <div v-if="!isSlides" ref="renderView" class="rendered-note-content content">
-                <p v-if="initialRender" style="opacity: 0.5">Initial render...</p>
+        <div v-if="isSlides" class="App-print reveal" ref="reveal">
+            <div class="slides">
                 <markdown-chunk
                     v-for="chunk in markdownChunks"
                     :source="chunk"
                     :fragmentify="fragmentify"
                     :highlight="true"
-                    :wrap="null"
-                    :autoScrollIntoView="true"
+                    :wrap="'section'"
+                    :autoScrollIntoView="false"
                 />
-            </div>
-            <div v-if="isSlides" class="App-print reveal" ref="reveal">
-                <div class="slides">
-                    <markdown-chunk
-                        v-for="chunk in markdownChunks"
-                        :source="chunk"
-                        :fragmentify="fragmentify"
-                        :highlight="true"
-                        :wrap="'section'"
-                        :autoScrollIntoView="false"
-                    />
-                </div>
             </div>
         </div>
     </div>
-    <div class="App-statusbar is-family-monospace is-flex-grow-0 pt-1 pb-1 pl-2 pr-2">
+    <div class="App-statusbar is-family-monospace pt-1 pb-1 pl-2 pr-2">
         <div class="is-flex is-align-items-center">
             <button class="button is-black App-icon App-open-file-indicator" @click="togglePicker"></button>
             <span class="is-flex-grow-1 ml-2">
@@ -418,38 +418,34 @@ export default {
 @import 'bulma/sass/utilities/mixins.sass';
 
 .App-root {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.App-mainview {
-    overflow: auto;
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: var(--source-width-px) 8px 1fr;
+    grid-template-rows: calc(100vh - 2.5em) 2.5em;
 }
 
 .App-statusbar {
     background: #f5f5f5;
     border-top: 2px solid lightgray;
+    grid-area: 2 / 1 / 3 / 4;
 }
 
 .App-codemirror-container {
-    @include mobile { display: none; }
-    @include tablet { flex-grow: 0; flex-shrink: 0; height: 100% }
+    grid-area: 1 / 1 / 2 / 2;
     > div {
         height: 100%;
     }
 }
 
 .App-gutter {
-    width: 8px;
+    grid-area: 1 / 2 / 2 / 3;
     background: lightgray;
     cursor: col-resize;
 }
 
 .App-render-container {
-    flex-grow: 1;
+    grid-area: 1 / 3 / 2 / 4;
     height: 100%;
     overflow-y: auto;
 }
