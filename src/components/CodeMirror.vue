@@ -243,8 +243,13 @@ export default {
             });
             this.$emit('openImageAtCursor');
         },
-        focus() {
-            this.editorView.focus();
+        focus(timeout = null) {
+            // The timeout is used to prevent a rare edge case with Chrome on Windows,
+            // where the element's focus may be lost after setting it immediately,
+            // only after alt-tabbing back from another full-screen window.
+            // It can also be used (a bit more generously) to focus on page load.
+            let f = () => this.editorView.focus();
+            return timeout == null ? f() : setTimeout(f, timeout);
         },
         async onPaste(event) {
             let image = await getImageDataURLFromClipboardEvent(event);

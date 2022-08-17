@@ -389,10 +389,8 @@ export default {
             if (!this.hasContentChanged) return;
             event.preventDefault(); event.returnValue = 1;
         });
-        this.$refs.codemirror?.focus?.();
-        window.addEventListener('focus', () => {
-            this.$refs.codemirror?.focus?.();
-        });
+        this.$refs.codemirror?.focus?.(100);
+        window.addEventListener('focus', () => this.$refs.codemirror?.focus?.(10));
         if (this.isSlides) this.initSlides();
     },
     watch: {
