@@ -321,9 +321,7 @@ export default {
         },
         async initializeCurFile() {
             let curFile = window.localStorage.getItem('curFile');
-            if (curFile != null) {
-                curFile = JSON.parse(curFile);
-            }
+            if (curFile != null) curFile = JSON.parse(curFile);
             this.curFile = curFile;
 
             if (window.location.hash.length > 1) {
@@ -334,9 +332,9 @@ export default {
             }
 
             let serverFileData = null;
-            let response = await network.get(`/api/stat/${ this.curFile.path }`);
-            if (response?.status == 200) {
-                serverFileData = await response.json();
+            if (this.curFile != null) {
+                let response = await network.get(`/api/stat/${ this.curFile.path }`);
+                if (response?.status == 200) serverFileData = await response.json();
             }
 
             if (serverFileData != null && serverFileData.md5 != this.curFile?.md5) {
@@ -353,7 +351,7 @@ export default {
                 let serverMd5 = serverFileData?.md5;
                 this.hasContentChanged = bufferMd5 != serverMd5;
 
-                if (serverFileData == null) this.toast = { color: 'red', message: 'Offline' };
+                if (this.curFile != null && serverFileData == null) this.toast = { color: 'red', message: 'Offline' };
                 this.editorDisabled = false;
             }
         },
