@@ -163,7 +163,9 @@ export default {
                     }
                     pos = line.to + 1;
                 }
-                chunks.push(state.sliceDoc(curStart, state.doc.length));
+                let content = state.sliceDoc(curStart, state.doc.length).trim();
+                let id = makeChunkId(content);
+                chunks.push({ id, sourcePos: curStart, content });
                 if (cursor >= curStart) editedChunkIndex = chunks.length - 1;
             }
             
