@@ -24,6 +24,8 @@ export default {
         async scrollIntoView() {
             // Scrolling an edited image into view needs to be done in onload,
             // which makes this method (possibly) async.
+            // Returns the element that was actually scrolled, so the client
+            // can perform further tweaks based on its positioning.
             let el = this.$el;
             if (el.nodeType != Node.ELEMENT_NODE) el = el?.nextElementSibling;
             if (el == null) return;
@@ -32,13 +34,14 @@ export default {
             if (this.flashOnUpdate != null) this.flash(...this.flashOnUpdate);
 
             if (image == null) {
-                return el.scrollIntoView({ block: 'end' });
+                el.scrollIntoView({ block: 'end' });
+                return Promise.resolve(el);
             } else {
                 return new Promise((resolve, reject) => {
                     image.onload = () => {
                         image.scrollIntoView({ block: 'end' });
                         image.onload = null;
-                        resolve();
+                        resolve(image);
                     }
                 });
             }

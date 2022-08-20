@@ -256,12 +256,18 @@ export default {
                     let id = this.markdownChunks[chunkIndex].id;
                     let chunk = this.$refs.markdownChunks.find(x => x.id == id);
 
-                    let oldScrollTop = this.$refs.renderContainer.scrollTop;
-                    await chunk.scrollIntoView();
-                    let offset = Math.round(this.$refs.renderContainer.clientHeight * 0.3);
-                    this.$refs.renderContainer.scroll(0, this.$refs.renderContainer.scrollTop + offset);
-                    let delta = this.$refs.renderContainer.scrollTop - oldScrollTop;
-                    if (Math.abs(delta) > 0.5 * this.$refs.renderContainer.clientHeight) chunk.flash('markdown-chunk-update-flash', 500);
+                    const r = this.$refs.renderContainer;
+                    let oldScrollTop = r.scrollTop;
+                    let el = await chunk.scrollIntoView();
+                    let offset = Math.round(r.clientHeight * 0.3);
+                    // To scroll the full offset would assume that scrollIntoView() actually aligned the bottom
+                    // of the element to the bottom of the render container, which doesn't happen for elements
+                    // near the top.
+                    let realOffset = Math.max(0, offset - (r.clientHeight - el.getBoundingClientRect().bottom));
+                    r.scroll(0, r.scrollTop + realOffset);
+                    console.log(el.getBoundingClientRect().bottom, offset, realOffset);
+                    let delta = r.scrollTop - oldScrollTop;
+                    if (Math.abs(delta) > 0.5 * r.clientHeight) chunk.flash('markdown-chunk-update-flash', 500);
                 }
             });
         },
