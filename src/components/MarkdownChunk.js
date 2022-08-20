@@ -21,24 +21,34 @@ export default {
         },
     },
     methods: {
-        scrollIntoView() {
+        async scrollIntoView() {
+            // Scrolling an edited image into view needs to be done in onload,
+            // which makes this method (possibly) async.
             let el = this.$el;
             if (el.nodeType != Node.ELEMENT_NODE) el = el?.nextElementSibling;
             if (el == null) return;
             let image = el.querySelector('img');
-            if (image != null) {
-                image.onload = () => {
-                    image.scrollIntoView(true);
-                    image.onload = null;
-                }
-            } else {
-                el.scrollIntoView({ block: 'center' });
-            }
 
-            if (this.flashOnUpdate) {
-                el.classList.add(this.flashOnUpdate.class);
-                setTimeout(() => el.classList.remove(this.flashOnUpdate.class), this.flashOnUpdate.timeout);
+            if (this.flashOnUpdate != null) this.flash(...this.flashOnUpdate);
+
+            if (image == null) {
+                return el.scrollIntoView({ block: 'end' });
+            } else {
+                return new Promise((resolve, reject) => {
+                    image.onload = () => {
+                        image.scrollIntoView({ block: 'end' });
+                        image.onload = null;
+                        resolve();
+                    }
+                });
             }
+        },
+        flash(cls, timeout) {
+            let el = this.$el;
+            if (el.nodeType != Node.ELEMENT_NODE) el = el?.nextElementSibling;
+            if (el == null) return;
+            el.classList.add(cls);
+            setTimeout(() => el.classList.remove(cls), timeout);
         },
     },
     render() {

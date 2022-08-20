@@ -32,7 +32,6 @@
                 :source="chunk.content"
                 :fragmentify="fragmentify"
                 :highlight="true"
-                :flashOnUpdate="{ class: 'markdown-chunk-update-flash', timeout: 500 }"
                 @click="scrollEditorToPos(chunk.sourcePos)"
             />
         </div>
@@ -244,7 +243,7 @@ export default {
         documentEdited(editedChunkIndex) {
             this.hasContentChanged = true;
             this.persistBuffer();
-            this.$nextTick(() => {
+            this.$nextTick(async () => {
                 if (this.isSlides) {
                     // In this case, editedChunkIndex is the slide number.
                     this.slideDeck.sync();
@@ -252,10 +251,17 @@ export default {
                     this.slideDeck.slide(slide, 0, 0);
                 } else {
                     // refs on a v-for are not necessarily in the same order as the source array :(
+                    if (this.markdownChunks.length == 0) return;
                     let chunkIndex = editedChunkIndex ?? this.markdownChunks.length - 1;
                     let id = this.markdownChunks[chunkIndex].id;
                     let chunk = this.$refs.markdownChunks.find(x => x.id == id);
-                    chunk.scrollIntoView();
+
+                    let oldScrollTop = this.$refs.renderContainer.scrollTop;
+                    await chunk.scrollIntoView();
+                    let offset = Math.round(this.$refs.renderContainer.clientHeight * 0.3);
+                    this.$refs.renderContainer.scroll(0, this.$refs.renderContainer.scrollTop + offset);
+                    let delta = this.$refs.renderContainer.scrollTop - oldScrollTop;
+                    if (Math.abs(delta) > 0.5 * this.$refs.renderContainer.clientHeight) chunk.flash('markdown-chunk-update-flash', 500);
                 }
             });
         },
