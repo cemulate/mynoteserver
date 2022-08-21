@@ -265,7 +265,6 @@ export default {
                     // near the top.
                     let realOffset = Math.max(0, offset - (r.clientHeight - el.getBoundingClientRect().bottom));
                     r.scroll(0, r.scrollTop + realOffset);
-                    console.log(el.getBoundingClientRect().bottom, offset, realOffset);
                     let delta = r.scrollTop - oldScrollTop;
                     if (Math.abs(delta) > 0.5 * r.clientHeight) chunk.flash('markdown-chunk-update-flash', 500);
                 }
