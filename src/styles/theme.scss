@@ -52,8 +52,14 @@ html.no-scroll {
         margin-bottom: 0;
     }
 
-    p + ul {
+    /* Shouldn't apply in markdown loose lists, i.e. li > p + ul,
+    and it doesn't since the following rule is more specific */
+    p+ul {
         margin-top: calc(-0.75em);
+    }
+
+    li ul {
+        margin-top: 0.25em;
     }
 }
 
