@@ -551,7 +551,7 @@ export default [
     { "label": "\\succneqq", "snippet": "\\succneqq#{}" },
     { "label": "\\succnsim", "snippet": "\\succnsim#{}" },
     { "label": "\\succsim", "snippet": "\\succsim#{}" },
-    { "label": "\\sum\\limits_{#{1}}^{#{2}}", "snippet": "\\sum\\limits_{#{1}}^{#{2}}#{}" },
+    { "label": "\\sum", "snippet": "\\sum_{#{1}}^{#{2}}#{}" },
     { "label": "\\sup", "snippet": "\\sup#{}" },
     { "label": "\\supset", "snippet": "\\supset#{}" },
     { "label": "\\supseteq", "snippet": "\\supseteq#{}" },
