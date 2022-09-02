@@ -25,16 +25,6 @@ class MarkdownRenderer {
             html: true,
         });
     
-        this.markdownIt.use(markdownItColor, { inline: true });
-        this.markdownIt.use(markdownItAttrs);
-    
-        // Re-write the renderer for "fence" tags
-        // This makes the renderer put token.attrs on the <pre> element of a fence, instead of the <code>
-        // In particular this makes the following plugin work correctly, since "fragment" will go on the <pre>
-        // Also allows the renderer to respect the 'highlightEnabled' option.
-        this.markdownIt.use(markdownItCustomFence);
-        this.markdownIt.use(markdownItFragmentify);
-    
         this.mathRenderer = new MathRenderer(mathjaxConfig);
     
         this.markdownIt.use(markdownItMath, {
@@ -50,6 +40,16 @@ class MarkdownRenderer {
                 return `<p${ attrString }>\n${ mathContent }\n</p>`;
             },
         });
+
+        this.markdownIt.use(markdownItColor, { inline: true });
+        this.markdownIt.use(markdownItAttrs);
+    
+        // Re-write the renderer for "fence" tags
+        // This makes the renderer put token.attrs on the <pre> element of a fence, instead of the <code>
+        // In particular this makes the following plugin work correctly, since "fragment" will go on the <pre>
+        // Also allows the renderer to respect the 'highlightEnabled' option.
+        this.markdownIt.use(markdownItCustomFence);
+        this.markdownIt.use(markdownItFragmentify);
     }
 
     render(content, opts) {
