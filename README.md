@@ -1,6 +1,9 @@
 # My Note Server
 
-A simple, self-hosted note-taking and slide-making solution with the following key features:
+Check out 
+
+A simple, self-hosted note-taking and slide-making solution with some key features detailed below.
+Though the app is self-hosted, you can check out [the demo](https://cemulate.github.io/mynoteserver/app/); this is a mocked-out copy of the front-end/app that you can use to test out the editor.
 
 * Typed content comes _first_; full Markdown support
 * **First-class support** for math with MathJax, including custom configurations and macros
@@ -8,6 +11,7 @@ A simple, self-hosted note-taking and slide-making solution with the following k
     Among other things, you can use this file to configure MathJax and add macros.
     An [example of such a file](https://docs.mathjax.org/en/latest/input/tex/macros.html) is in the MathJax docs.
         * Press `ctrl-alt-m` add a new MathJax macro definition to the bottom of your `mathjax-config.js` file; a reload is required before it takes effect on the page.
+    * Snippet completion is automatically supported for all builtin TeX macros as well as user macros (see below for more).
 * Notes are stored as _plain markdown files_ in a single directory with _one_ level of hierarchy: `collection/name`.
 * Insert drawings/figures instantly with a button or `ctrl-space`
     * Or `ctrl-v` to insert (and sketch on) an image from the clipboard.
@@ -25,11 +29,9 @@ In this case, horizontal rules (`---`) are treated as slide boundaries.
     * [markdown-it-attrs](https://github.com/arve0/markdown-it-attrs) is included so you can arbitrary alter attributes/classes on output HTML; this is particular useful for coloring text (for which some utility css classes are incldued) or for "floating" images in slides with `position: absolute`.
 * While the app is served at `/app` (and the api at `/api`), there is also a "static" view of your notes under `/notes`
     * `/notes` itself serves a basic directory of notes by modification date.
-    * `/notes/collection/file` will produce a static server-rendered view of the note, useful for reading on mobile or printing to PDF.
+    * `/notes/file/.../path` will produce a static server-rendered view of the note, useful for reading on mobile or printing to PDF; this is the same page the "print" link in the lower right of the editor goes to.
     * If the file is a presentation, the same url will render a standalone Reveal.js fullscreen presentation; use `fragmentify` in the query string to enable fragmented mode on the presentation. In particular, you can use this page to export the presentation to PDF [per the reveal.js docs](https://revealjs.com/pdf-export/)
 * The editor supports snippet completion, in the [style of vscode](https://code.visualstudio.com/docs/editor/userdefinedsnippets). By default, all builtin LaTeX commands as well as all user-defined MathJax macros have automatically created snippets. You can also use the `config.js` file to add additional snippets; the [default config file](/src/lib/config-default.js) has some included. The supported syntax is the same as as vscode snippet JSON files, but doesn't support all features such as variables and regex (only what [codemirror supports](https://codemirror.net/docs/ref/#autocomplete.snippet)).
-
-Check out [the demo](https://cemulate.github.io/mynoteserver/app/); this is a mocked-out copy of the front-end/app that you can use to test out the editor.
 
 # Usage
 
