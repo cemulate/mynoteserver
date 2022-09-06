@@ -8,7 +8,7 @@ import builtinTexSnippets from './builtin-tex-snippets';
 let mathjaxMacros = window?.MathJax?.tex?.macros ?? {};
 let userSnippetData = window?.mynoteserver?.userSnippets ?? {};
 
-let baseSnippets = builtinTexSnippets.map(({ label, snippet }) => snippetCompletion(snippet, { label })).slice(0, 1000);
+let baseSnippets = builtinTexSnippets.map(({ label, snippet }) => snippetCompletion(snippet, { label }));
 let texSnippets = Object.entries(mathjaxMacros).map(([ name, value ]) => {
     let hasArgs = !(typeof value == 'string');
     let arity = hasArgs ? value[1] : 0;
