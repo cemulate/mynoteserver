@@ -27,8 +27,7 @@ class Directory {
 
     ensureExt(p) {
         let { dirname, basename, extname } = pathParts(p);
-        let valid = /^\.[a-zA-Z]+$/.test(extname);
-        if (!valid) basename += this.defaultExt;
+        if (this.defaultExt != null && extname != this.defaultExt) basename += this.defaultExt;
         return path.join(dirname, basename);
     }
 
