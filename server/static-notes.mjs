@@ -97,7 +97,7 @@ async function routes(server, options) {
         const renderer = new MarkdownRenderer(mathjaxConfig);
 
         let path = req.params['*'].split('/');
-        let content = await dir.readFile(path);
+        let content = await dir.readFile(path, '.md');
         let isSlides = content.startsWith('---');
         let fragmentifyEnabled = isSlides && req.query.fragmentify != null;
         let renderedContent = renderer.render(content, { fragmentifyEnabled, highlightEnabled: true });

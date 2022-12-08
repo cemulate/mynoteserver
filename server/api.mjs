@@ -47,21 +47,21 @@ async function routes(server, options) {
         return {};
     });
     server.get('/ls', async (req, res) => {
-        return dir.ls();
+        return dir.ls('.md');
     });
     server.get('/file/*', async (req, res) => {
         let path = req.params['*'].split('/');
-        return dir.getFileData(true, path);
+        return dir.getFileData(true, path, '.md');
     });
     server.get('/stat/*', async (req, res) => {
         let path = req.params['*'].split('/');
-        return dir.statFile(path);
+        return dir.statFile(path, '.md');
     });
     server.post('/file/*', async (req, res) => {
         let { content } = req.body;
         let path = req.params['*'].split('/');
-        await dir.writeFile(content, path);
-        let stats = await dir.statFile(path);
+        await dir.writeFile(content, path, '.md');
+        let stats = await dir.statFile(path, '.md');
         return stats;
     });
 };
