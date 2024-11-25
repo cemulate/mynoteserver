@@ -1,24 +1,21 @@
-// Settings
+@import 'bulma/css/bulma.min.css';
 
-$family-primary: "Noto Sans", BlinkMacSystemFont, -apple-system,
-"Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
-"Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+:root {
+    --bulma-family-primary: "Noto Sans", BlinkMacSystemFont, -apple-system,
+    "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+    "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+    --bulma-code: unset;
+    --bulma-code-background: #eeeeee;
+    --bulma-pre-background: #f3f3f3; /* Matches highlight.js default theme */
+}
 
-$code: unset;
-$code-background: #eeeeee;
-$code-size: 0.95em;
-$code-padding: 0 0.25em 0.1em 0.25em;
-$pre-background: #f3f3f3; // Matches highlight.js default theme
-
-@import 'bulma/bulma.sass';
-
-// Remove vertical scrollbar on fullscreen application
+/* Remove vertical scrollbar on fullscreen application */
 html.no-scroll {
     overflow-y: hidden;
 }
 
-// Small tweaks to editor and rendered markdown content 
-// (perhaps break this out into a custom resource?)
+/* Small tweaks to editor and rendered markdown content  */
+/* (perhaps break this out into a custom resource?) */
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
@@ -38,7 +35,7 @@ html.no-scroll {
 
     font-size: 1.1em;
     line-height: 1.6;
-    font-family: Noto Serif, $body-family;
+    font-family: Noto Serif, serif;
 
     p img {
         display: block;
@@ -83,10 +80,10 @@ body.static-page .rendered-note-content {
     min-height: 100vh;
     background: white;
     padding: 0.5rem 1rem 0.5rem 1rem;
-    @include desktop {
+    /* @include desktop { */
         border-left: 2px solid black;
         border-right: 2px solid black;
-    }
+    /* } */
     @media print {
         border: none;
     }

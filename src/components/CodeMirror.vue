@@ -268,9 +268,9 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style>
 .CodeMirror-root {
-    > .cm-editor {
+    & > .cm-editor {
         height: 100%;
     }
 }

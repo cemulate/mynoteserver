@@ -434,8 +434,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-@import 'bulma/sass/utilities/mixins.sass';
+<style scoped>
 
 .App-root {
     width: 100vw;
@@ -453,7 +452,7 @@ export default {
 
 .App-codemirror-container {
     grid-area: 1 / 1 / 2 / 2;
-    > div {
+    & >div {
         height: 100%;
     }
 }

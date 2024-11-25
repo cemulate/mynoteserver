@@ -262,13 +262,13 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
 
 .SketchArea-root {
     background: lightgray;
 }
 .SketchArea-canvas-container {
-    > div {
+    & > div {
         position: relative;
         width: 100%;
         height: 100%;

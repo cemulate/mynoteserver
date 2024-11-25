@@ -1,4 +1,4 @@
-import './styles/theme.scss';
+import './styles/theme.css';
 import { createHead } from '@vueuse/head';
 
 if ('serviceWorker' in navigator) {
