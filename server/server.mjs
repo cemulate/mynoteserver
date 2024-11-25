@@ -42,4 +42,4 @@ const directory = new Directory(options.directory);
 server.register(api, { prefix: '/api', directory });
 server.register(staticNotes, { prefix: '/notes', directory });
 
-server.listen(options.port, options.host);
+server.listen({ port: options.port, host: options.host });

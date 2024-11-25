@@ -1,5 +1,3 @@
-import { escapeHtml, unescapeAll } from 'markdown-it/lib/common/utils.js';
-
 // Add class "fragment" to 'vertical' elements;
 // in a reveal.js presentation, this means you'll automatically "step through" each slide.
 function markdownItFragmentify(markdownIt, options) {
@@ -34,7 +32,7 @@ function markdownItFragmentify(markdownIt, options) {
 function markdownItCustomFence(markdownIt, options) {
     markdownIt.renderer.rules.fence = (tokens, idx, options, env, self) => {
         let token = tokens[idx];
-        let info = token.info ? unescapeAll(token.info).trim() : '';
+        let info = token.info ? markdownIt.utils.unescapeAll(token.info).trim() : '';
         let langName, langAttrs;
         if (info != null) {
             let parts = info.split(/(\s+)/g);
@@ -45,8 +43,8 @@ function markdownItCustomFence(markdownIt, options) {
         let shouldHighlight = options.highlightEnabled ?? true;
 
         let highlighted = shouldHighlight
-            ? options?.highlight?.(token.content, langName, langAttrs) ?? escapeHtml(token.content)
-            : escapeHtml(token.content);
+            ? options?.highlight?.(token.content, langName, langAttrs) ?? markdownIt.utils.escapeHtml(token.content)
+            : markdownIt.utils.escapeHtml(token.content);
 
         let codeAttrString = (info != null && shouldHighlight)
             ? ` class="hljs ${ options.langPrefix + langName }"`
