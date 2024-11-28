@@ -25,8 +25,10 @@ import { customShortcutsKeymap } from '../lib/codemirror/shortcuts';
 import { getImageDataURLFromClipboardEvent } from '../lib/image-utils';
 import MurmurHash3 from 'imurmurhash';
 
-const IMAGE_LINE_START = `![](`;
-const IMAGE_LINE_END = `)`;
+const IMAGE_LINE_START = '![';
+const SVG_LINE_START = '<svg';
+const IMAGE_LINE_END = ')';
+const MARKDOWN_IMAGE_REGEX = /(?<alt>!\[[^\]]*\])\((?<href>.*?)(?=\"|\))\)/;
 
 const SLIDE_BOUNDARY = '---';
 
@@ -93,8 +95,8 @@ export default {
                 markdownBrackets,
                 syntaxHighlighting(markdownTexHighlightStyle),
                 hideLinesByPrefixField([
-                    { prefix: IMAGE_LINE_START, replacement: 'Figure' },
-                    { prefix: '<svg', replacement: 'SVG' },
+                    { prefix: IMAGE_LINE_START, replacement: 'Image' },
+                    { prefix: '<svg', replacement: 'SVG Figure' },
                 ]),
                 this.editableCompartment.of(EditorView.editable.of(!this.disabled)),
                 EditorView.updateListener.of(this.onDocumentUpdate.bind(this)),
@@ -200,23 +202,32 @@ export default {
         getDocument() {
             return this.editorView.state.doc.toString();
         },
-        addOrReplaceImageAtCursor(dataURL) {
+        addOrReplaceImageAtCursor(svgText) {
             let cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
             let line = this.editorView.state.doc.lineAt(cursor);
-            let content = IMAGE_LINE_START + dataURL + IMAGE_LINE_END;
-            let shouldReplace = line.length == 0 || line.text.startsWith(IMAGE_LINE_START);
+            let shouldReplace = line.length == 0 || line.text.startsWith(IMAGE_LINE_START) || line.text.startsWith(SVG_LINE_START);
             let changes = shouldReplace
-                ? { from: line.from, to: line.to, insert: content }
-                : { from: cursor, insert: '\n' + content };
+                ? { from: line.from, to: line.to, insert: svgText }
+                : { from: cursor, insert: '\n' + svgText };
             this.editorView.dispatch({ changes });
         },
         checkCursorForImage() {
             const cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];
             const line = this.editorView.state.doc.lineAt(cursor);
-            if (cursor != line.to) return { valid: false, image: null };
-            if (!line.text.startsWith(IMAGE_LINE_START)) return { valid: true, image: null };
-            let image = line.text.slice(IMAGE_LINE_START.length, line.length - IMAGE_LINE_END.length);
-            return { valid: true, image };
+            if (line.text.startsWith('<svg')) {
+                // Return the whole svg tag
+                return { valid: true, image: line.text };    
+            } else if (line.text.startsWith(IMAGE_LINE_START)) {
+                // Return the href of the markdown image
+                const groups = MARKDOWN_IMAGE_REGEX.exec(line.text);
+                return { valid: true, image: groups.href };
+            } else if (line.length == 0) {
+                // This is a valid place for an image, but there is not one currently. 
+                return { valid: true, image: null };
+            } else {
+                console.log('invalid image place');
+                return { valid: false, image: null };
+            }
         },
         getCursorRegion(regionPrefix) {
             const cursor = this.editorView.state.selection.ranges.map(r => r.head)[0];

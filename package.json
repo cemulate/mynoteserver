@@ -29,6 +29,7 @@
     "imurmurhash": "^0.1.4",
     "mini-css-extract-plugin": "^2.9.2",
     "nodemon": "^3.1.7",
+    "perfect-freehand": "^1.2.2",
     "reveal.js": "^5.1.0",
     "url-loader": "^4.1.1",
     "vue": "^3.5.13",

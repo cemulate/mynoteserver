@@ -170,8 +170,8 @@ export default {
             this.fragmentify = !this.fragmentify;
         },
         toggleDrawing(initialImage) {
-            this.isDrawingOpen = !this.isDrawingOpen;
-            if (this.isDrawingOpen) {
+            const newStatus = !this.isDrawingOpen;
+            if (newStatus) {
                 // Opening
                 if (this.$refs.codemirror == null) return;
                 let { valid, image: existingImage } = this.$refs.codemirror.checkCursorForImage();
@@ -185,10 +185,11 @@ export default {
                 // Closing
                 // if the opened image was new (pasted), we still want to retrieve the image
                 // even if the user didn't edit it - so discardUnedited = false
-                const image = this.$refs.sketch?.getImage?.(!this.openedImageIsNew);
+                const image = this.$refs.sketch?.getSvg?.(!this.openedImageIsNew);
                 if (image != null) this.$refs.codemirror?.addOrReplaceImageAtCursor(image);
                 this.$refs.codemirror?.focus?.();
             }
+            this.isDrawingOpen = newStatus;
         },
         togglePicker() {
             this.isPickerOpen = !this.isPickerOpen;

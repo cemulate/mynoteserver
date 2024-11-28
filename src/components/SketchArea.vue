@@ -1,40 +1,44 @@
 <template>
-<div class="SketchArea-root is-flex is-flex-direction-row">
-    <div class="SketchArea-canvas-container is-flex-grow-1 p-2">
+<div class="root is-flex is-flex-direction-row">
+    <div class="whiteboard-container is-flex-grow-1 p-2">
         <div>
-            <canvas id="SketchArea-main-canvas" ref="mainCanvas"
-                :class="{ 'SketchArea-crosshair-cursor': recentPointerType != 'pen' }"
-                :width="pixelWidth"
-                :height="pixelHeight"
+            <svg class="whiteboard" ref="whiteboard"
                 @pointerdown.prevent="onPointerDown"
                 @pointermove.prevent="onPointerMove"
                 @pointerup.prevent="onPointerUp"
                 @contextmenu.prevent=""
-            />
-            <canvas id="SketchArea-overlay-canvas" ref="overlayCanvas" :width="pixelWidth" :height="pixelHeight"></canvas>
+            >
+                <g id="whiteboard-content" ref="whiteboardContentSvgGroup">
+                    <g class="existingImage" ref="existingImageSvgGroup"></g>
+                    <g class="currentDrawing">
+                        <path v-for="stroke in strokes" :d="stroke.path" :fill="stroke.color" ref="strokeSvgPaths"></path>
+                        <path :d="curStroke.path" :fill="curStroke.color"></path>
+                    </g>
+                </g>
+            </svg>
         </div>
     </div>
     <div class="is-flex-grow-0">
-        <div class="SketchArea-toolbar pt-2 pr-2 pb-2 is-flex is-flex-direction-column is-align-content-center">
-            <a class="box SketchArea-color-button"
+        <div class="toolbar pt-2 pr-2 pb-2 is-flex is-flex-direction-column is-align-content-center">
+            <a class="box color-button"
                 v-for="c in normalColors"
                 :style="{ 'background': c, 'border': c == color ? '3px solid white' : 'none' }"
                 @click="color = c"
             />
-            <a class="box SketchArea-color-button SketchArea-eraser-button" 
+            <a class="box color-button eraser-button" 
                 :style="{ 'border': color == 'ERASER' ? '3px solid black' : 'none' }"
                 @click="color = 'ERASER'"
             />
-            <a class="SketchArea-color-button SketchArea-undo-button" @click="undo"></a>
+            <a class="color-button undo-button" @click="undo"></a>
             <div class="is-flex-grow-1"></div>
-            <a class="SketchArea-color-button SketchArea-close-button" @click="$emit('close')"></a>
+            <a class="color-button close-button" @click="$emit('close')"></a>
         </div>
     </div>
 </div>
 </template>
 
 <script>
-import { getCropBoundsFromImageData } from '../lib/image-utils';
+import { getFreehandStrokePathFromPoints } from '../lib/image-utils';
 
 const BUTTONS_ERASER = 32;
 const ACTION = {
@@ -45,28 +49,19 @@ const ACTION = {
 
 export default {
     data: () => ({
-        initialized: false,
-        pixelWidth: 480,
-        pixelHeight: 580,
         action: ACTION.NONE,
         color: 'black',
         colors: [ 'black', 'blue', 'red', 'green', 'orange', 'ERASER' ],
 
         recentPointerType: 'pen',
-        position: null,
-        context: null,
-        initialImageData: null,
         strokes: [],
-        curStroke: [],
+        deletedStrokes: [],
+        curSamplePoints: [],
     }),
     props: {
-        neutralEraserRadius: {
-            type: Number,
-            default: 30,
-        },
         lineWidthRange: {
             type: Array,
-            default: [0.8, 3],
+            default: [1.5, 10],
         },
         disabled: {
             type: Boolean,
@@ -81,193 +76,171 @@ export default {
         normalColors() {
             return this.colors.filter(c => c != 'ERASER');
         },
+        curStroke() {
+            // This unassuming computed property uses the perfect-freehand library
+            // to transform curSamplePoints into a calligraphic stroke.
+            const opts = { size: 5, simulatePressure: this.recentPointerType != 'pen' };
+            return { color: this.color, path: getFreehandStrokePathFromPoints(this.curSamplePoints, opts) };
+        }
     },
     methods: {
-        getImage(discardUnedited = true) {
-            // In this case, the canvas was never drawn on.
-            // (but the image might be new / we are not editing an existing image,
-            // in which case discardUnedited will be false)
-            if (discardUnedited && this.strokes.length == 0) return null;
-
-            let raw = this.context.getImageData(0, 0, this.pixelWidth, this.pixelHeight);
-            let bounds = getCropBoundsFromImageData(raw);
-
-            // canvas is empty
-            if (bounds == null) return null;
-
-            let width = bounds.maxX - bounds.minX;
-            let height = bounds.maxY - bounds.minY;
-            let crop = this.context.getImageData(bounds.minX, bounds.minY, width, height);
-
-            let dest = document.createElement('canvas');
-            dest.width = width;
-            dest.height = height;
-            const destCtx = dest.getContext('2d');
-            destCtx.putImageData(crop, 0, 0);
-
-            return dest.toDataURL('image/webp');
-        },
-        updatePosition(event) {
-            // This works since the dimensions of the canvas are set based
-            // on the computed style at creation
-            this.position = { x: event.offsetX, y: event.offsetY };
-        },
-        lineWidthFromEvent(event) {
-            const [ min, max ] = this.lineWidthRange;
-            if (event.pressure == 0) return (min + max) / 2;
-            
-            return min + (max - min) * event.pressure;
-        },
-        erase(pos, showEraser = true) {
-            let { x, y } = pos;
-            let r = this.neutralEraserRadius;
-
-            if (showEraser) {
-                this.overlayContext.clearRect(0, 0, this.pixelWidth, this.pixelHeight);
-                this.overlayContext.beginPath();
-                this.overlayContext.ellipse(x, y, r, r, 0, 0, 2 * Math.PI);
-                this.overlayContext.stroke();
+        tryEraseAt(x, y) {
+            let i = this.strokes.length - 1;
+            const hitTest = (i) => {
+                const svgPath = this.$refs.strokeSvgPaths[i];
+                return svgPath.isPointInFill(new DOMPoint(x, y));
             }
-
-            this.context.beginPath(); this.context.ellipse(x, y, r, r, 0, 0, 2 * Math.PI); this.context.fill();
-        },
-        clearEraseTooltip() {
-            this.overlayContext.clearRect(0, 0, this.pixelWidth, this.pixelHeight);
-        },
-        connect(pos1, pos2, lineWidth) {
-            this.context.lineWidth = lineWidth;
-            let { x: x1, y: y1 } = pos1 != null ? pos1 : pos2;
-            let { x: x2, y: y2 } = pos2;
-            this.context.beginPath(); this.context.moveTo(x1, y1); this.context.lineTo(x2, y2); this.context.stroke();
+            while (i >= 0 && !hitTest(i)) i--;
+            if (i >= 0) this.strokes = this.strokes.toSpliced(i, 1);
         },
         onPointerDown(event) {
             this.recentPointerType = event.pointerType;
             if (this.disabled) return;
 
-            this.updatePosition(event);
-
             // Setup to perform the appropriate action;
             // Start a log of the current action in curStroke
             if (event.buttons == BUTTONS_ERASER || this.color == 'ERASER') {
                 this.action = ACTION.ERASING;
-                this.context.globalCompositeOperation = 'destination-out';
-                this.erase(this.position);
-
-                this.curStroke.push({ action: ACTION.ERASING });
-                this.curStroke.push(this.position);
+                this.tryEraseAt(event.offsetX, event.offsetY);
             } else {
                 this.action = ACTION.DRAWING;
-                this.context.globalCompositeOperation = 'source-over';
-                this.context.strokeStyle = this.color;
-
-                this.curStroke.push({ action: ACTION.DRAWING, color: this.color });
-                this.curStroke.push([ this.position, 0 ]);
+                this.curSamplePoints = [[ event.offsetX, event.offsetY, event.pressure ]];
             }
         },
         onPointerMove(event) {
+            this.recentPointerType = event.pointerType;
             if (this.disabled || this.action == ACTION.NONE) return;
             
-            let oldPos = this.position;
-            this.updatePosition(event);
-
             // Perform the action, and continue the log in curStroke
             if (this.action == ACTION.DRAWING) {
-                let width = this.lineWidthFromEvent(event);
-                this.connect(oldPos, this.position, width);
-                this.curStroke.push([ this.position, width ]);
+                this.curSamplePoints.push([ event.offsetX, event.offsetY, event.pressure ]);
             } else {
-                this.erase(this.position);
-                this.curStroke.push(this.position);
+                this.tryEraseAt(event.offsetX, event.offsetY);
             }
         },
         onPointerUp(event) {
             this.action = ACTION.NONE;
-            this.clearEraseTooltip();
-
-            this.strokes.push(this.curStroke);
-            this.curStroke = [];
+            
+            this.strokes.push({ ...this.curStroke });
+            this.curSamplePoints = [];
         },
         undo() {
-            // Delete last stroke, and replay everything back
-            this.strokes.pop();
-            this.context.clearRect(0, 0, this.pixelWidth, this.pixelHeight);
-            this.drawInitialImage();
-            this.redrawStrokes();  
+            if (this.strokes.length == 0) return;
+            this.deletedStrokes.push(this.strokes.pop());
         },
-        drawInitialImage() {
-            if (this.initialImageData == null) return;
-            let { width, height } = this.initialImageData;
-            let x = Math.floor((this.pixelWidth / 2) - (width / 2));
-            let y = Math.floor((this.pixelHeight / 2) - (height / 2));
-            this.context.putImageData(this.initialImageData, x, y);
+        redo() {
+            if (this.deletedStrokes.length == 0) return;
+            this.strokes.push(this.deletedStrokes.pop());
         },
-        redrawStrokes() {
-            for (let [ { action, ...params }, ...data ] of this.strokes) {
-                if (action == ACTION.ERASING) {
-                    this.context.globalCompositeOperation = 'destination-out';
-                    for (let p of data) {
-                        this.erase(p, false);
-                    }
-                } else if (action == ACTION.DRAWING) {
-                    this.context.globalCompositeOperation = 'source-over';
-                    this.context.strokeStyle = params.color;
-                    for (let i = 1; i < data.length; i ++) {
-                        let [ pos1 ] = data[i-1];
-                        let [ pos2, width ] = data[i];
-                        this.connect(pos1, pos2, width);
-                    }
+        initializeExistingImage() {
+            // the 'image' prop may contain some image that we are annotating.
+            // This can be an svg image, such as one originally created from
+            // this component; in this case 'image' will be the (text of the) svg
+            // It can also be a raster image, in this case 'image' will be the href.
+            if (this.image == null || this.image.length == 0) return;
+
+            const { width: boardWidth, height: boardHeight } = this.$refs.whiteboard.getBoundingClientRect();
+            console.log('board', boardWidth, boardHeight);
+
+            if (this.image.startsWith('<svg')) {
+                // The existing image is an SVG, either from a previous drawing,
+                // or some svg pasted in directly. In the latter case, we use some
+                // vague heuristics to position the svg reasonably within the whiteboard.
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.innerHTML = this.image;
+
+                const svgWidth = g.firstChild.getAttribute('width');
+                const svgHeight = g.firstChild.getAttribute('height');
+                const svgViewBox = g.firstChild.viewBox.baseVal;
+
+                if (svgWidth != null && svgHeight != null) {
+                    // Case 1: the svg tag has a set width and height
+                    // This will be the case for drawings created by this component.
+                    const width = parseFloat(svgWidth);
+                    const height = parseFloat(svgHeight);
+                    g.firstChild.setAttribute('x', ((boardWidth / 2) - (width / 2)).toFixed(2));
+                    g.firstChild.setAttribute('y', ((boardHeight / 2) - (height / 2)).toFixed(2));
+                } else if (svgViewBox != null) {
+                    // Otherwise, we don't know anything about the SVG.
+                    // If it has a viewBox, we can try to put it comfortably in the center.
+                    const aspectRatio = svgViewBox.height / svgViewBox.width;
+                    const width = boardWidth / 3;
+                    const height = width * aspectRatio;
+                    g.firstChild.setAttribute('width', width);
+                    g.firstChild.setAttribute('height', height);
+                    g.firstChild.setAttribute('x', ((boardWidth / 2) - (width / 2)).toFixed(2));
+                    g.firstChild.setAttribute('y', ((boardHeight / 2) - (height / 2)).toFixed(2));
+                } else {
+                    // What even should happen in this case???
                 }
+
+                this.$refs.existingImageSvgGroup.innerHTML = g.innerHTML;
+            } else {
+                // The existing image is a dataURL.
+                // "Load" the image to figure out its dimensions, and then
+                // include it as an svg <image>
+                let img = new Image();
+                img.onload = () => {
+                    const svgImg = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+                    svgImg.setAttribute('width', img.width.toFixed(2));
+                    svgImg.setAttribute('height', img.height.toFixed(2));
+                    svgImg.setAttribute('x', ((boardWidth / 2) - (img.width / 2)).toFixed(2));
+                    svgImg.setAttribute('y', ((boardHeight / 2) - (img.height / 2)).toFixed(2));
+                    svgImg.setAttribute('href', this.image);
+
+                    this.$refs.existingImageSvgGroup.innerHTML = svgImg.outerHTML;
+                }
+                img.src = this.image;
             }
         },
-    },
-    mounted() {
-        this.initialized = false;
-        // These update the actual 'width' and 'height' of the canvases,
-        // which resets the context. Continue initializing in updated()
-        const compStyle = window.getComputedStyle(this.$refs.mainCanvas);
+        getSvg(discardUnedited = true) {
+            // In this case, the canvas was never drawn on.
+            // (but the image might be new / we are not editing an existing image,
+            // in which case discardUnedited will be false)
+            if (discardUnedited && this.strokes.length == 0) return null;
 
-        // Using these values guarantees that event.offset[X|Y] is actually the correct coordinate.
-        let borderWidth = parseInt(compStyle.getPropertyValue('border-width').replace('px', ''));
-        this.pixelWidth = parseInt(compStyle.getPropertyValue('width').replace('px', '')) - 2 * borderWidth;
-        this.pixelHeight = parseInt(compStyle.getPropertyValue('height').replace('px', '')) - 2 * borderWidth;
-    },
-    updated() {
-        if (this.initialized) return;
+            const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            s.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 
-        const ctx = this.$refs.mainCanvas.getContext('2d');
-        const overlay = this.$refs.overlayCanvas.getContext('2d');
+            // Upon export, we set the viewBox to the slightly padded bounding
+            // box of all the whiteboard content
+            const { x, y, width, height } = this.$refs.whiteboard.getBBox();
+            const box = [ x - 5, y - 5, width + 10, height + 10 ].map(x => x.toFixed(2)).join(' ');
+            s.setAttribute('viewBox', box);
+            s.setAttribute('width', width + 10);
+            s.setAttribute('height', height + 10);
 
-        ctx.lineCap = 'butt';
-        overlay.strokeStyle = 'black';
-        overlay.setLineDash([ 4, 2 ]);
-        overlay.lineWidth = 1;
-
-        if (this.image != null && this.image.length > 0) {
-            let img = new Image();
-            img.onload = () => {
-                let x = Math.floor((this.pixelWidth / 2) - (img.width / 2));
-                let y = Math.floor((this.pixelHeight / 2) - (img.height / 2));
-
-                this.context.drawImage(img, x, y);
-                // Save this as ImageData for re-drawing later.
-                this.initialImageData = this.context.getImageData(x, y, img.width, img.height);
+            // Any content that we were 'drawing over' (the existing image) is in the 
+            // appropriately named group; simply copy its children into this svg.
+            for (const el of this.$refs.existingImageSvgGroup.children) s.appendChild(el);
+            // Now include our new strokes
+            for (let { color, path } of this.strokes) {
+                const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                p.setAttribute('fill', color);
+                p.setAttribute('d', path);
+                s.appendChild(p);
             }
-            img.src = this.image;
-        }
 
-        this.context = ctx;
-        this.overlayContext = overlay;
-        this.initialized = true;
-    }
+            // As to why we can't just get whiteboard.outerHTML, two reasons:
+            // * That would result in infinitely nested 'existingImageSvgGroup' groups
+            //   when editing an image repeatedly.
+            // * Our new strokes would contain vue data attributes which will still
+            //   affect the svg even when 'rendered' into the document.
+            return s.outerHTML.replace('\n', '');
+        },
+    },
+    async mounted() {
+        this.initializeExistingImage();
+    },
 };
 </script>
 
 <style scoped>
 
-.SketchArea-root {
+.root {
     background: lightgray;
 }
-.SketchArea-canvas-container {
+.whiteboard-container {
     & > div {
         position: relative;
         width: 100%;
@@ -275,15 +248,15 @@ export default {
     }
 }
 
-.SketchArea-toolbar {
+.toolbar {
     height: 100%;
 }
 
-.SketchArea-color-button {
+.color-button {
     width: 0.5in;
     height: 0.5in;
 }
-.SketchArea-eraser-button {
+.eraser-button {
     background-color: lightgray;
     background-image:  repeating-linear-gradient(45deg, white 25%, transparent 25%, transparent 75%, white 75%, white),
         repeating-linear-gradient(45deg, white 25%, lightgray 25%, lightgray 75%, white 75%, white);
@@ -291,20 +264,20 @@ export default {
     background-size: 20px 20px;
 }
 
-.SketchArea-undo-button {
+.undo-button {
     background: url('../assets/undo.svg');
     background-repeat: no-repeat;
     background-size: 100% 100%;
     background-position: center;
 }
-.SketchArea-close-button {
+.close-button {
     background: url('../assets/delete.svg');
     background-repeat: no-repeat;
     background-size: 60% 60%;
     background-position: center;
 }
 
-.SketchArea-canvas-container canvas {
+.whiteboard {
     position: absolute;
     top: 0; 
     left: 0;
@@ -312,18 +285,10 @@ export default {
     height: 100%;
     background: white;
     background-clip: padding-box;
-    border: 0.5rem solid transparent;
+    padding: 0.5rem;
     border-radius: 1rem;
     background: white;
     touch-action: none;
-}
-
-.SketchArea-crosshair-cursor {
     cursor: crosshair;
-}
-
-#SketchArea-overlay-canvas {
-    background: none;
-    pointer-events: none;
 }
 </style>
