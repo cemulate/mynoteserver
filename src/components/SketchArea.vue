@@ -1,22 +1,20 @@
 <template>
 <div class="root is-flex is-flex-direction-row">
-    <div class="whiteboard-container is-flex-grow-1 p-2">
-        <div>
-            <svg class="whiteboard" ref="whiteboard"
-                @pointerdown.prevent="onPointerDown"
-                @pointermove.prevent="onPointerMove"
-                @pointerup.prevent="onPointerUp"
-                @contextmenu.prevent=""
-            >
-                <g id="whiteboard-content" ref="whiteboardContentSvgGroup">
-                    <g class="existingImage" ref="existingImageSvgGroup"></g>
-                    <g class="currentDrawing">
-                        <path v-for="stroke in strokes" :d="stroke.path" :fill="stroke.color" ref="strokeSvgPaths"></path>
-                        <path :d="curStroke.path" :fill="curStroke.color"></path>
-                    </g>
+    <div class="whiteboard-container is-flex-grow-1">
+        <svg class="whiteboard" ref="whiteboard"
+            @pointerdown.prevent="onPointerDown"
+            @pointermove.prevent="onPointerMove"
+            @pointerup.prevent="onPointerUp"
+            @contextmenu.prevent=""
+        >
+            <g id="whiteboard-content" ref="whiteboardContentSvgGroup">
+                <g class="existingImage" ref="existingImageSvgGroup"></g>
+                <g class="currentDrawing">
+                    <path v-for="stroke in strokes" :d="stroke.path" :fill="stroke.color" ref="strokeSvgPaths"></path>
+                    <path :d="curStroke.path" :fill="curStroke.color"></path>
                 </g>
-            </svg>
-        </div>
+            </g>
+        </svg>
     </div>
     <div class="is-flex-grow-0">
         <div class="toolbar pt-2 pr-2 pb-2 is-flex is-flex-direction-column is-align-content-center">
@@ -53,7 +51,7 @@ export default {
         color: 'black',
         colors: [ 'black', 'blue', 'red', 'green', 'orange', 'ERASER' ],
 
-        recentPointerType: 'pen',
+        exclusivePenInput: false,
         strokes: [],
         deletedStrokes: [],
         curSamplePoints: [],
@@ -79,7 +77,7 @@ export default {
         curStroke() {
             // This unassuming computed property uses the perfect-freehand library
             // to transform curSamplePoints into a calligraphic stroke.
-            const opts = { size: 5, simulatePressure: this.recentPointerType != 'pen' };
+            const opts = { size: 5, simulatePressure: !this.exclusivePenInput };
             return { color: this.color, path: getFreehandStrokePathFromPoints(this.curSamplePoints, opts) };
         }
     },
@@ -94,7 +92,9 @@ export default {
             if (i >= 0) this.strokes = this.strokes.toSpliced(i, 1);
         },
         onPointerDown(event) {
-            this.recentPointerType = event.pointerType;
+            if (!this.exclusivePenInput && event.pointerType == 'pen') this.exclusivePenInput = true;
+            if (this.exclusivePenInput && event.pointerType != 'pen') return;
+            
             if (this.disabled) return;
 
             // Setup to perform the appropriate action;
@@ -108,11 +108,14 @@ export default {
             }
         },
         onPointerMove(event) {
-            this.recentPointerType = event.pointerType;
+            if (!this.exclusivePenInput && event.pointerType == 'pen') this.exclusivePenInput = true;
+            if (this.exclusivePenInput && event.pointerType != 'pen') return;
+
             if (this.disabled || this.action == ACTION.NONE) return;
             
             // Perform the action, and continue the log in curStroke
             if (this.action == ACTION.DRAWING) {
+                console.log([ event.offsetX, event.offsetY, event.pressure ]);
                 this.curSamplePoints.push([ event.offsetX, event.offsetY, event.pressure ]);
             } else {
                 this.tryEraseAt(event.offsetX, event.offsetY);
@@ -241,11 +244,9 @@ export default {
     background: lightgray;
 }
 .whiteboard-container {
-    & > div {
-        position: relative;
-        width: 100%;
-        height: 100%;
-    }
+    width: 100%;
+    height: 100%;
+    padding: 0.5rem;
 }
 
 .toolbar {
@@ -278,14 +279,10 @@ export default {
 }
 
 .whiteboard {
-    position: absolute;
-    top: 0; 
-    left: 0;
     width: 100%;
     height: 100%;
     background: white;
     background-clip: padding-box;
-    padding: 0.5rem;
     border-radius: 1rem;
     background: white;
     touch-action: none;
