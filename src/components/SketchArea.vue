@@ -1,5 +1,5 @@
 <template>
-<div class="root is-flex is-flex-direction-row">
+<div class="SketchArea-root is-flex is-flex-direction-row">
     <div class="whiteboard-container is-flex-grow-1">
         <svg class="whiteboard" ref="whiteboard"
             @pointerdown.prevent="onPointerDown"
@@ -240,7 +240,7 @@ export default {
 
 <style scoped>
 
-.root {
+.SketchArea-root {
     background: lightgray;
 }
 .whiteboard-container {

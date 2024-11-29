@@ -3,7 +3,7 @@
     <title>{{ documentTitle }}</title>
 </Head>
 <div class="App-root" :style="{ '--source-width-px': sourceWidthPx + 'px' }" @pointermove="gutterDrag">
-    <div class="App-codemirror-container">
+    <div class="codemirror-container">
         <code-mirror 
             v-model:chunks="markdownChunks"
             v-model:isSlides="isSlides"
@@ -16,12 +16,12 @@
             :style="{ 'opacity': editorDisabled ? '0.5' : '1' }"
         />
     </div>
-    <div class="App-gutter"
+    <div class="gutter"
         @pointerdown.prevent="event => gutterDragStart = { x: event.clientX, width: sourceWidthPx }"
         @pointerup.prevent="gutterDragStart = null"
         @dblclick.prevent="resetSourceWidthPx"
     />
-    <div class="App-render-container p-2" ref="renderContainer">
+    <div class="render-container p-2" ref="renderContainer">
         <p v-if="initialRender" style="opacity: 0.5">Initial render...</p>
         <div v-if="!isSlides" ref="renderView" class="rendered-note-content content">
             <markdown-chunk
@@ -35,7 +35,7 @@
                 @click="scrollEditorToPos(chunk.sourcePos)"
             />
         </div>
-        <div v-if="isSlides" class="App-print reveal" ref="reveal">
+        <div v-if="isSlides" class="print reveal" ref="reveal">
             <div class="slides">
                 <markdown-chunk
                     v-for="chunk in markdownChunks"
@@ -51,9 +51,9 @@
             </div>
         </div>
     </div>
-    <div class="App-statusbar is-family-monospace pt-1 pb-1 pl-2 pr-2">
+    <div class="statusbar is-family-monospace pt-1 pb-1 pl-2 pr-2">
         <div class="is-flex is-align-items-center">
-            <button class="button is-black App-icon App-open-file-indicator" @click="togglePicker"></button>
+            <button class="button is-black icon open-file-indicator" @click="togglePicker"></button>
             <span class="is-flex-grow-1 ml-2">
                 <a class="has-text-black" @click="togglePicker">
                     <span v-if="curFile != null">
@@ -61,13 +61,13 @@
                     </span>
                     <span v-else>Select file</span>
                 </a>
-                <Transition name="App-fadeout">
+                <Transition name="fadeout">
                     <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
                 </Transition>
             </span>
-            <a class="is-hidden-mobile button is-black App-icon App-edit-image-button ml-4"
+            <a class="is-hidden-mobile button is-black icon edit-image-button ml-4"
                 @click="toggleDrawing(null)" title="Insert/edit image"></a>
-            <a class="button is-black App-icon App-fullscreen-button ml-4" @click="toggleFullscreen"
+            <a class="button is-black icon fullscreen-button ml-4" @click="toggleFullscreen"
                 :title="isSlides ? 'Present' : 'Toggle fullscreen editor'"></a>
             <button v-if="isSlides"
                 class="button is-small is-rounded ml-4"
@@ -77,7 +77,7 @@
             >
             Auto Pause
             </button>
-            <a target="_blank" class="is-hidden-mobile button is-link App-icon App-static-link-button ml-4" :href="staticLink"
+            <a target="_blank" class="is-hidden-mobile button is-link icon static-link-button ml-4" :href="staticLink"
                 title="Open print view in new tab"></a>
         </div>
     </div>
@@ -86,7 +86,7 @@
     <div class="modal-background">
         <!-- Use the v-if to *create* this component upon opening the modal, causing it to 
         read the DOM to set the correct dimensions -->
-        <sketch-area class="App-sketch-area-component"
+        <sketch-area class="sketch-area-component"
             ref="sketch"
             :image="openedImage"
             v-if="isDrawingOpen"
@@ -445,26 +445,26 @@ export default {
     grid-template-rows: calc(100vh - 2.5em) 2.5em;
 }
 
-.App-statusbar {
+.statusbar {
     background: #f5f5f5;
     border-top: 2px solid lightgray;
     grid-area: 2 / 1 / 3 / 4;
 }
 
-.App-codemirror-container {
+.codemirror-container {
     grid-area: 1 / 1 / 2 / 2;
     & >div {
         height: 100%;
     }
 }
 
-.App-gutter {
+.gutter {
     grid-area: 1 / 2 / 2 / 3;
     background: lightgray;
     cursor: col-resize;
 }
 
-.App-render-container {
+.render-container {
     grid-area: 1 / 3 / 2 / 4;
     height: 100%;
     overflow-y: auto;
@@ -476,7 +476,7 @@ export default {
     aspect-ratio: 16/9;
 }
 
-.App-sketch-area-component {
+.sketch-area-component {
     position: absolute;
     top: 0;
     left: 0;
@@ -484,35 +484,35 @@ export default {
     height: 100%;
 }
 
-.App-icon {
+.icon {
     height: 1.8em;
     aspect-ratio: 1;
 }
-.App-fullscreen-button {
+.fullscreen-button {
     mask: url('../assets/maximize.svg') 0 0/100% 100%;
     -webkit-mask: url('../assets/maximize.svg') 0 0/100% 100%;
 }
 
-.App-open-file-indicator {
+.open-file-indicator {
     mask: url('../assets/folder.svg') 0 0/100% 100%;
     -webkit-mask: url('../assets/folder.svg') 0 0/100% 100%;
 }
 
-.App-static-link-button {
+.static-link-button {
     mask: url('../assets/journal-page.svg') 0 0/100% 100% no-repeat;
     -webkit-mask: url('../assets/journal-page.svg') 0 0/100% 100% no-repeat;
 }
 
-.App-edit-image-button {
+.edit-image-button {
     mask: url('../assets/image.svg') 0 0/100% 100%;
     -webkit-mask: url('../assets/image.svg') 0 0/100% 100%;
 }
 
-.App-fadeout-leave-active {
+.fadeout-leave-active {
     transition: opacity 0.5s ease;
 }
 
-.App-fadeout-leave-to {
+.fadeout-leave-to {
     opacity: 0;
 }
 </style>

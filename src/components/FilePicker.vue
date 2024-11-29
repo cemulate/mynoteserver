@@ -12,20 +12,20 @@
             >
         </p>
     </div>
-    <a class="panel-block is-flex"
+    <div class="panel-block is-flex"
         v-for="(entry, index) in topMatchingFiles"
         v-bind:class="{ 'has-background-link-light': index == focusedIndex }"
         @click="selectFile(entry)"
     >
         <span class="is-family-monospace is-flex-grow-1">{{ entry.path }}</span>
-        <small class="FilePicker-subdued">{{ formatEditTime(entry.mtime) }}</small>
+        <small class="subdued">{{ formatEditTime(entry.mtime) }}</small>
         <a 
-            class="button is-link FilePicker-open-new-tab-button"
+            class="button is-link open-new-tab-button"
             @click.stop=""
             :href="`notes/${ entry.path }`"
             title="Open note in new tab"
         />
-    </a>
+    </div>
     <a class="panel-block" v-if="loadError">
         Couldn't load files...
     </a>
@@ -119,14 +119,14 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 .FilePicker-root {
     background: white;
 }
-.FilePicker-subdued {
+.subdued {
     color: hsl(0, 0%, 30%);
 }
-.FilePicker-open-new-tab-button {
+.open-new-tab-button {
     height: 1.4em;
     aspect-ratio: 1;
     margin-left: 0.5em;

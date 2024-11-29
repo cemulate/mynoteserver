@@ -1,5 +1,5 @@
 <template>
-<div class="CodeMirror-root" ref="root" @paste="onPaste"></div>
+<div ref="root" @paste="onPaste"></div>
 </template>
 
 <script>
@@ -225,7 +225,6 @@ export default {
                 // This is a valid place for an image, but there is not one currently. 
                 return { valid: true, image: null };
             } else {
-                console.log('invalid image place');
                 return { valid: false, image: null };
             }
         },
@@ -280,9 +279,7 @@ export default {
 </script>
 
 <style>
-.CodeMirror-root {
-    & > .cm-editor {
-        height: 100%;
-    }
+.cm-editor {
+    height: 100%;
 }
 </style>
