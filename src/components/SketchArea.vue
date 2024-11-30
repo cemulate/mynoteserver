@@ -38,6 +38,12 @@
 <script>
 import { getFreehandStrokePathFromPoints } from '../lib/image-utils';
 
+const perfectFreehandOptions = window?.mynoteserver?.perfectFreehandOptions ?? {
+    size: 4,
+    thinning: 0.8,
+    simulatePressure: false,
+};
+
 const BUTTONS_ERASER = 32;
 const ACTION = {
     NONE: 0,
@@ -57,10 +63,6 @@ export default {
         curSamplePoints: [],
     }),
     props: {
-        lineWidthRange: {
-            type: Array,
-            default: [1.5, 10],
-        },
         disabled: {
             type: Boolean,
             default: false,
@@ -77,7 +79,8 @@ export default {
         curStroke() {
             // This unassuming computed property uses the perfect-freehand library
             // to transform curSamplePoints into a calligraphic stroke.
-            const opts = { size: 5, simulatePressure: !this.exclusivePenInput };
+            const opts = { ...perfectFreehandOptions };
+            if (this.exclusivePenInput) opts.simulatePressure = false;
             return { color: this.color, path: getFreehandStrokePathFromPoints(this.curSamplePoints, opts) };
         }
     },

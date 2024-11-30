@@ -27,4 +27,11 @@ window.mynoteserver = {
             "body": ["$$", "$0", "$$"]
         }
     },
+    perfectFreehandOptions: {
+        size: 4,
+        thinning: 0.8,
+        // Will be overridden to false when using a stylus/pen, so this is
+        // relevant to touch/mouse input.
+        simulatePressure: false,
+    },
 };
