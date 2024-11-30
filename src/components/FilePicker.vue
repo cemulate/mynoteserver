@@ -121,7 +121,7 @@ export default {
 
 <style scoped>
 .FilePicker-root {
-    background: white;
+    background: var(--bulma-body-background-color);
 }
 .subdued {
     color: hsl(0, 0%, 30%);

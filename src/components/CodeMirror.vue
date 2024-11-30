@@ -11,13 +11,14 @@ import { foldGutter, foldKeymap, defaultHighlightStyle, syntaxHighlighting, brac
 import { closeBrackets, closeBracketsKeymap, autocompletion, snippetKeymap } from '@codemirror/autocomplete';
 import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { markdown as langMarkdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { oneDark } from '@codemirror/theme-one-dark';
 
 import { hideLinesByPrefixField } from '../lib/codemirror/hide-lines-by-prefix';
 import {
     InlineMathConfig,
     BlockMathConfig,
-    markdownTexHighlightStyle,
     markdownBrackets,
+    markdownTexHighlightStyle,
     customCloseBrackets,
 } from '../lib/codemirror/markdown-language-ext.js';
 import { markdownTexSnippets, customAutocompletionKeymap } from '../lib/codemirror/tex-snippets';
@@ -56,11 +57,13 @@ export default {
         'edited',
     ],
     mounted() {
+        const darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
         this.editableCompartment = new Compartment();
         this.editorView = new EditorView({
             doc: 'Initializing...',
             extensions: [
                 minimalSetup,
+                ...(darkMode ? [ oneDark ] : [ syntaxHighlighting(defaultHighlightStyle) ]),
                 lineNumbers(),
                 highlightActiveLine(),
                 highlightActiveLineGutter(),
@@ -68,7 +71,6 @@ export default {
                 foldGutter(),
                 drawSelection(),
                 EditorState.allowMultipleSelections.of(true),
-                syntaxHighlighting(defaultHighlightStyle),
                 bracketMatching(),
                 customCloseBrackets,
                 autocompletion({ defaultKeymap: false }),
@@ -94,6 +96,7 @@ export default {
                 markdownTexSnippets,
                 markdownBrackets,
                 syntaxHighlighting(markdownTexHighlightStyle),
+
                 hideLinesByPrefixField([
                     { prefix: IMAGE_LINE_START, replacement: 'Image' },
                     { prefix: '<svg', replacement: 'SVG Figure' },

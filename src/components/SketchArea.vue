@@ -20,11 +20,12 @@
         <div class="toolbar pt-2 pr-2 pb-2 is-flex is-flex-direction-column is-align-content-center">
             <a class="box color-button"
                 v-for="c in normalColors"
-                :style="{ 'background': c, 'border': c == color ? '3px solid white' : 'none' }"
+                :class="{ 'selected': c == color }"
+                :style="{ 'background': c }"
                 @click="color = c"
             />
             <a class="box color-button eraser-button" 
-                :style="{ 'border': color == 'ERASER' ? '3px solid black' : 'none' }"
+                :class="{ 'selected': color == 'ERASER' }"
                 @click="color = 'ERASER'"
             />
             <a class="color-button undo-button" @click="undo"></a>
@@ -44,6 +45,8 @@ const perfectFreehandOptions = window?.mynoteserver?.perfectFreehandOptions ?? {
     simulatePressure: false,
 };
 
+const darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
 const BUTTONS_ERASER = 32;
 const ACTION = {
     NONE: 0,
@@ -54,8 +57,8 @@ const ACTION = {
 export default {
     data: () => ({
         action: ACTION.NONE,
-        color: 'black',
-        colors: [ 'black', 'blue', 'red', 'green', 'orange', 'ERASER' ],
+        color: darkMode ? 'white' : 'black',
+        colors: [ darkMode ? 'white' : 'black', 'blue', 'red', 'green', 'orange', 'ERASER' ],
 
         exclusivePenInput: false,
         strokes: [],
@@ -244,7 +247,14 @@ export default {
 <style scoped>
 
 .SketchArea-root {
-    background: lightgray;
+    @media (prefers-color-scheme: light) {
+        background: lightgray;
+        --color-button-outline-color: 5px solid white;
+    }
+    @media (prefers-color-scheme: dark) {
+        background: #444;
+        --color-button-outline-color: 5px solid black;
+    }
 }
 .whiteboard-container {
     width: 100%;
@@ -259,7 +269,11 @@ export default {
 .color-button {
     width: 0.5in;
     height: 0.5in;
+    &.selected {
+        outline: var(--color-button-outline-color);
+    }
 }
+
 .eraser-button {
     background-color: lightgray;
     background-image:  repeating-linear-gradient(45deg, white 25%, transparent 25%, transparent 75%, white 75%, white),
@@ -269,25 +283,20 @@ export default {
 }
 
 .undo-button {
-    background: url('../assets/undo.svg');
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    background-position: center;
+    mask: url('../assets/undo.svg') 0 0/100% 100%;
+    background-color: var(--bulma-body-color);
 }
 .close-button {
-    background: url('../assets/delete.svg');
-    background-repeat: no-repeat;
-    background-size: 60% 60%;
-    background-position: center;
+    mask: url('../assets/delete.svg') center/60% no-repeat;
+    background-color: var(--bulma-body-color);
 }
 
 .whiteboard {
     width: 100%;
     height: 100%;
-    background: white;
+    background: var(--bulma-body-background-color);
     background-clip: padding-box;
     border-radius: 1rem;
-    background: white;
     touch-action: none;
     cursor: crosshair;
 }

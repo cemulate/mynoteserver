@@ -11,7 +11,7 @@ async function routes(server, options) {
         const defaultPaths = {
             'config.js': path.join(__dirname, 'resources', 'config-default.js'),
             'reveal-theme.css': path.join(__dirname, 'resources', 'reveal-theme-default.css'),
-            'highlight-theme.css': path.join(__dirname, '..', 'node_modules', 'highlight.js', 'styles', 'default.css'),
+            'highlight-theme.css': path.join(__dirname, 'resources', 'highlight-theme-default.css'),
         };
         const contentType = { '.js': 'text/javascript', '.css': 'text/css' };
 

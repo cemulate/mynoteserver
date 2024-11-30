@@ -5,8 +5,15 @@
     "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
     "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
     --bulma-code: unset;
-    --bulma-code-background: #eeeeee;
-    --bulma-pre-background: #f3f3f3; /* Matches highlight.js default theme */
+    /* These match the default (light/dark) highlight.js theme */
+    @media (prefers-color-scheme: light) {
+        --bulma-code-background: #f3f3f3;
+        --bulma-pre-background: #f3f3f3; 
+    }
+    @media (prefers-color-scheme: dark) {
+        --bulma-code-background: #282c34;
+        --bulma-pre-background: #282c34;
+    }    
 }
 
 /* Remove vertical scrollbar on fullscreen application */
@@ -20,13 +27,20 @@ html.no-scroll {
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 .cm-editor {
-    background-color: #fbfbfb;
     font-size: 14px;
 
     &.cm-focused { outline: none !important; }
     
     .cm-content {
         font-family: 'DejaVu Sans Mono', 'Consolas', monospace;
+    }
+
+    /* Highlighting colors for token classes defined in markdownTexHighlightStyle */
+    @media (prefers-color-scheme: light) {
+        .cmt-im, .cmt-im-d, .cmt-bm { color: #4876d6; }
+    }
+    @media (prefers-color-scheme: dark) {
+        .cmt-im, .cmt-im-d, .cmt-bm { color: #e06c75; }
     }
 }
 
@@ -83,19 +97,17 @@ html.no-scroll {
 
 body.static-page .rendered-note-content {
     min-height: 100vh;
-    background: white;
+    background: var(--bulma-body-background);
     padding: 0.5rem 1rem 0.5rem 1rem;
-    /* @include desktop { */
-        border-left: 2px solid black;
-        border-right: 2px solid black;
-    /* } */
+    border-left: 2px solid black;
+    border-right: 2px solid black;
     @media print {
         border: none;
     }
 }
 
 body.static-page.static-note-page {
-    background: hsl(0, 0%, 95%);
+    background: var(--bulma-body-background);
 }
 
 body.static-page .datecell {

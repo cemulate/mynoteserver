@@ -1,44 +1,97 @@
 /**
- * White theme for reveal.js. This is the opposite of the 'black' theme.
- *
- * By Hakim El Hattab, http://hakim.se
+ * This file is a customized version of the the stock 'white' and 'black' reveal.js
+ * themes, included in a single file with the appropriate media queries.
  */
+
+section.has-light-background, section.has-light-background h1, section.has-light-background h2, section.has-light-background h3, section.has-light-background h4, section.has-light-background h5, section.has-light-background h6 {
+  color: #222;
+}
 section.has-dark-background, section.has-dark-background h1, section.has-dark-background h2, section.has-dark-background h3, section.has-dark-background h4, section.has-dark-background h5, section.has-dark-background h6 {
   color: #fff;
 }
+@import url(./fonts/source-sans-pro/source-sans-pro.css);
 
 /*********************************************
  * GLOBAL STYLES
  *********************************************/
 :root {
-  --r-background-color: #fbfbfb;
-  --r-main-font: Palatino Linotype, serif;
-  --r-main-font-size: 34px;
-  --r-main-color: #222;
-  --r-block-margin: 20px;
-  --r-heading-margin: 0 0 20px 0;
-  --r-heading-font: Palatino Linotype, serif;
-  --r-heading-color: #222;
-  --r-heading-line-height: 1.2;
-  --r-heading-letter-spacing: normal;
-  --r-heading-text-transform: unset;
-  --r-heading-text-shadow: none;
-  --r-heading-font-weight: 600;
-  --r-heading1-text-shadow: none;
-  --r-heading1-size: 2em;
-  --r-heading2-size: 1.6em;
-  --r-heading3-size: 1.3em;
-  --r-heading4-size: 1em;
-  --r-code-font: monospace;
-  --r-link-color: #2a76dd;
-  --r-link-color-dark: #1a53a1;
-  --r-link-color-hover: #6ca0e8;
-  --r-selection-background-color: #98bdef;
-  --r-selection-color: #fff;
+  @media (prefers-color-scheme: light) {
+    --r-background-color: #fbfbfb;
+    --r-main-font: Palatino Linotype, serif;
+    --r-main-font-size: 34px;
+    --r-main-color: #222;
+    --r-block-margin: 20px;
+    --r-heading-margin: 0 0 20px 0;
+    --r-heading-font: Palatino Linotype, serif;
+    --r-heading-color: #222;
+    --r-heading-line-height: 1.2;
+    --r-heading-letter-spacing: normal;
+    --r-heading-text-transform: unset;
+    --r-heading-text-shadow: none;
+    --r-heading-font-weight: 600;
+    --r-heading1-text-shadow: none;
+    --r-heading1-size: 2em;
+    --r-heading2-size: 1.6em;
+    --r-heading3-size: 1.3em;
+    --r-heading4-size: 1em;
+    --r-code-font: monospace;
+    --r-link-color: #2a76dd;
+    --r-link-color-dark: #1a53a1;
+    --r-link-color-hover: #6ca0e8;
+    --r-selection-background-color: #98bdef;
+    --r-selection-color: #fff;
+
+    /* Additional variables */
+    --r-viewport-background: #fff;
+    --r-blockquote-background-color: white;
+    --r-pre-background-color: #f3f3f3;
+    --r-roll-color: #fff;
+    --r-progress-background: rgba(0, 0, 0, 0.2);
+
+    /* Additional variables for custom extension */
+    --rc-framed-image-background: white;
+  }
+  @media (prefers-color-scheme: dark) {
+    --r-background-color: #191919;
+    --r-main-font: Palatino Linotype, serif;
+    --r-main-font-size: 34px;
+    --r-main-color: #fff;
+    --r-block-margin: 20px;
+    --r-heading-margin: 0 0 20px 0;
+    --r-heading-font: Palatino Linotype, serif;
+    --r-heading-color: #fff;
+    --r-heading-line-height: 1.2;
+    --r-heading-letter-spacing: normal;
+    --r-heading-text-shadow: none;
+    --r-heading-font-weight: 600;
+    --r-heading1-text-shadow: none;
+    --r-heading1-size: 2em;
+    --r-heading2-size: 1.6em;
+    --r-heading3-size: 1.3em;
+    --r-heading4-size: 1em;
+    --r-code-font: monospace;
+    --r-link-color: #42affa;
+    --r-link-color-dark: rgb(19.8216494845, 155.4536082474, 248.7783505155);
+    --r-link-color-hover: rgb(94.35, 187, 250.75);
+    --r-selection-background-color: rgba(66, 175, 250, 0.75);
+    --r-selection-color: #fff;
+    --r-overlay-element-bg-color: 240, 240, 240;
+    --r-overlay-element-fg-color: 0, 0, 0;
+
+    /* Additional variables */
+    --r-viewport-background: #191919;
+    --r-blockquote-background-color: rgba(255, 255, 255, 0.05);
+    --r-pre-background-color: #282c34;
+    --r-roll-color: #fff;
+    --r-progress-background: rgba(0, 0, 0, 0.2);
+
+    /* Additional variables for custom extension */
+    --rc-framed-image-background: white;
+  }
 }
 
 .reveal-viewport {
-  background: #fff;
+  background: var(--r-viewport-background);
   background-color: var(--r-background-color);
 }
 
@@ -202,7 +255,7 @@ as it would be from another list item */
   width: 100%;
   margin: var(--r-block-margin) auto;
   padding: 0.5em 0.5em 0.5em 0.8em;
-  background-color: white;
+  background-color: var(--r-blockquote-background-color);
   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
 }
 
@@ -216,7 +269,7 @@ as it would be from another list item */
 }
 
 .reveal pre {
-  background-color: #f3f3f3;
+  background-color: var(--r-pre-background-color);
   display: block;
   position: relative;
   margin: var(--r-block-margin) auto;
@@ -323,7 +376,7 @@ as it would be from another list item */
 }
 
 .reveal .roll span:after {
-  color: #fff;
+  color: var(--r-roll-color);
   background: var(--r-link-color-dark);
 }
 
@@ -355,7 +408,7 @@ as it would be from another list item */
  * PROGRESS BAR
  *********************************************/
 .reveal .progress {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--r-progress-background);
   color: var(--r-link-color);
 }
 
@@ -378,9 +431,8 @@ as it would be from another list item */
 }
 
 .reveal .slides p.framed-image img {
-  background: white;
+  background: var(--rc-framed-image-background);
   padding: 20px;
-  background-color: white;
   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
 }
 

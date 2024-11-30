@@ -12,7 +12,11 @@ const MATH_BLOCK_STOP_REGEX = /^.*\$\$\s*$/;
 
 const InlineMathDelim = { resolve: 'InlineMath', mark: 'InlineMathDelim' };
 
-const markdownTexTags = { inlineMath: Tag.define(), blockMath: Tag.define() };
+const markdownTexTags = { 
+    inlineMath: Tag.define(),
+    inlineMathDelim: Tag.define(),
+    blockMath: Tag.define(),
+};
 
 const InlineMathConfig = {
     defineNodes: [
@@ -22,7 +26,7 @@ const InlineMathConfig = {
         },
         {
             name: 'InlineMathDelim',
-            style: tags.processingInstruction,
+            style: markdownTexTags.inlineMathDelim,
         },
     ],
     parseInline: [{
@@ -108,8 +112,9 @@ const BlockMathConfig = {
 };
 
 const markdownTexHighlightStyle = HighlightStyle.define([
-    { tag: markdownTexTags.inlineMath, color: '#4876d6' },
-    { tag: markdownTexTags.blockMath, color: '#4876d6' },
+    { tag: markdownTexTags.inlineMath, class: 'cmt-im' },
+    { tag: markdownTexTags.inlineMathDelim, class: 'cmt-im-d' },
+    { tag: markdownTexTags.blockMath, class: 'cmt-bm' },
 ]);
 
 const markdownBrackets = markdownLanguage.data.of({
@@ -141,4 +146,4 @@ const customCloseBracketsInputHandler = EditorView.inputHandler.of((view, from, 
 // closeBrackets(). We replace the input handler with a custom version
 const customCloseBrackets = [ customCloseBracketsInputHandler, closeBrackets()[1] ];
 
-export { InlineMathConfig, BlockMathConfig, markdownTexTags, markdownTexHighlightStyle, markdownBrackets, customCloseBrackets };
+export { InlineMathConfig, BlockMathConfig, markdownTexTags, markdownBrackets, markdownTexHighlightStyle, customCloseBrackets };

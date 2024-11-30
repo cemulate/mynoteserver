@@ -55,7 +55,7 @@
         <div class="is-flex is-align-items-center">
             <button class="button is-black icon open-file-indicator" @click="togglePicker"></button>
             <span class="is-flex-grow-1 ml-2">
-                <a class="has-text-black" @click="togglePicker">
+                <a class="open-file-text" @click="togglePicker">
                     <span v-if="curFile != null">
                     {{ curFile.path }}{{ hasContentChanged ? '*' : '' }}
                     </span>
@@ -443,11 +443,22 @@ export default {
     display: grid;
     grid-template-columns: var(--source-width-px) 8px 1fr;
     grid-template-rows: calc(100vh - 2.5em) 2.5em;
+
+    @media (prefers-color-scheme: light) {
+        --app-statusbar-background: #f5f5f5;
+        --app-gutter-background: #d3d3d3;
+        --app-border: 2px solid lightgray;
+    }
+    @media (prefers-color-scheme: dark) {
+        --app-statusbar-background: #222;
+        --app-gutter-background: #3e3e3e;
+        --app-border: 2px solid black;
+    }
 }
 
 .statusbar {
-    background: #f5f5f5;
-    border-top: 2px solid lightgray;
+    background: var(--app-statusbar-background);
+    border-top: var(--app-border);
     grid-area: 2 / 1 / 3 / 4;
 }
 
@@ -460,7 +471,7 @@ export default {
 
 .gutter {
     grid-area: 1 / 2 / 2 / 3;
-    background: lightgray;
+    background: var(--app-gutter-background);
     cursor: col-resize;
 }
 
@@ -484,9 +495,16 @@ export default {
     height: 100%;
 }
 
+.open-file-text {
+    color: var(--bulma-body-color);
+}
+
 .icon {
     height: 1.8em;
     aspect-ratio: 1;
+    &:not(.is-link) {
+        background-color: var(--bulma-body-color);
+    }
 }
 .fullscreen-button {
     mask: url('../assets/maximize.svg') 0 0/100% 100%;
