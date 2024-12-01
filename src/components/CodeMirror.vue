@@ -57,13 +57,16 @@ export default {
         'edited',
     ],
     mounted() {
-        const darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
         this.editableCompartment = new Compartment();
+        this.themedCompartment = new Compartment();
+        const themedExtensions = (isDark) => ([
+            isDark ? oneDark : syntaxHighlighting(defaultHighlightStyle),
+        ]);
         this.editorView = new EditorView({
             doc: 'Initializing...',
             extensions: [
                 minimalSetup,
-                ...(darkMode ? [ oneDark ] : [ syntaxHighlighting(defaultHighlightStyle) ]),
+                this.themedCompartment.of([]),
                 lineNumbers(),
                 highlightActiveLine(),
                 highlightActiveLineGutter(),
@@ -107,6 +110,8 @@ export default {
             ],
             parent: this.$refs.root,
         });
+        this.setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => this.setTheme(event.matches));
     },
     methods: {
         onDocumentUpdate(update) {
@@ -269,6 +274,11 @@ export default {
         async onPaste(event) {
             let image = await getImageDataURLFromClipboardEvent(event);
             if (image != null) this.$emit('pasteImage', image);
+        },
+        setTheme(isDark) {
+            this.editorView.dispatch({
+                effects: this.themedCompartment.reconfigure(isDark ? oneDark : syntaxHighlighting(defaultHighlightStyle)),
+            });
         },
     },
     watch: {
