@@ -50,6 +50,10 @@ export default {
             type: Boolean,
             default: false,
         },
+        useDarkTheme: {
+            type: Boolean,
+            default: false,
+        },
     },
     emits: [
         'update:chunks',
@@ -59,14 +63,13 @@ export default {
     mounted() {
         this.editableCompartment = new Compartment();
         this.themedCompartment = new Compartment();
-        const themedExtensions = (isDark) => ([
-            isDark ? oneDark : syntaxHighlighting(defaultHighlightStyle),
-        ]);
         this.editorView = new EditorView({
             doc: 'Initializing...',
             extensions: [
                 minimalSetup,
-                this.themedCompartment.of([]),
+                this.themedCompartment.of(
+                    this.useDarkTheme ? oneDark : syntaxHighlighting(defaultHighlightStyle)
+                ),
                 lineNumbers(),
                 highlightActiveLine(),
                 highlightActiveLineGutter(),
@@ -104,14 +107,14 @@ export default {
                     { prefix: IMAGE_LINE_START, replacement: 'Image' },
                     { prefix: '<svg', replacement: 'SVG Figure' },
                 ]),
-                this.editableCompartment.of(EditorView.editable.of(!this.disabled)),
+                this.editableCompartment.of(
+                    EditorView.editable.of(!this.disabled)
+                ),
                 EditorView.updateListener.of(this.onDocumentUpdate.bind(this)),
                 EditorView.domEventHandlers({ click: this.onClick.bind(this) }),
             ],
             parent: this.$refs.root,
         });
-        this.setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => this.setTheme(event.matches));
     },
     methods: {
         onDocumentUpdate(update) {
@@ -285,6 +288,11 @@ export default {
         disabled(newVal) {
             this.editorView.dispatch({
                 effects: this.editableCompartment.reconfigure(EditorView.editable.of(!newVal)),
+            });
+        },
+        useDarkTheme(newVal) {
+            this.editorView.dispatch({
+                effects: this.themedCompartment.reconfigure(newVal ? oneDark : syntaxHighlighting(defaultHighlightStyle)),
             });
         },
     },

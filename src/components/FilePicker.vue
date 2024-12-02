@@ -14,17 +14,19 @@
     </div>
     <div class="panel-block is-flex"
         v-for="(entry, index) in topMatchingFiles"
-        v-bind:class="{ 'has-background-link-light': index == focusedIndex }"
+        v-bind:class="{ 'focused': index == focusedIndex }"
         @click="selectFile(entry)"
     >
         <span class="is-family-monospace is-flex-grow-1">{{ entry.path }}</span>
-        <small class="subdued">{{ formatEditTime(entry.mtime) }}</small>
+        <small>{{ formatEditTime(entry.mtime) }}</small>
         <a 
-            class="button is-link open-new-tab-button"
+            class="icon-button ml-2"
             @click.stop=""
             :href="`notes/${ entry.path }`"
             title="Open note in new tab"
-        />
+        >
+            <NewTabIcon/>
+        </a>
     </div>
     <a class="panel-block" v-if="loadError">
         Couldn't load files...
@@ -35,6 +37,8 @@
 <script>
 import { format, toDate } from 'date-fns';
 import * as network from '../lib/network';
+
+import NewTabIcon from './icons/NewTabIcon.vue';
 
 export default {
     data: () => ({
@@ -116,6 +120,9 @@ export default {
     updated() {
         this.$refs.searchBar?.focus?.();
     },
+    components: {
+        NewTabIcon,
+    },
 };
 </script>
 
@@ -123,14 +130,10 @@ export default {
 .FilePicker-root {
     background: var(--bulma-body-background-color);
 }
-.subdued {
-    color: hsl(0, 0%, 30%);
-}
-.open-new-tab-button {
-    height: 1.4em;
-    aspect-ratio: 1;
-    margin-left: 0.5em;
-    mask: url('../assets/newtab.svg') 0 0/100% 100% no-repeat;
-    -webkit-mask: url('../assets/newtab.svg') 0 0/100% 100% no-repeat;
+.focused {
+    background-color: hsl(0 0 90%);
+    [data-theme="dark"] & {
+        background-color: hsl(0 0 20%);
+    }
 }
 </style>

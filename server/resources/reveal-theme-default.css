@@ -1,6 +1,8 @@
 /**
- * This file is a customized version of the the stock 'white' and 'black' reveal.js
- * themes, included in a single file with the appropriate media queries.
+ * This file is a mildly customized version of the the stock 'white' and 'black'
+ * reveal.js themes, included in a single file with the appropriate data-theme 
+ * selectors. For efficiency, all coloration has been moved into additional :root
+ * --r-(.*) variables
  */
 
 section.has-light-background, section.has-light-background h1, section.has-light-background h2, section.has-light-background h3, section.has-light-background h4, section.has-light-background h5, section.has-light-background h6 {
@@ -15,43 +17,42 @@ section.has-dark-background, section.has-dark-background h1, section.has-dark-ba
  * GLOBAL STYLES
  *********************************************/
 :root {
-  @media (prefers-color-scheme: light) {
-    --r-background-color: #fbfbfb;
-    --r-main-font: Palatino Linotype, serif;
-    --r-main-font-size: 34px;
-    --r-main-color: #222;
-    --r-block-margin: 20px;
-    --r-heading-margin: 0 0 20px 0;
-    --r-heading-font: Palatino Linotype, serif;
-    --r-heading-color: #222;
-    --r-heading-line-height: 1.2;
-    --r-heading-letter-spacing: normal;
-    --r-heading-text-transform: unset;
-    --r-heading-text-shadow: none;
-    --r-heading-font-weight: 600;
-    --r-heading1-text-shadow: none;
-    --r-heading1-size: 2em;
-    --r-heading2-size: 1.6em;
-    --r-heading3-size: 1.3em;
-    --r-heading4-size: 1em;
-    --r-code-font: monospace;
-    --r-link-color: #2a76dd;
-    --r-link-color-dark: #1a53a1;
-    --r-link-color-hover: #6ca0e8;
-    --r-selection-background-color: #98bdef;
-    --r-selection-color: #fff;
+  --r-background-color: #fbfbfb;
+  --r-main-font: Palatino Linotype, serif;
+  --r-main-font-size: 34px;
+  --r-main-color: #222;
+  --r-block-margin: 20px;
+  --r-heading-margin: 0 0 20px 0;
+  --r-heading-font: Palatino Linotype, serif;
+  --r-heading-color: #222;
+  --r-heading-line-height: 1.2;
+  --r-heading-letter-spacing: normal;
+  --r-heading-text-transform: unset;
+  --r-heading-text-shadow: none;
+  --r-heading-font-weight: 600;
+  --r-heading1-text-shadow: none;
+  --r-heading1-size: 2em;
+  --r-heading2-size: 1.6em;
+  --r-heading3-size: 1.3em;
+  --r-heading4-size: 1em;
+  --r-code-font: monospace;
+  --r-link-color: #2a76dd;
+  --r-link-color-dark: #1a53a1;
+  --r-link-color-hover: #6ca0e8;
+  --r-selection-background-color: #98bdef;
+  --r-selection-color: #fff;
 
-    /* Additional variables */
-    --r-viewport-background: #fff;
-    --r-blockquote-background-color: white;
-    --r-pre-background-color: #f3f3f3;
-    --r-roll-color: #fff;
-    --r-progress-background: rgba(0, 0, 0, 0.2);
+  /* Additional variables */
+  --r-viewport-background: #fff;
+  --r-blockquote-background-color: white;
+  --r-pre-background-color: #f3f3f3;
+  --r-roll-color: #fff;
+  --r-progress-background: rgba(0, 0, 0, 0.2);
 
-    /* Additional variables for custom extension */
-    --rc-framed-image-background: white;
-  }
-  @media (prefers-color-scheme: dark) {
+  /* Additional variables for custom extension */
+  --rc-framed-image-background: white;
+
+  &[data-theme="dark"] {
     --r-background-color: #191919;
     --r-main-font: Palatino Linotype, serif;
     --r-main-font-size: 34px;

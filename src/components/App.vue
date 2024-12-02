@@ -1,8 +1,11 @@
 <template>
 <Head>
     <title>{{ documentTitle }}</title>
+    <html :data-theme="useDarkTheme ? 'dark' : null"></html>
+    <meta v-if="useDarkTheme" name="color-scheme" content="dark">
 </Head>
-<div class="App-root" :style="{ '--source-width-px': sourceWidthPx + 'px' }" @pointermove="gutterDrag">
+<div class="App-root" :style="{ '--source-width-px': sourceWidthPx + 'px' }" @pointermove="gutterDrag"
+>
     <div class="codemirror-container">
         <code-mirror 
             v-model:chunks="markdownChunks"
@@ -14,6 +17,7 @@
             @edited="documentEdited"
             :disabled="editorDisabled"
             :style="{ 'opacity': editorDisabled ? '0.5' : '1' }"
+            :useDarkTheme="useDarkTheme"
         />
     </div>
     <div class="gutter"
@@ -53,7 +57,7 @@
     </div>
     <div class="statusbar is-family-monospace pt-1 pb-1 pl-2 pr-2">
         <div class="is-flex is-align-items-center">
-            <button class="button is-black icon open-file-indicator" @click="togglePicker"></button>
+            <button class="icon-button" @click="togglePicker"><FolderIcon/></button>
             <span class="is-flex-grow-1 ml-2">
                 <a class="open-file-text" @click="togglePicker">
                     <span v-if="curFile != null">
@@ -65,20 +69,26 @@
                     <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
                 </Transition>
             </span>
-            <a class="is-hidden-mobile button is-black icon edit-image-button ml-4"
-                @click="toggleDrawing(null)" title="Insert/edit image"></a>
-            <a class="button is-black icon fullscreen-button ml-4" @click="toggleFullscreen"
-                :title="isSlides ? 'Present' : 'Toggle fullscreen editor'"></a>
+            <button class="icon-button ml-4" @click="toggleDrawing(null)" title="Insert/edit image"><ImageIcon/></button>
+            <button class="icon-button ml-4" :class="{ 'is-active': !useDarkTheme }" @click="useDarkTheme = false"><SunIcon/></button>
+            <button class="icon-button" :class="{ 'is-active': useDarkTheme }" @click="useDarkTheme = true"><MoonIcon/></button>
+            <button class="icon-button ml-4"
+                @click="toggleFullscreen"
+                :title="isSlides ? 'Present' : 'Toggle fullscreen editor'"
+            >
+                <MaximizeIcon/>
+            </button>
             <button v-if="isSlides"
-                class="button is-small is-rounded ml-4"
+                class="button is-small ml-4"
                 :class="{ 'is-primary': fragmentify }"
                 @click="toggleFragmentify"
                 title="Make presentation proceed step-by-step through all block elements"
             >
             Auto Pause
             </button>
-            <a target="_blank" class="is-hidden-mobile button is-link icon static-link-button ml-4" :href="staticLink"
-                title="Open print view in new tab"></a>
+            <a class="icon-button ml-4" target="_blank" :href="staticLink" title="Open print view in new tab">
+                <JournalPageIcon/>
+            </a>
         </div>
     </div>
 </div>
@@ -116,15 +126,23 @@ import * as network from '../lib/network';
 import Reveal from 'reveal.js';
 import md5sum from 'md5';
 
-import { Head } from '@vueuse/head'
+import { Head } from '@unhead/vue/components';
 import MarkdownChunk from './MarkdownChunk.js';
 import SketchArea from '../components/SketchArea.vue';
 import CodeMirror from '../components/CodeMirror.vue';
 import FilePicker from '../components/FilePicker.vue';
 import AddMacro from '../components/AddMacro.vue';
 
+import JournalPageIcon from '../components/icons/JournalPageIcon.vue';
+import FolderIcon from '../components/icons/FolderIcon.vue';
+import MaximizeIcon from '../components/icons/MaximizeIcon.vue';
+import ImageIcon from '../components/icons/ImageIcon.vue';
+import SunIcon from '../components/icons/SunIcon.vue';
+import MoonIcon from '../components/icons/MoonIcon.vue';
+
 export default {
     data: () => ({
+        useDarkTheme: window.matchMedia('(prefers-color-scheme: dark)').matches,
         initialRender: true,
         markdownChunks: [],
         isSlides: false,
@@ -401,6 +419,7 @@ export default {
             if (!this.hasContentChanged) return;
             event.preventDefault(); event.returnValue = 1;
         });
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => this.useDarkTheme = e.matches);
         this.$refs.codemirror?.focus?.(100);
         window.addEventListener('focus', () => this.$refs.codemirror?.focus?.(10));
         if (this.isSlides) this.initSlides();
@@ -431,6 +450,13 @@ export default {
         'code-mirror': CodeMirror,
         'file-picker': FilePicker,
         'add-macro': AddMacro,
+
+        JournalPageIcon,
+        FolderIcon,
+        MaximizeIcon,
+        ImageIcon,
+        SunIcon,
+        MoonIcon,
     },
 };
 </script>
@@ -444,12 +470,10 @@ export default {
     grid-template-columns: var(--source-width-px) 8px 1fr;
     grid-template-rows: calc(100vh - 2.5em) 2.5em;
 
-    @media (prefers-color-scheme: light) {
-        --app-statusbar-background: #f5f5f5;
-        --app-gutter-background: #d3d3d3;
-        --app-border: 2px solid lightgray;
-    }
-    @media (prefers-color-scheme: dark) {
+    --app-statusbar-background: #f5f5f5;
+    --app-gutter-background: #d3d3d3;
+    --app-border: 2px solid lightgray;
+    [data-theme="dark"] & {
         --app-statusbar-background: #222;
         --app-gutter-background: #3e3e3e;
         --app-border: 2px solid black;
@@ -460,6 +484,9 @@ export default {
     background: var(--app-statusbar-background);
     border-top: var(--app-border);
     grid-area: 2 / 1 / 3 / 4;
+    .icon-button {
+        height: 1.8em;
+    }
 }
 
 .codemirror-container {
@@ -495,35 +522,12 @@ export default {
     height: 100%;
 }
 
+.icon-button.is-active > svg {
+    fill: var(--bulma-primary);
+}
+
 .open-file-text {
     color: var(--bulma-body-color);
-}
-
-.icon {
-    height: 1.8em;
-    aspect-ratio: 1;
-    &:not(.is-link) {
-        background-color: var(--bulma-body-color);
-    }
-}
-.fullscreen-button {
-    mask: url('../assets/maximize.svg') 0 0/100% 100%;
-    -webkit-mask: url('../assets/maximize.svg') 0 0/100% 100%;
-}
-
-.open-file-indicator {
-    mask: url('../assets/folder.svg') 0 0/100% 100%;
-    -webkit-mask: url('../assets/folder.svg') 0 0/100% 100%;
-}
-
-.static-link-button {
-    mask: url('../assets/journal-page.svg') 0 0/100% 100% no-repeat;
-    -webkit-mask: url('../assets/journal-page.svg') 0 0/100% 100% no-repeat;
-}
-
-.edit-image-button {
-    mask: url('../assets/image.svg') 0 0/100% 100%;
-    -webkit-mask: url('../assets/image.svg') 0 0/100% 100%;
 }
 
 .fadeout-leave-active {

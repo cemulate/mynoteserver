@@ -6,19 +6,24 @@
     "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
     --bulma-code: unset;
     /* These match the default (light/dark) highlight.js theme */
-    @media (prefers-color-scheme: light) {
-        --bulma-code-background: #f3f3f3;
-        --bulma-pre-background: #f3f3f3; 
-    }
-    @media (prefers-color-scheme: dark) {
+    --bulma-code-background: #f3f3f3;
+    --bulma-pre-background: #f3f3f3; 
+    &[data-theme="dark"] {
+        color-scheme: dark;
         --bulma-code-background: #282c34;
         --bulma-pre-background: #282c34;
-    }    
+    }
 }
 
 /* Remove vertical scrollbar on fullscreen application */
 html.no-scroll {
     overflow-y: hidden;
+}
+
+.icon-button > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 /* Small tweaks to editor and rendered markdown content  */
@@ -27,6 +32,9 @@ html.no-scroll {
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 .cm-editor {
+    .cm-scroller {
+        scrollbar-width: thin;
+    }
     font-size: 14px;
 
     &.cm-focused { outline: none !important; }
@@ -36,12 +44,14 @@ html.no-scroll {
     }
 
     /* Highlighting colors for token classes defined in markdownTexHighlightStyle */
-    @media (prefers-color-scheme: light) {
-        .cmt-im, .cmt-im-d, .cmt-bm { color: #4876d6; }
-    }
-    @media (prefers-color-scheme: dark) {
+    .cmt-im, .cmt-im-d, .cmt-bm { color: #4876d6; }
+    [data-theme="dark"] & {
         .cmt-im, .cmt-im-d, .cmt-bm { color: #e06c75; }
     }
+}
+
+.render-container {
+    scrollbar-width: thin;
 }
 
 .content.rendered-note-content {
@@ -84,6 +94,13 @@ html.no-scroll {
 .color-green { color: green; }
 .color-orange { color: orange; }
 
+svg path.default-fill {
+    fill: black;
+    [data-theme="dark"] & {
+        fill: white;
+    }
+}
+
 .markdown-chunk-update-flash {
     animation-name: markdown-chunk-update-flash-animation;
     animation-duration: 0.4s;
@@ -99,8 +116,10 @@ body.static-page .rendered-note-content {
     min-height: 100vh;
     background: var(--bulma-body-background);
     padding: 0.5rem 1rem 0.5rem 1rem;
-    border-left: 2px solid black;
-    border-right: 2px solid black;
+    @media screen and (min-width: 1024px) {
+        border-left: 2px solid var(--bulma-body-color);
+        border-right: 2px solid var(--bulma-body-color);
+    }
     @media print {
         border: none;
     }

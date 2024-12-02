@@ -1,3 +1,4 @@
+<template>
 <svg width="24" height="24" stroke-width="1.5" viewBox="-1 -1 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M6 6L14 6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M6 10H18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
@@ -7,3 +8,4 @@
 <path d="M18 5.4V2.35355C18 2.15829 18.1583 2 18.3536 2C18.4473 2 18.5372 2.03725 18.6036 2.10355L21.8964 5.39645C21.9628 5.46275 22 5.55268 22 5.64645C22 5.84171 21.8417 6 21.6464 6H18.6C18.2686 6 18 5.73137 18 5.4Z" fill="currentColor" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M6 18V14H8V18H6Z" fill="currentColor" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
+</template>

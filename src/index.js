@@ -1,5 +1,5 @@
 import './styles/theme.css';
-import { createHead } from '@vueuse/head';
+import { createHead } from '@unhead/vue';
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {

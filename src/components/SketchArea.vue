@@ -10,27 +10,44 @@
             <g id="whiteboard-content" ref="whiteboardContentSvgGroup">
                 <g class="existingImage" ref="existingImageSvgGroup"></g>
                 <g class="currentDrawing">
-                    <path v-for="stroke in strokes" :d="stroke.path" :fill="stroke.color" ref="strokeSvgPaths"></path>
-                    <path :d="curStroke.path" :fill="curStroke.color"></path>
+                    <path
+                        v-for="stroke in strokes"
+                        :d="stroke.path"
+                        :fill="stroke.color"
+                        :class="{ 'default-fill': stroke.color == null }"
+                        ref="strokeSvgPaths"></path>
+                    <path 
+                        :d="curStroke.path"
+                        :fill="curStroke.color"
+                        :class="{ 'default-fill': curStroke.color == null }"
+                    ></path>
+                    <!-- a null color means fill will not be set, which defaults
+                     to black as desired in a light theme. Such strokes also
+                     get the default-fill class, which allows them to change to 
+                     white when the app is in a dark theme. -->
                 </g>
             </g>
         </svg>
     </div>
     <div class="is-flex-grow-0">
         <div class="toolbar pt-2 pr-2 pb-2 is-flex is-flex-direction-column is-align-content-center">
-            <a class="box color-button"
+            <button class="box color-button default-color-button"
+                :class="{ 'selected': color == null }"
+                @click="color = null"
+            />
+            <button class="box color-button"
                 v-for="c in normalColors"
-                :class="{ 'selected': c == color }"
+                :class="{ 'selected': color == c }"
                 :style="{ 'background': c }"
                 @click="color = c"
             />
-            <a class="box color-button eraser-button" 
+            <button class="box color-button eraser-button" 
                 :class="{ 'selected': color == 'ERASER' }"
                 @click="color = 'ERASER'"
             />
-            <a class="color-button undo-button" @click="undo"></a>
+            <button class="icon-button color-button" @click="undo"><UndoIcon/></button>
             <div class="is-flex-grow-1"></div>
-            <a class="color-button close-button" @click="$emit('close')"></a>
+            <button class="icon-button color-button" @click="$emit('close')"><DeleteIcon/></button>
         </div>
     </div>
 </div>
@@ -39,13 +56,14 @@
 <script>
 import { getFreehandStrokePathFromPoints } from '../lib/image-utils';
 
+import DeleteIcon from './icons/DeleteIcon.vue';
+import UndoIcon from './icons/UndoIcon.vue';
+
 const perfectFreehandOptions = window?.mynoteserver?.perfectFreehandOptions ?? {
     size: 4,
     thinning: 0.8,
     simulatePressure: false,
 };
-
-const darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
 const BUTTONS_ERASER = 32;
 const ACTION = {
@@ -57,8 +75,8 @@ const ACTION = {
 export default {
     data: () => ({
         action: ACTION.NONE,
-        color: darkMode ? 'white' : 'black',
-        colors: [ darkMode ? 'white' : 'black', 'blue', 'red', 'green', 'orange', 'ERASER' ],
+        color: null,
+        colors: [ null, 'blue', 'red', 'green', 'orange', 'ERASER' ],
 
         exclusivePenInput: false,
         strokes: [],
@@ -77,7 +95,7 @@ export default {
     },
     computed: {
         normalColors() {
-            return this.colors.filter(c => c != 'ERASER');
+            return this.colors.filter(c => c != 'ERASER' && c != null);
         },
         curStroke() {
             // This unassuming computed property uses the perfect-freehand library
@@ -225,7 +243,7 @@ export default {
             // Now include our new strokes
             for (let { color, path } of this.strokes) {
                 const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                p.setAttribute('fill', color);
+                (color != null) ? p.setAttribute('fill', color) : p.classList.add('default-fill');
                 p.setAttribute('d', path);
                 s.appendChild(p);
             }
@@ -241,17 +259,20 @@ export default {
     async mounted() {
         this.initializeExistingImage();
     },
+    components: {
+        DeleteIcon,
+        UndoIcon,
+    },
 };
 </script>
 
 <style scoped>
 
 .SketchArea-root {
-    @media (prefers-color-scheme: light) {
-        background: lightgray;
-        --color-button-outline-color: 5px solid white;
-    }
-    @media (prefers-color-scheme: dark) {
+    background: lightgray;
+    --color-button-outline-color: 5px solid white;
+
+    [data-theme="dark"] & {
         background: #444;
         --color-button-outline-color: 5px solid black;
     }
@@ -274,6 +295,13 @@ export default {
     }
 }
 
+.default-color-button {
+    background-color: black;
+    [data-theme="dark"] & {
+        background-color: white;
+    }
+}
+
 .eraser-button {
     background-color: lightgray;
     background-image:  repeating-linear-gradient(45deg, white 25%, transparent 25%, transparent 75%, white 75%, white),
@@ -282,14 +310,14 @@ export default {
     background-size: 20px 20px;
 }
 
-.undo-button {
+/* .undo-button {
     mask: url('../assets/undo.svg') 0 0/100% 100%;
     background-color: var(--bulma-body-color);
 }
 .close-button {
     mask: url('../assets/delete.svg') center/60% no-repeat;
     background-color: var(--bulma-body-color);
-}
+} */
 
 .whiteboard {
     width: 100%;

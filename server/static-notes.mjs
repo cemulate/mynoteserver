@@ -9,6 +9,23 @@ const HEADER = `
     <base href="/" target="_blank">
 `;
 
+const DARK_MODE_SCRIPT = `
+    <script>
+        function setTheme(isDark) {
+            const d = document.documentElement;
+            if (isDark) {
+                d.setAttribute('data-theme', 'dark');
+                d.style.colorScheme = 'dark';
+            } else {
+                d.removeAttribute('data-theme');
+                d.style.colorScheme = 'normal';
+            }
+        }
+        setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => setTheme(e.matches));
+    </script>
+`;
+
 const notePage = (path, renderedContent, styleSheet) => `<!doctype html>
 <html>
 <head>
@@ -17,6 +34,7 @@ const notePage = (path, renderedContent, styleSheet) => `<!doctype html>
     <link rel="stylesheet" href="app/styles.css">
     <link rel="stylesheet" href="api/custom-resource/highlight-theme.css">
     <script src="api/custom-resource/config.js"></script>
+    ${ DARK_MODE_SCRIPT }
     <style>${ styleSheet }</style>
 </head>
 
@@ -38,6 +56,7 @@ const slidesPage = (path, renderedContent, styleSheet) => `<!doctype html>
     <link rel="stylesheet" href="app/resources/reveal.css">
     <link rel="stylesheet" href="api/custom-resource/reveal-theme.css">
     <script src="api/custom-resource/config.js"></script>
+    ${ DARK_MODE_SCRIPT }
     <style>${ styleSheet }</style>
 </head>
 
@@ -45,7 +64,7 @@ const slidesPage = (path, renderedContent, styleSheet) => `<!doctype html>
 <div class="reveal">
 <div class="slides">
 ${ revealSlides(renderedContent) }
-</slides>
+</div>
 </div>
 <script src="/app/resources/reveal.js"></script>
 <script>Reveal.initialize({ width: 1920 - 0.04 * 1920, height: 1080 - 0.04 * 1080, margin: 0.04 });</script>
@@ -69,6 +88,7 @@ const listPage = (files) => `<!doctype html>
 <head>
     ${ HEADER }
     <title>Notes</title>
+    ${ DARK_MODE_SCRIPT }
     <link rel="stylesheet" href="app/styles.css">
 </head>
 
