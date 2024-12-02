@@ -15,6 +15,7 @@
     <div class="panel-block is-flex"
         v-for="(entry, index) in topMatchingFiles"
         v-bind:class="{ 'focused': index == focusedIndex }"
+        @pointerenter.prevent="focusedIndex = index"
         @click="selectFile(entry)"
     >
         <span class="is-family-monospace is-flex-grow-1">{{ entry.path }}</span>
