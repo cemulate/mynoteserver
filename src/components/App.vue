@@ -1,8 +1,9 @@
 <template>
 <Head>
     <title>{{ documentTitle }}</title>
-    <html :data-theme="useDarkTheme ? 'dark' : null"></html>
+    <html :data-theme="useDarkTheme ? 'dark' : 'light'"></html>
     <meta v-if="useDarkTheme" name="color-scheme" content="dark">
+    <meta v-if="!useDarkTheme" name="color-scheme" content="light">
 </Head>
 <div class="App-root" :style="{ '--source-width-px': sourceWidthPx + 'px' }" @pointermove="gutterDrag"
 >

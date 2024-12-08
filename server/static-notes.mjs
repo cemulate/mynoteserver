@@ -17,8 +17,8 @@ const DARK_MODE_SCRIPT = `
                 d.setAttribute('data-theme', 'dark');
                 d.style.colorScheme = 'dark';
             } else {
-                d.removeAttribute('data-theme');
-                d.style.colorScheme = 'normal';
+                d.setAttribute('data-theme', 'light');
+                d.style.colorScheme = 'light';
             }
         }
         setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
