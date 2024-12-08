@@ -42,6 +42,8 @@ module.exports = {
       meta: { viewport: 'width=device-width, initial-scale=1' },
       template: 'src/index.html',
       title: 'My Notes',
+      meta: { viewport: 'width=device-width,initial-scale=1' },
+      favicon: 'src/assets/favicon.svg',
     }),
     new CopyWebpackPlugin({
       patterns: [
