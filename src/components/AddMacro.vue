@@ -1,33 +1,42 @@
 <template>
-<div class="box">
-    <h4 class="title is-4">Add MathJax Macro</h4>
-    <div class="field">
-        <label class="label">Command</label>
-        <div class="control">
-            <input class="input is-family-monospace" type="text" ref="commandInput" v-model="command" placeholder="bb">
+<Teleport to="body">
+    <div class="modal" :class="{ 'is-active': isActive }">
+        <div class="modal-background" @click="$emit('update:isActive', !isActive)"></div>
+        <div class="modal-content">
+            <div class="modal-content">
+                <div class="box">
+                    <h4 class="title is-4">Add MathJax Macro</h4>
+                    <div class="field">
+                        <label class="label">Command</label>
+                        <div class="control">
+                            <input class="input is-family-monospace" type="text" ref="commandInput" v-model="command" placeholder="bb">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Arity</label>
+                        <div class="control">
+                            <input class="input is-family-monospace" type="number" v-model="arity" placeholder="arity">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Value</label>
+                        <div class="control">
+                            <input class="input is-family-monospace" type="text" v-model="expansion" placeholder="\mathbb{#1}">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <button class="button is-link" :class="{ 'is-loading': submitting }" v-bind:disabled="!valid || submitting" @click="submitMacro">Add Macro</button>
+                        </div>
+                        <p v-if="submitFailed" class="help is-danger">Failed to add macro</p>
+                    </div>
+                    <hr>
+                    <textarea class="textarea is-family-monospace" rows="1" readonly :value="preview"></textarea>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="field">
-        <label class="label">Arity</label>
-        <div class="control">
-            <input class="input is-family-monospace" type="number" v-model="arity" placeholder="arity">
-        </div>
-    </div>
-    <div class="field">
-        <label class="label">Value</label>
-        <div class="control">
-            <input class="input is-family-monospace" type="text" v-model="expansion" placeholder="\mathbb{#1}">
-        </div>
-    </div>
-    <div class="field">
-        <div class="control">
-            <button class="button is-link" :class="{ 'is-loading': submitting }" v-bind:disabled="!valid || submitting" @click="submitMacro">Add Macro</button>
-        </div>
-        <p v-if="submitFailed" class="help is-danger">Failed to add macro</p>
-    </div>
-    <hr>
-    <textarea class="textarea is-family-monospace" rows="1" readonly :value="preview"></textarea>
-</div>
+</Teleport>
 </template>
 
 <script>
@@ -41,6 +50,12 @@ export default {
         submitting: false,
         submitFailed: false,
     }),
+    props: {
+        isActive: { type: Boolean },
+    },
+    emits: [
+        'update:isActive',
+    ],
     computed: {
         valid() {
             if (!(/^[a-z0-9]+$/.test(this.command))) return false;
@@ -63,7 +78,7 @@ export default {
             let data = { key: this.command, value: this.expansion, arity: this.arity };
             let response = await network.post('/api/add-mathjax-macro', data);
             if (response?.status == 200) {
-                this.$emit('close');
+                this.$emit('update:isActive', false);
             } else {
                 this.submitFailed = true;
             }

@@ -105,12 +105,7 @@
     <div class="modal-content">
     </div>
 </div>
-<div class="modal" :class="{ 'is-active': isAddMacroOpen }">
-    <div class="modal-background" @click="isAddMacroOpen = false"></div>
-    <div class="modal-content">
-        <add-macro v-if="isAddMacroOpen" @close="isAddMacroOpen = false"></add-macro>
-    </div>
-</div>
+<add-macro v-model:isActive="isAddMacroOpen"></add-macro>
 </template>
 
 <script>
