@@ -26,6 +26,10 @@ html.no-scroll {
     height: 100%;
 }
 
+.icon-button.is-active > svg {
+    fill: var(--bulma-primary);
+}
+
 /* Small tweaks to editor and rendered markdown content  */
 /* (perhaps break this out into a custom resource?) */
 

@@ -58,18 +58,16 @@
     </div>
     <div class="statusbar is-family-monospace pt-1 pb-1 pl-2 pr-2">
         <div class="is-flex is-align-items-center">
-            <button class="icon-button" @click="togglePicker"><FolderIcon/></button>
-            <span class="is-flex-grow-1 ml-2">
-                <a class="open-file-text" @click="togglePicker">
-                    <span v-if="curFile != null">
-                    {{ curFile.path }}{{ hasContentChanged ? '*' : '' }}
-                    </span>
-                    <span v-else>Select file</span>
-                </a>
-                <Transition name="fadeout">
-                    <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
-                </Transition>
-            </span>
+            <file-picker
+                v-model:isActive="isPickerOpen"
+                v-model:curFile="curFile"
+                :hasContentChanged="hasContentChanged"
+                @update:curFile="loadCurFile"
+            ></file-picker>
+            <Transition name="fadeout">
+                <strong class="ml-3" :style="{ 'color': toast.color }" v-if="showToast">{{ toast.message }}</strong>
+            </Transition>
+            <div class="is-flex-grow-1"></div>
             <button class="icon-button ml-4" @click="toggleDrawing(null)" title="Insert/edit image"><ImageIcon/></button>
             <button class="icon-button ml-4" :class="{ 'is-active': !useDarkTheme }" @click="useDarkTheme = false"><SunIcon/></button>
             <button class="icon-button" :class="{ 'is-active': useDarkTheme }" @click="useDarkTheme = true"><MoonIcon/></button>
@@ -82,7 +80,7 @@
             <button v-if="isSlides"
                 class="button is-small ml-4"
                 :class="{ 'is-primary': fragmentify }"
-                @click="toggleFragmentify"
+                @click="fragmentify = !fragmentify"
                 title="Make presentation proceed step-by-step through all block elements"
             >
             Auto Pause
@@ -107,12 +105,6 @@
     <div class="modal-content">
     </div>
 </div>
-<div class="modal" :class="{ 'is-active': isPickerOpen }">
-    <div class="modal-background" @click="togglePicker"></div>
-    <div class="modal-content">
-        <file-picker ref="picker" @selectFile="selectFile"></file-picker>
-    </div>
-</div>
 <div class="modal" :class="{ 'is-active': isAddMacroOpen }">
     <div class="modal-background" @click="isAddMacroOpen = false"></div>
     <div class="modal-content">
@@ -122,10 +114,8 @@
 </template>
 
 <script>
-import { MarkdownRenderer } from '../lib/markdown/markdown.mjs';
 import * as network from '../lib/network';
 import Reveal from 'reveal.js';
-import md5sum from 'md5';
 
 import { Head } from '@unhead/vue/components';
 import MarkdownChunk from './MarkdownChunk.js';
@@ -135,7 +125,6 @@ import FilePicker from '../components/FilePicker.vue';
 import AddMacro from '../components/AddMacro.vue';
 
 import JournalPageIcon from '../components/icons/JournalPageIcon.vue';
-import FolderIcon from '../components/icons/FolderIcon.vue';
 import MaximizeIcon from '../components/icons/MaximizeIcon.vue';
 import ImageIcon from '../components/icons/ImageIcon.vue';
 import SunIcon from '../components/icons/SunIcon.vue';
@@ -180,14 +169,11 @@ export default {
         },
         documentTitle() {
             if (this.curFile == null) return 'My Notes';
-            let base = `${ this.curFile.path.split('/').at(-1) }`;
+            let base = `${ this.curFile.split('/').at(-1) }`;
             return this.hasContentChanged ? base + '*' : base;
         },
     },
     methods: {
-        toggleFragmentify() {
-            this.fragmentify = !this.fragmentify;
-        },
         toggleDrawing(initialImage) {
             const newStatus = !this.isDrawingOpen;
             if (newStatus) {
@@ -209,11 +195,6 @@ export default {
                 this.$refs.codemirror?.focus?.();
             }
             this.isDrawingOpen = newStatus;
-        },
-        togglePicker() {
-            this.isPickerOpen = !this.isPickerOpen;
-            if (this.isPickerOpen) this.$refs.picker?.reset?.();
-            if (!this.isPickerOpen) this.$refs.codemirror?.focus?.();
         },
         toggleFullscreen() {
             if (document.fullscreenElement != null) {
@@ -238,31 +219,8 @@ export default {
             this.$refs.codemirror.setCursorAtPos(n);
             this.$refs.codemirror.focus();
         },
-        selectFile(file) {
-            if (this.hasContentChanged) {
-                let answer = window.confirm('Load another document?\n\nChanges you made will not be saved.');
-                if (!answer) return;
-            }
-
-            this.markdownChunks = [];
-            this.curFile = file;
-            this.isPickerOpen = false;
-            this.persistCurFile();
-
-            if (this.curFile.mtime == null) {
-                // If this file doesn't have an mtime,
-                // FilePicker wanted to create a new file.
-                this.setDocument(`# ${ this.curFile.path }`);
-                // Assume "edited"
-                this.hasContentChanged = true;
-                this.toast = { color: 'green', message: 'New File', timeout: 3000 };
-            } else {
-                this.downloadCurFile();
-            }
-        },
         documentEdited(editedChunkIndex) {
             this.hasContentChanged = true;
-            this.persistBuffer();
             this.$nextTick(async () => {
                 if (this.isSlides) {
                     // In this case, editedChunkIndex is the slide number.
@@ -290,49 +248,28 @@ export default {
                 }
             });
         },
-        async downloadCurFile() {
+        async loadCurFile() {
             if (this.curFile == null) return;
             this.editorDisabled = true;
             this.toast = { color: 'gray', message: 'Loading...' };
 
-            let { path, mtime } = this.curFile;
-            let response = await network.get(`/api/file/${ path }`);
+            let response = await network.get(`/api/file/${ this.curFile }`);
             if (response?.status == 200) {
-                let { content, mtime, md5 } = await response.json();
-                this.setDocument(content);
-                this.curFile = { ...this.curFile, mtime, md5 };
-                this.persistCurFile();
+                let { content } = await response.json();
+                this.replaceDocument(content);
                 this.toast = { color: 'green', message: 'File loaded', timeout: 3000 };
             } else {
-                this.setDocument('');
-                this.toast = { color: 'red', message: 'Load failed' };
-                // Persist curFile but set .md5 = null; Enforce that the
-                // app thinks this file is out of date on next load.
-                this.persistCurFile(true);
-                this.curFile = null;
+                // TODO: Need a default local buffer in this case.
             }
 
-            this.persistBuffer();
             this.hasContentChanged = false;
             this.editorDisabled = false;
             this.$nextTick(() => this.$refs.codemirror?.focus?.());
         },
-        setDocument(document) {
-            // Set the whole document to something new
+        replaceDocument(document) {
+            // This is a function solely to set this flag
             this.initialRender = true;
             this.$refs.codemirror.setDocument(document);
-        },
-        updateSourceAndSave() {
-            if (this.curFile == null) return;
-            this.saveCurFile();
-        },
-        persistCurFile(nullHash) {
-            let data = nullHash ? { ...this.curFile, md5: null } : this.curFile;
-            window.localStorage.setItem('curFile', JSON.stringify(data));
-        },
-        persistBuffer() {
-            let buffer = this.$refs.codemirror.getDocument();
-            window.localStorage.setItem('buffer', buffer);
         },
         async saveCurFile() {
             if (this.curFile == null) return;
@@ -351,40 +288,9 @@ export default {
             }
         },
         async initializeCurFile() {
-            let curFile = window.localStorage.getItem('curFile');
-            if (curFile != null) curFile = JSON.parse(curFile);
-            this.curFile = curFile;
-
-            if (window.location.hash.length > 1) {
-                let hashPath = window.location.hash.slice(1);
-                if (this.curFile.path != hashPath) {
-                    this.curFile = { path: hashPath };
-                }
-            }
-
-            let serverFileData = null;
-            if (this.curFile != null) {
-                let response = await network.get(`/api/stat/${ this.curFile.path }`);
-                if (response?.status == 200) serverFileData = await response.json();
-            }
-
-            if (serverFileData != null && serverFileData.md5 != this.curFile?.md5) {
-                // We affirmatively know that the file is out of date (or we're loading from hash)
-                this.downloadCurFile();
-            } else {
-                // This file isn't out of date or we're offline / can't tell
-                let savedBuffer = window.localStorage.getItem('buffer') ?? '';
-                this.setDocument(savedBuffer);
-                // Even though we don't have the file content from the server,
-                // we can see if the saved buffer differs by computing its md5.
-                // If so, ensure that hasContentChanged says true.
-                let bufferMd5 = md5sum(savedBuffer);
-                let serverMd5 = serverFileData?.md5;
-                this.hasContentChanged = bufferMd5 != serverMd5;
-
-                if (this.curFile != null && serverFileData == null) this.toast = { color: 'red', message: 'Offline' };
-                this.editorDisabled = false;
-            }
+            const hash = window.location.hash.slice(1);
+            this.curFile = hash.length > 0 ? hash : (window.localStorage.getItem('curFile') ?? null);
+            this.loadCurFile();
         },
         initSlides() {
             this.slideDeck = new Reveal(this.$refs.reveal, {
@@ -406,7 +312,7 @@ export default {
             } else if (event.ctrlKey && event.key == 'p') {
                 event.preventDefault(); this.togglePicker();
             } else if (event.ctrlKey && event.key == 's') {
-                event.preventDefault(); this.updateSourceAndSave();
+                event.preventDefault(); this.saveCurFile();
             } else if (event.ctrlKey && event.altKey && event.key == 'm') {
                 event.preventDefault(); this.isAddMacroOpen = true;
             } else if (event.key == 'Escape') {
@@ -443,6 +349,9 @@ export default {
         isSlides(newVal) {
             if (newVal) this.$nextTick(() => this.initSlides());
         },
+        curFile(newVal) {
+            window.localStorage.setItem('curFile', newVal);
+        }
     },
     components: {
         Head,
@@ -453,7 +362,6 @@ export default {
         'add-macro': AddMacro,
 
         JournalPageIcon,
-        FolderIcon,
         MaximizeIcon,
         ImageIcon,
         SunIcon,
@@ -521,14 +429,6 @@ export default {
     left: 0;
     width: 100%;
     height: 100%;
-}
-
-.icon-button.is-active > svg {
-    fill: var(--bulma-primary);
-}
-
-.open-file-text {
-    color: var(--bulma-body-color);
 }
 
 .fadeout-leave-active {
