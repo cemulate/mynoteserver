@@ -139,7 +139,6 @@ export default {
             
             // Perform the action, and continue the log in curStroke
             if (this.action == ACTION.DRAWING) {
-                console.log([ event.offsetX, event.offsetY, event.pressure ]);
                 this.curSamplePoints.push([ event.offsetX, event.offsetY, event.pressure ]);
             } else {
                 this.tryEraseAt(event.offsetX, event.offsetY);
@@ -167,7 +166,6 @@ export default {
             if (this.image == null || this.image.length == 0) return;
 
             const { width: boardWidth, height: boardHeight } = this.$refs.whiteboard.getBoundingClientRect();
-            console.log('board', boardWidth, boardHeight);
 
             if (this.image.startsWith('<svg')) {
                 // The existing image is an SVG, either from a previous drawing,

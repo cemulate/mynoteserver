@@ -27,7 +27,8 @@
         @dblclick.prevent="resetSourceWidthPx"
     />
     <div class="render-container p-2" ref="renderContainer">
-        <p v-if="initialRender" style="opacity: 0.5">Initial render...</p>
+        <p v-if="initialRender && offline" style="opacity: 0.5">Couldn't load file</p>
+        <p v-if="initialRender && !offline" style="opacity: 0.5">Loading...</p>
         <div v-if="!isSlides" ref="renderView" class="rendered-note-content content">
             <markdown-chunk
                 v-for="chunk in markdownChunks"
@@ -61,6 +62,7 @@
             <file-picker
                 v-model:isActive="isPickerOpen"
                 v-model:curFile="curFile"
+                v-model:offline="offline"
                 :hasContentChanged="hasContentChanged"
                 @update:curFile="loadCurFile"
             ></file-picker>
@@ -109,7 +111,7 @@
 </template>
 
 <script>
-import * as network from '../lib/network';
+import * as fileUtil from '../lib/file-utils.js';
 import Reveal from 'reveal.js';
 
 import { Head } from '@unhead/vue/components';
@@ -128,31 +130,28 @@ import MoonIcon from '../components/icons/MoonIcon.vue';
 export default {
     data: () => ({
         useDarkTheme: window.matchMedia('(prefers-color-scheme: dark)').matches,
+        sourceWidthPx: parseInt(window.localStorage?.getItem?.('sourceWidthPx') ?? 0.4 * window.screen.width),
+        gutterDragStart: null,
+
+        editorDisabled: true,
         initialRender: true,
         markdownChunks: [],
         isSlides: false,
         hasContentChanged: false,
-
         fragmentify: false,
+
         isDrawingOpen: false,
         openedImage: null,
         openedImageIsNew: false,
-        editorDisabled: true,
 
         isPickerOpen: false,
         curFile: null,
 
         isAddMacroOpen: false,
 
-        originalContentOnLoad: null,
-        toast: {
-            color: 'black',
-            message: '',
-            timeout: null,
-        },
+        toast: { color: 'black', message: '', timeout: null },
         showToast: false,
-        sourceWidthPx: parseInt(window.localStorage?.getItem?.('sourceWidthPx') ?? 0.4 * window.screen.width),
-        gutterDragStart: null,
+        offline: !navigator.onLine,
     }),
     computed: {
         renderedSlides() {
@@ -245,20 +244,22 @@ export default {
         },
         async loadCurFile() {
             if (this.curFile == null) return;
+
             this.editorDisabled = true;
             this.toast = { color: 'gray', message: 'Loading...' };
 
-            let response = await network.get(`/api/file/${ this.curFile }`);
-            if (response?.status == 200) {
-                let { content } = await response.json();
+            const { success, isNew, content } = await fileUtil.loadFile(this.curFile);
+            if (success) {
+                this.offline = false;
+                this.hasContentChanged = isNew;
                 this.replaceDocument(content);
+                this.editorDisabled = false;
                 this.toast = { color: 'green', message: 'File loaded', timeout: 3000 };
             } else {
-                // TODO: Need a default local buffer in this case.
+                this.toast = { color: 'red', message: 'Load failed', timeout: 3000 };
+                this.offline = true;
             }
 
-            this.hasContentChanged = false;
-            this.editorDisabled = false;
             this.$nextTick(() => this.$refs.codemirror?.focus?.());
         },
         replaceDocument(document) {
@@ -268,19 +269,14 @@ export default {
         },
         async saveCurFile() {
             if (this.curFile == null) return;
-            let { path } = this.curFile;
             let content = this.$refs.codemirror.getDocument();
-            let response = await network.post(`/api/file/${ path }`, { content });
-            if (response?.status == 200) {
-                let { mtime, md5 } = await response.json();
-                this.hasContentChanged = false;
-                this.curFile.mtime = mtime;
-                this.curFile.md5 = md5;
-                this.persistCurFile();
-                this.toast = { color: 'green', message: 'Saved!', timeout: 3000 };
-            } else {
-                this.toast = { color: 'red', message: 'Save failed' };
-            }
+            
+            const success = await fileUtil.saveFile(this.curFile, content);
+            this.toast = success
+                ? { color: 'green', message: 'Saved', timeout: 3000 }
+                : { color: 'red', message: 'Save failed', timeout: 3000 };
+            if (success) this.hasContentChanged = false;
+            this.offline = !success;
         },
         async initializeCurFile() {
             const hash = window.location.hash.slice(1);
@@ -305,14 +301,14 @@ export default {
             if (event.ctrlKey && event.key == ' ') {
                 event.preventDefault(); this.toggleDrawing();
             } else if (event.ctrlKey && event.key == 'p') {
-                event.preventDefault(); this.togglePicker();
+                event.preventDefault(); this.isPickerOpen = !this.isPickerOpen;
             } else if (event.ctrlKey && event.key == 's') {
                 event.preventDefault(); this.saveCurFile();
             } else if (event.ctrlKey && event.altKey && event.key == 'm') {
                 event.preventDefault(); this.isAddMacroOpen = true;
             } else if (event.key == 'Escape') {
                 event.preventDefault();
-                if (this.isPickerOpen) this.togglePicker();
+                if (this.isPickerOpen) this.isPickerOpen = !this.isPickerOpen;
                 if (this.isDrawingOpen) this.toggleDrawing();
                 if (this.isAddMacroOpen) this.isAddMacroOpen = false;
             }

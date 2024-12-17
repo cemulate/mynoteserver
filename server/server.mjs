@@ -34,6 +34,14 @@ if (process.env.NODE_ENV && process.env.NODE_ENV == 'development') {
     server.register(fastifyStatic, { root: __dirname + '/../dist', prefix: '/app/' });
 }
 
+server.setErrorHandler(async (err, req, res) => {
+    if (err.code == 'ENOENT') {
+        return res.status(404).send(err);
+    } else {
+        return res.status(500).send(err);
+    }
+});
+
 server.get('/', async (request, reply) => {
     return reply.redirect('/app/');
 });

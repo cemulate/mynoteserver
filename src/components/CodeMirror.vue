@@ -64,7 +64,7 @@ export default {
         this.editableCompartment = new Compartment();
         this.themedCompartment = new Compartment();
         this.editorView = new EditorView({
-            doc: 'Initializing...',
+            doc: 'Loading...',
             extensions: [
                 minimalSetup,
                 this.themedCompartment.of(

@@ -6,19 +6,21 @@
         {{ curFile }}{{ hasContentChanged ? '*' : '' }}
         </span>
         <span v-else>Select file</span>
+        <small class="offline-indicator ml-2" v-if="offline">(Offline)</small>
     </a>
     <Teleport to="body">
         <div class="modal" :class="{ 'is-active': isActive }">
             <div class="modal-background" @click="$emit('update:isActive', !isActive)"></div>
             <div class="modal-content">
                 <div class="panel is-primary">
-                    <p class="panel-heading">
-                        Open
-                        <span v-if="topMatchingFiles.length == 0">(New)</span>
+                    <p class="panel-heading is-flex">
+                        <span class="is-flex-grow-1" v-if="topMatchingFiles.length == 0">Create</span>
+                        <span class="is-flex-grow-1" v-else>Open</span>
                     </p>
                     <div class="panel-block">
                         <p class="control">
                             <input ref="searchBar" class="input is-family-monospace" type="text" placeholder="Search"
+                                :class="{ 'is-danger': newPathInvalid }"
                                 v-model="searchTerm"
                                 @keyup="inputKeypress"
                             >
@@ -41,9 +43,9 @@
                             <NewTabIcon/>
                         </a>
                     </div>
-                    <a class="panel-block" v-if="loadError">
-                        Couldn't load files...
-                    </a>
+                    <div class="panel-block" v-if="offline">
+                        <em class="has-text-danger">Offline (create a local buffer by starting the path with '@')</em>
+                    </div>
                 </div>
             </div>
         </div>
@@ -54,26 +56,29 @@
 
 <script>
 import { format, toDate } from 'date-fns';
-import * as network from '../lib/network';
+import * as fileUtil from '../lib/file-utils';
 
 import NewTabIcon from './icons/NewTabIcon.vue';
 import FolderIcon from './icons/FolderIcon.vue';
+
+const PATH_REGEX = new RegExp('^[@]{0,1}(?:[0-9a-zA-Z\-._ ]+\/)*[0-9a-zA-Z\-._ ]+$');
 
 export default {
     data: () => ({
         files: [],
         searchTerm: '',
         focusedIndex: -1,
-        loadError: false,
     }),
     props: {
         curFile: { type: String },
         isActive: { type: Boolean },
+        offline: { type: Boolean },
         hasContentChanged: { type: Boolean },
     },
     emits: [
         'update:curFile',
         'update:isActive',
+        'update:offline',
     ],
     computed: {
         topMatchingFiles() {
@@ -83,6 +88,11 @@ export default {
             result.sort((a, b) => Math.sign(b.mtime - a.mtime));
             return result.slice(0, 10);
         },
+        newPathInvalid() {
+            // Ignore if there are still matches, i.e. we're searching for a file
+            if (this.topMatchingFiles.length > 0) return false;
+            return !PATH_REGEX.test(this.searchTerm);
+        },
         focusedFile() {
             return (this.focusedIndex >= 0 && this.focusedIndex < this.topMatchingFiles.length)
                 ? this.topMatchingFiles[this.focusedIndex]
@@ -91,15 +101,9 @@ export default {
     },
     methods: {
         async getFiles() {
-            let response = await network.get('/api/ls');
-            if (response?.status == 200) {
-                let files = await response.json();
-                this.files = files;
-                this.loadError = false;
-            } else {
-                this.files = [];
-                this.loadError = true;
-            }
+            const { localOnly, files } = await fileUtil.listFiles();
+            this.$emit('update:offline', localOnly);
+            this.files = files;
         },
         formatEditTime(timestamp) {
             let d = toDate(timestamp);
@@ -116,7 +120,8 @@ export default {
                 event.preventDefault(); this.changeFocus(-1);
             } else if (event.key == 'Enter') {
                 event.preventDefault();
-                if (this.topMatchingFiles.length == 0) {
+                if (event.shiftKey || this.topMatchingFiles.length == 0) {
+                    // Shift forces a new file, even if there are matches for the search
                     this.selectNewFile();
                 } else if (this.topMatchingFiles.length == 1) {
                     // Don't need to arrow down to the only file in the list.
@@ -127,14 +132,15 @@ export default {
                 }
             }
         },
-        selectFile(file) {
-            this.$emit('update:curFile', file);
+        selectFile(path) {
+            this.$emit('update:curFile', path);
             this.$emit('update:isActive', false);
         },
         selectNewFile() {
             // New file
+            if (this.newPathInvalid) return;
             let parts = this.searchTerm.split('/').filter(x => x.length > 0);
-            this.selectFile({ path: parts.join('/') });
+            this.selectFile(parts.join('/'));
         },
         reset() {
             this.files = [];
@@ -170,5 +176,8 @@ export default {
 }
 .open-file-text {
     color: var(--bulma-body-color);
+}
+.offline-indicator {
+    color: red;
 }
 </style>
