@@ -2,63 +2,38 @@
 
 Check out 
 
-A simple, self-hosted note-taking and slide-making solution with some key features detailed below.
-Though the app is self-hosted, you can check out [the demo](https://cemulate.github.io/mynoteserver/app/); this is a mocked-out copy of the front-end/app that you can use to test out the editor.
+A **simple**, **self-hosted** note-taking and **slide-making** solution.
 
-* Typed content comes _first_; full Markdown support
-* **First-class support** for math with MathJax, including custom configurations and macros
-    * Create a file called `config.js` in the top level of your notes directory and the app will include it.
-    Among other things, you can use this file to configure MathJax and add macros.
-    An [example of such a file](https://docs.mathjax.org/en/latest/input/tex/macros.html) is in the MathJax docs.
-        * Press `ctrl-alt-m` add a new MathJax macro definition to the bottom of your `mathjax-config.js` file; a reload is required before it takes effect on the page.
-    * Snippet completion is automatically supported for all builtin TeX macros as well as user macros (see below for more).
-* Notes are stored as _plain markdown files_ in a single directory with _one_ level of hierarchy: `collection/name`.
-* Insert drawings/figures instantly with a button or `ctrl-space`
-    * Or `ctrl-v` to insert (and sketch on) an image from the clipboard.
-    * Rich sketch interface with full support for stylus pressure & erasers, colors, etc.
-    * **No managing image files and links!** Images are stored _directly_ in the markdown document as an image tag with a data URL, conveniently hidden from view in the editor.
-    * Edit images easily by re-opening the sketch area with your cursor on the line of an existing figure tag.
-    * Including SVG images is supported by pasting a raw `<svg>` into the editor; as long as the svg code is on one line, such tags will be hidden in the editor like other images.
-        * For best results, use `viewBox` instead of `width` and `height` to ensure the image takes up its whole container, and use prefixed ids to avoid id conflicts if including multiple SVGs. Inkscape's "Optimized SVG" export has various settings to do both of these things, and can also collapse the output file to one line.
-        * For choosing the figure size, you can use [markdown-it-attrs](https://github.com/arve0/markdown-it-attrs) to then set the width and position of the containing paragraph (see below for more about using this to position images in presentations).
-* Instead of notes, **make [Reveal.js](https://revealjs.com) presentations** by starting the document with `---`. 
-In this case, horizontal rules (`---`) are treated as slide boundaries.
-    * In this mode, the fullscreen button will easily present the slides
-    * Use the "Fragmented" button to *automatically* add the `fragment` class to all block elements, making your presentation **automatically proceed step-by-step**.
-    * There is a default reveal.js theme, but you can drop a file called `reveal-theme.css` in the top level of your notes directory to use include that css, this can be an existing reveal.js theme or your own.
-    * [markdown-it-attrs](https://github.com/arve0/markdown-it-attrs) is included so you can arbitrary alter attributes/classes on output HTML; this is particular useful for coloring text (for which some utility css classes are incldued) or for "floating" images in slides with `position: absolute`.
-* While the app is served at `/app` (and the api at `/api`), there is also a "static" view of your notes under `/notes`
-    * `/notes` itself serves a basic directory of notes by modification date.
-    * `/notes/file/.../path` will produce a static server-rendered view of the note, useful for reading on mobile or printing to PDF; this is the same page the "print" link in the lower right of the editor goes to.
-    * If the file is a presentation, the same url will render a standalone Reveal.js fullscreen presentation; use `fragmentify` in the query string to enable fragmented mode on the presentation. In particular, you can use this page to export the presentation to PDF [per the reveal.js docs](https://revealjs.com/pdf-export/)
-* The editor supports snippet completion, in the [style of vscode](https://code.visualstudio.com/docs/editor/userdefinedsnippets). By default, all builtin LaTeX commands as well as all user-defined MathJax macros have automatically created snippets. You can also use the `config.js` file to add additional snippets; the [default config file](/src/lib/config-default.js) has some included. The supported syntax is the same as as vscode snippet JSON files, but doesn't support all features such as variables and regex (only what [codemirror supports](https://codemirror.net/docs/ref/#autocomplete.snippet)).
+You can [see the demo](https://cemulate.github.io/mynoteserver/app/) for an overview of basic features. 
+Note that this demo has no server-side capability, but only serves to demonstrate the editor on a sample buffer.
 
-# Usage
-
-Distribution is as an npm package, but nothing is published on npm yet.
-For now, download `mynoteserver-x.x.x.tgz` from the Releases, and run
-
-```
-$ sudo npm -g install mynoteserver-x.x.x.tgz
-$ mynoteserver -h [host] -p [port] -d [notes directory]
-```
+More detailed documentation is below.
 
 # Reference
 
-* Key shortcuts
-    * `ctrl-space`: Add/edit/open image under cursor
-    * `ctrl-p`: File palette (switch, open, create new files)
-    * `ctrl-s`: Save file
-    * `ctrl-alt-m`: Add MathJax macro to `mathjax-config.js`
-    * Double click split-view gutter: reset to default proportion
-* Toolbar buttons
-    * Folder/filename: Open file palette
-    * Image button: Add/edit/open image under cursor
-    * Link button: Contains a link to a static/server-rendered simple view of the current file; useful for bookmarking just to read or printing.
-    * Fullscreen button: Make editor fullscreen or, if the document is a presentation, present it.
+### Shortcuts
 
-## Deployment
+* Most universal markdown text-editing shortcuts should work, and things like `ctrl-s` for save.
+* Double click split-view gutter: reset to default proportion
+* `ctrl-space`: Add/edit/open image under cursor
+* `ctrl-p`: File palette (switch, open, create new files)
 
-This is meant to be a self-hosted application; it does not implement any restrction functionality itself (password-protected accounts or permissions).
-Though the server implements basic security measures, it still accesses the filesystem and it is assumed that you "know what you're doing" when it comes to exposing the app to the internet. "Production" deployments should use standard solutions such as a reverse proxy, virtualization, proper user permissions, etc.
+### Customization
 
+Customization can be done through certain files that will be loaded in place of their defaults, if present at the top level of the notes directory with the following names:
+* `config.js`: Add MathJax macros ([per the MathJax docs](https://docs.mathjax.org/en/latest/input/tex/macros.html)), snippets (in the [style of vscode](https://code.visualstudio.com/docs/editor/userdefinedsnippets), but only [what codemirror supports](https://codemirror.net/docs/ref/#autocomplete.snippet)), and configure some settings for image drawing. This is done by adding data to a global `window.mynoteserver` object as done in the [default config file](/server/resources/config-default.js).
+* `reveal-theme.css`: Use a reveal.js theme of your choosing; the default one is a combination of the default and dark theme (depending on dark mode)
+* `highlight-theme.css`: Use a highlight.js theme of your choosing (for code highlighting), the default one again includes a light and dark theme.
+* Macros can be automatically added to a custom `config.js` file from the editor by bringing up a dialog with `ctrl-alt-m`.
+
+* The editor supports snippet completion, in the [style of vscode](https://code.visualstudio.com/docs/editor/userdefinedsnippets). By default, all builtin LaTeX commands as well as all user-defined MathJax macros have automatically created snippets. You can also use the `config.js` file to add additional snippets; the [default config file](/src/lib/config-default.js) has some included. The supported syntax is the same as as vscode snippet JSON files, but doesn't support all features such as variables and regex (only what [codemirror supports](https://codemirror.net/docs/ref/#autocomplete.snippet)).
+
+# Architecture and implementation
+
+This app glues together a vast number of robust and customizable existing technologies.
+An overview:
+* It is a Vue 3 application, with [Bulma](https://bulma.io/) for the basic UI; the server is [fastify](https://fastify.dev/).
+* [Codemirror](https://codemirror.net/) provides the (extremely robust, extensible, and featureful!) editor.
+* [markdown-it](https://github.com/markdown-it/markdown-it) and various extensions is used and customized for rendering.
+* Math is implemented with [MathJax](https://www.mathjax.org/)
+* [perfect-freehand](https://github.com/steveruizok/perfect-freehand) is used for sketching.
