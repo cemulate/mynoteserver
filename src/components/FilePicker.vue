@@ -30,7 +30,7 @@
                         v-for="(entry, index) in topMatchingFiles"
                         v-bind:class="{ 'focused': index == focusedIndex }"
                         @pointerenter.prevent="focusedIndex = index"
-                        @click="selectFile(entry.path)"
+                        @click="selectFile(entry)"
                     >
                         <span class="is-family-monospace is-flex-grow-1">{{ entry.path }}</span>
                         <small>{{ formatEditTime(entry.mtime) }}</small>
@@ -65,7 +65,7 @@ const PATH_REGEX = new RegExp('^[@]{0,1}(?:[0-9a-zA-Z\-._ ]+\/)*[0-9a-zA-Z\-._ ]
 
 export default {
     data: () => ({
-        files: [],
+        fileEntries: [],
         searchTerm: '',
         focusedIndex: -1,
     }),
@@ -84,7 +84,7 @@ export default {
         topMatchingFiles() {
             let searchParts = this.searchTerm.split('/');
             let fixed = searchParts.slice(0, -1).join('/');
-            let result = this.files.filter(f => f.path.startsWith(fixed) && f.path.slice(fixed.length).includes(searchParts.at(-1)));
+            let result = this.fileEntries.filter(f => f.path.startsWith(fixed) && f.path.slice(fixed.length).includes(searchParts.at(-1)));
             result.sort((a, b) => Math.sign(b.mtime - a.mtime));
             return result.slice(0, 10);
         },
@@ -101,9 +101,9 @@ export default {
     },
     methods: {
         async getFiles() {
-            const { localOnly, files } = await fileUtil.listFiles();
+            const { localOnly, fileEntries } = await fileUtil.listFiles();
             this.$emit('update:offline', localOnly);
-            this.files = files;
+            this.fileEntries = fileEntries;
         },
         formatEditTime(timestamp) {
             let d = toDate(timestamp);
@@ -132,15 +132,17 @@ export default {
                 }
             }
         },
-        selectFile(path) {
-            this.$emit('update:curFile', path);
+        selectFile(entry) {
+            this.$emit('update:curFile', entry.path);
             this.$emit('update:isActive', false);
         },
         selectNewFile() {
             // New file
             if (this.newPathInvalid) return;
             let parts = this.searchTerm.split('/').filter(x => x.length > 0);
-            this.selectFile(parts.join('/'));
+            const path = parts.join('/');
+            this.$emit('update:curFile', path);
+            this.$emit('update:isActive', false);
         },
         reset() {
             this.files = [];

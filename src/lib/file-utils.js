@@ -23,16 +23,16 @@ export async function loadFile(path) {
 }
 
 export async function listFiles(settings = {}) {
-    let files = Object.keys(window.localStorage).filter(x => x.startsWith(LOCAL_SPECIFIER)).map(path => ({
+    let fileEntries = Object.keys(window.localStorage).filter(x => x.startsWith(LOCAL_SPECIFIER)).map(path => ({
         path,
         ...JSON.parse(window.localStorage.getItem(path)),
     }));
     const response = await network.get('/api/ls');
     if (response?.status == 200) {
         const networkFiles = await response.json();
-        files = [ ...files, ...networkFiles ];
+        fileEntries = [ ...fileEntries, ...networkFiles ];
     }
-    return { localOnly: response?.status != 200, files };
+    return { localOnly: response?.status != 200, fileEntries };
 }
 
 export async function saveFile(path, content) {
