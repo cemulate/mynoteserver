@@ -71,8 +71,9 @@ html.no-scroll {
     }
 
     p svg {
+        display: block;
         max-width: 100%;
-        height: auto;
+        margin: 0 auto;
     }
 
     /* Extra bottom padding on render view in editor */

@@ -182,9 +182,7 @@ export default {
                 this.openedImageIsNew = initialImage != null;
             } else {
                 // Closing
-                // if the opened image was new (pasted), we still want to retrieve the image
-                // even if the user didn't edit it - so discardUnedited = false
-                const image = this.$refs.sketch?.getSvg?.(!this.openedImageIsNew);
+                const image = this.$refs.sketch?.getSvg?.();
                 if (image != null) this.$refs.codemirror?.addOrReplaceImageAtCursor(image);
                 this.$refs.codemirror?.focus?.();
             }

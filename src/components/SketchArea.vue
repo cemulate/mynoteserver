@@ -2,21 +2,24 @@
 <div class="SketchArea-root is-flex is-flex-direction-row">
     <div class="whiteboard-container is-flex-grow-1">
         <svg class="whiteboard" ref="whiteboard"
+            :class="{ 'no-cursor': exclusivePenInput}"
             @pointerdown.prevent="onPointerDown"
             @pointermove.prevent="onPointerMove"
             @pointerup.prevent="onPointerUp"
             @contextmenu.prevent=""
         >
             <g id="whiteboard-content" ref="whiteboardContentSvgGroup">
-                <g class="existingImage" ref="existingImageSvgGroup"></g>
                 <g class="currentDrawing">
                     <path
-                        v-for="stroke in strokes"
+                        v-for="(stroke, index) in strokes"
                         :d="stroke.path"
                         :fill="stroke.color"
                         :class="{ 'default-fill': stroke.color == null }"
-                        ref="strokeSvgPaths"></path>
-                    <path 
+                        @pointerdown.prevent="possiblyEraseStroke(index)"
+                        @pointermove.prevent="possiblyEraseStroke(index)"
+                        ref="strokeSvgPaths"
+                    ></path>
+                    <path
                         :d="curStroke.path"
                         :fill="curStroke.color"
                         :class="{ 'default-fill': curStroke.color == null }"
@@ -80,7 +83,7 @@ export default {
 
         exclusivePenInput: false,
         strokes: [],
-        deletedStrokes: [],
+        undoHistory: [],
         curSamplePoints: [],
     }),
     props: {
@@ -106,26 +109,19 @@ export default {
         }
     },
     methods: {
-        tryEraseAt(x, y) {
-            let i = this.strokes.length - 1;
-            const hitTest = (i) => {
-                const svgPath = this.$refs.strokeSvgPaths[i];
-                return svgPath.isPointInFill(new DOMPoint(x, y));
-            }
-            while (i >= 0 && !hitTest(i)) i--;
-            if (i >= 0) this.strokes = this.strokes.toSpliced(i, 1);
+        possiblyEraseStroke(index) {
+            if (this.action != ACTION.ERASING) return;
+            const erasedStroke = this.strokes[index];
+            this.undoHistory.push({ action: ACTION.ERASING, stroke: erasedStroke });
+            this.strokes = this.strokes.toSpliced(index, 1);
         },
         onPointerDown(event) {
             if (!this.exclusivePenInput && event.pointerType == 'pen') this.exclusivePenInput = true;
             if (this.exclusivePenInput && event.pointerType != 'pen') return;
-            
             if (this.disabled) return;
 
-            // Setup to perform the appropriate action;
-            // Start a log of the current action in curStroke
             if (event.buttons == BUTTONS_ERASER || this.color == 'ERASER') {
                 this.action = ACTION.ERASING;
-                this.tryEraseAt(event.offsetX, event.offsetY);
             } else {
                 this.action = ACTION.DRAWING;
                 this.curSamplePoints = [[ event.offsetX, event.offsetY, event.pressure ]];
@@ -134,29 +130,28 @@ export default {
         onPointerMove(event) {
             if (!this.exclusivePenInput && event.pointerType == 'pen') this.exclusivePenInput = true;
             if (this.exclusivePenInput && event.pointerType != 'pen') return;
+            if (this.disabled || this.action != ACTION.DRAWING) return;
 
-            if (this.disabled || this.action == ACTION.NONE) return;
-            
-            // Perform the action, and continue the log in curStroke
-            if (this.action == ACTION.DRAWING) {
-                this.curSamplePoints.push([ event.offsetX, event.offsetY, event.pressure ]);
-            } else {
-                this.tryEraseAt(event.offsetX, event.offsetY);
-            }
+            if (this.action == ACTION.DRAWING) this.curSamplePoints.push([ event.offsetX, event.offsetY, event.pressure ]);
         },
         onPointerUp(event) {
+            if (this.action == ACTION.DRAWING) {
+                const newStroke = { ...this.curStroke };
+                this.undoHistory.push({ action: ACTION.DRAWING, stroke: newStroke });
+                this.strokes.push(newStroke);
+                this.curSamplePoints = [];
+            }
             this.action = ACTION.NONE;
-            
-            this.strokes.push({ ...this.curStroke });
-            this.curSamplePoints = [];
         },
         undo() {
-            if (this.strokes.length == 0) return;
-            this.deletedStrokes.push(this.strokes.pop());
-        },
-        redo() {
-            if (this.deletedStrokes.length == 0) return;
-            this.strokes.push(this.deletedStrokes.pop());
+            if (this.undoHistory.length == 0) return;
+            const { action, stroke } = this.undoHistory.pop();
+            const index = this.strokes.indexOf(stroke);
+            if (action == ACTION.DRAWING && index >= 0) {
+                this.strokes = this.strokes.toSpliced(index, 1);
+            } else if (action == ACTION.ERASING) {
+                this.strokes.push(stroke);
+            }
         },
         initializeExistingImage() {
             // the 'image' prop may contain some image that we are annotating.
@@ -167,39 +162,55 @@ export default {
 
             const { width: boardWidth, height: boardHeight } = this.$refs.whiteboard.getBoundingClientRect();
 
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.classList.add('existingImage');
+
             if (this.image.startsWith('<svg')) {
                 // The existing image is an SVG, either from a previous drawing,
                 // or some svg pasted in directly. In the latter case, we use some
                 // vague heuristics to position the svg reasonably within the whiteboard.
-                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                g.innerHTML = this.image;
+                const t = document.createElement('template');
+                t.innerHTML = this.image;
+                const svg = t.content.firstChild;    
 
-                const svgWidth = g.firstChild.getAttribute('width');
-                const svgHeight = g.firstChild.getAttribute('height');
-                const svgViewBox = g.firstChild.viewBox.baseVal;
+                const svgWidth = svg.getAttribute('width');
+                const svgHeight = svg.getAttribute('height');
+                const svgViewBox = svg.viewBox.baseVal;
 
                 if (svgWidth != null && svgHeight != null) {
                     // Case 1: the svg tag has a set width and height
                     // This will be the case for drawings created by this component.
                     const width = parseFloat(svgWidth);
                     const height = parseFloat(svgHeight);
-                    g.firstChild.setAttribute('x', ((boardWidth / 2) - (width / 2)).toFixed(2));
-                    g.firstChild.setAttribute('y', ((boardHeight / 2) - (height / 2)).toFixed(2));
+                    g.setAttribute('x', ((boardWidth / 2) - (width / 2)).toFixed(2));
+                    g.setAttribute('y', ((boardHeight / 2) - (height / 2)).toFixed(2));
                 } else if (svgViewBox != null) {
                     // Otherwise, we don't know anything about the SVG.
                     // If it has a viewBox, we can try to put it comfortably in the center.
                     const aspectRatio = svgViewBox.height / svgViewBox.width;
                     const width = boardWidth / 3;
                     const height = width * aspectRatio;
-                    g.firstChild.setAttribute('width', width);
-                    g.firstChild.setAttribute('height', height);
-                    g.firstChild.setAttribute('x', ((boardWidth / 2) - (width / 2)).toFixed(2));
-                    g.firstChild.setAttribute('y', ((boardHeight / 2) - (height / 2)).toFixed(2));
+                    g.setAttribute('width', width);
+                    g.setAttribute('height', height);
+                    g.setAttribute('x', ((boardWidth / 2) - (width / 2)).toFixed(2));
+                    g.setAttribute('y', ((boardHeight / 2) - (height / 2)).toFixed(2));
                 } else {
                     // What even should happen in this case???
                 }
 
-                this.$refs.existingImageSvgGroup.innerHTML = g.innerHTML;
+                // "Extract" the path.mns that are previously drawn strokes and
+                // convert them to entries in the strokes array; this allows
+                // them to be subject to erasing and undo/redo on subsequent edits.
+                const oldStrokes = svg.querySelectorAll('path.mns');
+                for (const el of oldStrokes) {
+                    svg.removeChild(el);
+                    const color = el.classList.contains('default-fill') ? null : el.getAttribute('fill');
+                    const path = el.getAttribute('d');
+                    this.strokes.push({ color, path });
+                }
+
+                g.innerHTML = svg.innerHTML;
+                this.$refs.whiteboardContentSvgGroup.prepend(g);
             } else {
                 // The existing image is a dataURL.
                 // "Load" the image to figure out its dimensions, and then
@@ -213,17 +224,13 @@ export default {
                     svgImg.setAttribute('y', ((boardHeight / 2) - (img.height / 2)).toFixed(2));
                     svgImg.setAttribute('href', this.image);
 
-                    this.$refs.existingImageSvgGroup.innerHTML = svgImg.outerHTML;
+                    g.innerHTML = svgImg.outerHTML;
+                    this.$refs.whiteboardContentSvgGroup.prepend(g);
                 }
                 img.src = this.image;
             }
         },
-        getSvg(discardUnedited = true) {
-            // In this case, the canvas was never drawn on.
-            // (but the image might be new / we are not editing an existing image,
-            // in which case discardUnedited will be false)
-            if (discardUnedited && this.strokes.length == 0) return null;
-
+        getSvg() {
             const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             s.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 
@@ -237,12 +244,18 @@ export default {
 
             // Any content that we were 'drawing over' (the existing image) is in the 
             // appropriately named group; simply copy its children into this svg.
-            for (const el of this.$refs.existingImageSvgGroup.children) s.appendChild(el);
+            const existingImageGroup = this.$refs.whiteboardContentSvgGroup.querySelector('g.existingImage');
+            if (existingImageGroup != null) {
+                for (let el of existingImageGroup.children) s.append(el);
+            }
             // Now include our new strokes
             for (let { color, path } of this.strokes) {
                 const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 (color != null) ? p.setAttribute('fill', color) : p.classList.add('default-fill');
                 p.setAttribute('d', path);
+                // This marks the element as a "stroke" that can be detected and extracted
+                // in initializeExistingImage the next time this image is edited.
+                p.classList.add('mns'); 
                 s.appendChild(p);
             }
 
@@ -325,5 +338,8 @@ export default {
     border-radius: 1rem;
     touch-action: none;
     cursor: crosshair;
+    &.no-cursor {
+        cursor: none;
+    }
 }
 </style>
