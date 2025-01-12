@@ -1,11 +1,4 @@
 /*!
- * Determine if an object is a Buffer
- *
- * @author   Feross Aboukhadijeh <https://feross.org>
- * @license  MIT
- */
-
-/*!
  *************************************************************************
  *
  *  mhchemParser.ts
@@ -39,12 +32,14 @@
  */
 
 /*!
-* reveal.js 4.3.1
+* reveal.js 5.1.0
 * https://revealjs.com
 * MIT licensed
 *
-* Copyright (C) 2011-2022 Hakim El Hattab, https://hakim.se
+* Copyright (C) 2011-2024 Hakim El Hattab, https://hakim.se
 */
+
+/*! #__NO_SIDE_EFFECTS__ */
 
 /*! markdown-it-math 4.1.1 https://github.com/runarberg/markdown-it-math @license MIT */
 
@@ -59,3 +54,21 @@
  * @author <a href="mailto:aappleby@gmail.com">Austin Appleby</a>
  * @see http://sites.google.com/site/murmurhash/
  */
+
+/**
+* @vue/runtime-core v3.5.13
+* (c) 2018-present Yuxi (Evan) You and Vue contributors
+* @license MIT
+**/
+
+/**
+* @vue/runtime-dom v3.5.13
+* (c) 2018-present Yuxi (Evan) You and Vue contributors
+* @license MIT
+**/
+
+/**
+* @vue/shared v3.5.13
+* (c) 2018-present Yuxi (Evan) You and Vue contributors
+* @license MIT
+**/
