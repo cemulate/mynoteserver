@@ -431,6 +431,12 @@ as it would be from another list item */
   margin: 0 auto;
 }
 
+.reveal .slides p svg {
+  display: block;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
 .reveal .slides p.framed-image img {
   background: var(--rc-framed-image-background);
   padding: 20px;
